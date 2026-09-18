@@ -27,12 +27,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # enablement: true slår på Pages i repot vid första körningen och sätter
-      # källan till GitHub Actions. Utan den kräver första deployen att någon
-      # klickar i inställningarna.
+      # Pages måste vara påslaget i repoinställningarna med källa
+      # "GitHub Actions" innan detta steg går igenom. GITHUB_TOKEN kan inte
+      # skapa sajten själv — det kräver admin, inte bara pages: write.
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       # Prototypen är statisk och byggs inte. Hela reporoten laddas upp
       # som den är; index.html hamnar på sajtens rot.

@@ -157,9 +157,24 @@ en-axel-i-taget-budget som texturen.
 * Skatta spelarförmåga och materialsvårighet i samma modell, inte var för sig.
 * Bredda biblioteket — det är, som sagt, en rad text per progression.
 
+## Publicering
+
+Varje push till `main` publicerar sajten via GitHub Pages
+(`.github/workflows/pages.yml`). Ingen byggkedja: reporoten laddas upp som den
+är, så `index.html` hamnar på rotadressen.
+
+> **Engångssteg innan första deployen går igenom:** slå på Pages under
+> *Settings → Pages* och välj **Source: GitHub Actions**. Workflowen kan inte
+> göra det åt sig själv — `GITHUB_TOKEN` har `pages: write`, men att *skapa*
+> Pages-sajten kräver admin. Kör sedan om workflowen från Actions-fliken
+> (den har `workflow_dispatch`).
+
+Sajten hamnar på `https://paokarlsson.github.io/vamp/`.
+
 ## Filer
 
 ```
-index.html    hela prototypen: teori, motor, ljud, bild, gränssnitt
-README.md     den här filen
+index.html                    hela prototypen: teori, motor, ljud, bild, gränssnitt
+.github/workflows/pages.yml   deploy till GitHub Pages vid push till main
+README.md                     den här filen
 ```
