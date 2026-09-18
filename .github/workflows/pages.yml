@@ -27,7 +27,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # enablement: true slår på Pages i repot vid första körningen och sätter
+      # källan till GitHub Actions. Utan den kräver första deployen att någon
+      # klickar i inställningarna.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       # Prototypen är statisk och byggs inte. Hela reporoten laddas upp
       # som den är; index.html hamnar på sajtens rot.
