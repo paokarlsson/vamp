@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vamp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* scenen är alltid mörk — den är instrumentet, inte gränssnittet */
+    --stage:#16242b;
+    --stage-2:#1d3038;
+    --stage-line:#2b4650;
+    --hand-r:#ffc94d;
+    --hand-l:#7aa8ff;
+    --miss:#e2607f;
+    --key:#f3ece0;
+
+    --surface:#faf7f1;
+    --surface-2:#f1ece2;
+    --text:#17242a;
+    --muted:#66757c;
+    --border:#e2dbd0;
+    --accent:#1f6f6a;
+    --good:#2e8b7a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --surface:#16242b; --surface-2:#1d3038; --text:#e8eef0;
+      --muted:#8fa5ac; --border:#2b4650; --accent:#63d2c3; --good:#63d2c3;
+    }
+  }
+  :root[data-theme="dark"]{
+    --surface:#16242b; --surface-2:#1d3038; --text:#e8eef0;
+    --muted:#8fa5ac; --border:#2b4650; --accent:#63d2c3; --good:#63d2c3;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--surface); color:var(--text);
+    font-family:"IBM Plex Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+    font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:580px;margin:0 auto;padding:16px 14px 44px}
+
+  .mark{
+    font-family:"Bricolage Grotesque",Georgia,serif;
+    font-weight:800; font-size:42px; line-height:.9;
+    letter-spacing:-.045em; margin:0 0 2px;
+    font-variation-settings:"opsz" 72,"wdth" 92;
+  }
+  .tag{color:var(--muted);font-size:13.5px;margin:0 0 14px;max-width:46ch}
+
+  /* ---------- scenen ---------- */
+  .stage{background:var(--stage);border-radius:16px;overflow:hidden;position:relative}
+  #lane{display:block;width:100%;height:352px;touch-action:none}
+  .readout{
+    display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+    padding:9px 12px;background:var(--stage-2);color:var(--key);
+    font-size:12.5px;border-top:1px solid var(--stage-line);
+  }
+  .chip{background:rgba(243,236,224,.09);border-radius:20px;padding:3px 9px;white-space:nowrap}
+  .chip.prog{background:rgba(255,201,77,.18);color:var(--hand-r);font-weight:500}
+  .chip.two{background:rgba(122,168,255,.18);color:var(--hand-l)}
+  .readout .grow{flex:1}
+
+  #caption{
+    min-height:44px;display:flex;align-items:center;
+    padding:11px 14px;margin-top:10px;
+    border-left:3px solid var(--accent);
+    background:var(--surface-2);border-radius:0 9px 9px 0;
+    font-size:14px;
+  }
+  #caption:empty{display:none}
+
+  /* ---------- kontroller ---------- */
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 0}
+  button{
+    font:inherit;font-size:14px;font-weight:500;
+    background:var(--surface-2);color:var(--text);
+    border:1px solid var(--border);border-radius:10px;
+    padding:10px 15px;cursor:pointer;
+  }
+  button:hover{border-color:var(--muted)}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+  button:disabled{opacity:.45;cursor:default}
+
+  .slider{display:flex;align-items:center;gap:10px;margin:12px 0 0;font-size:13.5px;color:var(--muted)}
+  .slider input{flex:1;accent-color:var(--accent)}
+  .slider b{color:var(--text);font-variant-numeric:tabular-nums;font-weight:600}
+
+  /* ---------- paneler ---------- */
+  .panel{margin-top:18px;border:1px solid var(--border);border-radius:13px;background:var(--surface-2);padding:15px}
+  .panel h2{font-family:"Bricolage Grotesque",Georgia,serif;font-size:18px;font-weight:700;margin:0 0 3px;letter-spacing:-.015em}
+  .panel p.hint{margin:0 0 11px;font-size:12.5px;color:var(--muted);max-width:50ch}
+
+  .levels{display:flex;align-items:baseline;gap:18px}
+  .lv{display:flex;flex-direction:column}
+  .lv .n{font-family:"Bricolage Grotesque",Georgia,serif;font-size:36px;line-height:1;font-weight:700;font-variant-numeric:tabular-nums}
+  .lv .l{font-size:11.5px;color:var(--muted);margin-top:4px}
+  .lv.est .n{color:var(--accent)}
+  #chart{display:block;width:100%;height:72px;margin-top:10px}
+
+  .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:13px}
+  .metric .v{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+  .metric .k{font-size:11px;color:var(--muted);line-height:1.25}
+
+  .rows{margin-top:4px}
+  .row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:12.5px}
+  .row .name{width:112px;flex:none;color:var(--muted)}
+  .row .track{flex:1;height:7px;border-radius:4px;background:var(--border);overflow:hidden;position:relative}
+  .row .track i{display:block;height:100%;background:var(--accent);width:0%}
+  .row .track i.weak{background:var(--miss)}
+  .row .track i.dim{opacity:.35}
+  .row .val{width:40px;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+
+  #log{margin-top:18px;border:1px solid var(--border);border-radius:13px;max-height:300px;overflow-y:auto;background:var(--surface)}
+  .entry{display:flex;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border);font-size:13.5px}
+  .entry:last-child{border-bottom:none}
+  .entry .t{color:var(--muted);font-variant-numeric:tabular-nums;flex:none;width:40px}
+  .entry.up .m{color:var(--good)}
+  .entry.down .m{color:var(--miss)}
+  .entry.phase{background:var(--surface-2)}
+  .entry.phase .m{font-family:"Bricolage Grotesque",Georgia,serif;font-weight:700}
+
+  .note{font-size:12.5px;color:var(--muted);margin-top:18px;max-width:58ch}
+  .note code{font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+  @media (max-width:420px){
+    #lane{height:310px}
+    .row .name{width:96px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1 class="mark">vamp</h1>
+<p class="tag">Fyra ackord, en loop, och en motor som håller dig precis på din nivå. Spelaren nedan är simulerad — sann nivå 5, med dolda svagheter som motorn ska hitta.</p>
+
+<div class="stage">
+  <canvas id="lane"></canvas>
+  <div class="readout">
+    <span class="chip prog" id="c-prog">—</span>
+    <span class="chip" id="c-texture">—</span>
+    <span class="chip" id="c-bpm">—</span>
+    <span class="grow"></span>
+    <span class="chip" id="c-layers">—</span>
+  </div>
+</div>
+
+<div id="caption"></div>
+
+<div class="controls">
+  <button class="primary" id="btn-demo">Spela demo</button>
+  <button id="btn-free">Fritt läge</button>
+  <button id="btn-sound" aria-pressed="true">Ljud på</button>
+  <button id="btn-reset">Börja om</button>
+</div>
+
+<div class="slider">
+  <label for="truelevel">Spelarens sanna nivå</label>
+  <input type="range" id="truelevel" min="2" max="10" step="0.5" value="5">
+  <b id="truelevel-v">5.0</b>
+</div>
+
+<div class="panel">
+  <h2>Skattning</h2>
+  <p class="hint">Motorn ser aldrig den sanna nivån. Den jämför varje varvs utfall med vad den väntade sig och flyttar sig proportionellt mot sin egen osäkerhet.</p>
+  <div class="levels">
+    <div class="lv est"><span class="n" id="m-est">—</span><span class="l">skattad nivå</span></div>
+    <div class="lv"><span class="n" id="m-true">5.0</span><span class="l">sann nivå</span></div>
+    <div class="lv"><span class="n" id="m-sigma">—</span><span class="l">osäkerhet</span></div>
+  </div>
+  <canvas id="chart"></canvas>
+  <div class="metrics">
+    <div class="metric"><div class="v" id="m-acc">—</div><div class="k">träffar</div></div>
+    <div class="metric"><div class="v" id="m-sd">—</div><div class="k">timingspridning</div></div>
+    <div class="metric"><div class="v" id="m-rec">—</div><div class="k">miss efter miss</div></div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Varvets form</h2>
+  <p class="hint">Svårigheten räknas ur de faktiska tonerna, inte ur texturens namn. Två varv på samma nivå kan ha helt olika form — det är därför nivå 5 rymmer så mycket.</p>
+  <div class="rows" id="shape"></div>
+</div>
+
+<div class="panel">
+  <h2>Profil</h2>
+  <p class="hint">Nio axlar, var och en med egen osäkerhet. Blekt betyder för lite data för att säga något — motorn lånar då den allmänna nivån tills den vet bättre.</p>
+  <div class="rows" id="axes"></div>
+</div>
+
+<div id="log"></div>
+
+<p class="note">Vikterna i kostnadsfunktionen är handsatta och ska kalibreras mot riktig speldata. Progressionerna skrivs som romerska siffror och får sina grepp av röstföringsmotorn, så biblioteket växer med en rad text per progression.</p>
+
+</div>
+
+<script>
+"use strict";
+/* ==========================================================================
+   VAMP — adaptiv loopmotor för piano
+   Prototyp. Simulerad spelare, simulerat anslag, riktig motor.
+
+   Moduler, i ordning:
+     1  TEORI          romerska siffror → tonhöjdsklasser
+     2  RÖSTFÖRING     ackord → grepp, valda för minsta rörelse
+     3  BIBLIOTEK      progressioner som text
+     4  TEXTURER       grepp → noter
+     5  SVÅRIGHET      noter → formvektor → ett tal
+     6  SPELARE        simulerad hand med dolda styrkor och svagheter
+     7  MOTOR          skattning, profil, val av nästa varv
+     8  LJUD           Web Audio, inga samplingar
+     9  BILD           fallande noter, klaviatur
+    10  GRÄNSSNITT     demo, fritt läge, paneler
+
+   Vad som är mätt och vad som är gissat: allt i modul 5 är gissat och ska
+   skattas ur riktig speldata tillsammans med spelarförmågan. Resten av
+   arkitekturen bär oavsett vilka vikterna blir.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. TEORI
+   ========================================================================== */
+
+const DEG_MAJOR = [0,2,4,5,7,9,11];
+const DEG_MINOR = [0,2,3,5,7,8,10];
+const ROMAN_IDX = {I:0, II:1, III:2, IV:3, V:4, VI:5, VII:6};
+const PC_NAMES = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+
+/* "bVII", "vi", "V7", "ii" → { pcs:[...], root:pc, label:"Bb" } */
+function parseNumeral(sym, tonic, mode){
+  let s = sym, acc = 0;
+  while (s[0] === "b" || s[0] === "#"){ acc += s[0]==="b" ? -1 : 1; s = s.slice(1); }
+  let seventh = false, dim = false;
+  if (s.slice(-1) === "7"){ seventh = true; s = s.slice(0,-1); }
+  if (s.slice(-1) === "o"){ dim = true; s = s.slice(0,-1); }
+
+  const minorQuality = s === s.toLowerCase();
+  const idx = ROMAN_IDX[s.toUpperCase()];
+  const table = mode === "minor" ? DEG_MINOR : DEG_MAJOR;
+  const root = (((tonic + table[idx] + acc) % 12) + 12) % 12;
+
+  let iv;
+  if (dim) iv = [0,3,6];
+  else if (minorQuality) iv = [0,3,7];
+  else iv = [0,4,7];
+  if (seventh) iv = iv.concat([minorQuality || dim ? 10 : 10]);
+
+  return { pcs: iv.map(i => (root+i)%12), root, label: PC_NAMES[root] + (minorQuality?"m":"") + (seventh?"7":"") };
+}
+
+function scaleOf(tonic, mode){
+  const t = mode === "minor" ? DEG_MINOR : DEG_MAJOR;
+  return t.map(d => (tonic+d)%12);
+}
+
+const BLACK_PC = [1,3,6,8,10];
+const isBlack = m => BLACK_PC.indexOf(((m%12)+12)%12) >= 0;
+
+
+/* ==========================================================================
+   2. RÖSTFÖRING
+
+   Ett ackord säger bara vilka toner, inte hur de ska läggas. Motorn söker
+   den billigaste vägen genom hela progressionen, där kostnaden är hur långt
+   rösterna måste flytta sig. Det är detta som gör att handen ligger still
+   och att det låter arrangerat i stället för hoppigt — och det är detta som
+   gör att biblioteket kan skrivas som text.
+   ========================================================================== */
+
+/* Alla grepp för en uppsättning tonhöjdsklasser inom ett register. */
+function voicingsFor(pcs, lo, hi, maxSpan){
+  const out = [];
+  const n = pcs.length;
+  for (let rot=0; rot<n; rot++){
+    const order = [];
+    for (let i=0;i<n;i++) order.push(pcs[(rot+i)%n]);
+    for (let base=lo; base<=hi; base++){
+      if ((((base%12)+12)%12) !== order[0]) continue;
+      const v = [base];
+      let cur = base;
+      let ok = true;
+      for (let i=1;i<n;i++){
+        let next = cur+1;
+        while ((((next%12)+12)%12) !== order[i]) next++;
+        if (next > hi){ ok = false; break; }
+        v.push(next); cur = next;
+      }
+      if (!ok) continue;
+      if (v[v.length-1]-v[0] > maxSpan) continue;
+      out.push(v);
+    }
+  }
+  return out;
+}
+
+function moveCost(a, b){
+  const n = Math.min(a.length, b.length);
+  let c = 0;
+  for (let i=0;i<n;i++) c += Math.abs(a[i]-b[i]);
+  c += Math.abs(a.length-b.length)*3;
+  return c;
+}
+const centerOf = v => v.reduce((s,x)=>s+x,0)/v.length;
+
+/* Billigaste vägen genom progressionen, med varvets slut kopplat till
+   dess början — loopen ska gå runt lika mjukt som den går framåt. */
+function voiceLead(chordPcs, opts){
+  const lo = opts.lo, hi = opts.hi, center = opts.center, span = opts.span || 12;
+  const cands = chordPcs.map(pcs => {
+    const v = voicingsFor(pcs, lo, hi, span);
+    return v.length ? v : [pcs.map((p,i)=>lo+((p-lo%12)+12)%12+i*0)];
+  });
+
+  let best = null;
+  for (let s=0; s<cands[0].length; s++){
+    /* en väg per möjligt startgrepp */
+    let costs = cands[0].map((_,i) => i===s ? Math.abs(centerOf(cands[0][i])-center)*0.4 : Infinity);
+    let back = cands.map(()=>[]);
+    for (let k=1; k<cands.length; k++){
+      const next = [];
+      for (let j=0; j<cands[k].length; j++){
+        let bc = Infinity, bi = 0;
+        for (let i=0; i<cands[k-1].length; i++){
+          if (costs[i] === Infinity) continue;
+          const c = costs[i] + moveCost(cands[k-1][i], cands[k][j]);
+          if (c < bc){ bc = c; bi = i; }
+        }
+        next.push(bc + Math.abs(centerOf(cands[k][j])-center)*0.4);
+        back[k][j] = bi;
+      }
+      costs = next;
+    }
+    /* stäng loopen: sista greppet tillbaka till det första */
+    let endBest = Infinity, endIdx = 0;
+    for (let j=0;j<costs.length;j++){
+      const total = costs[j] + moveCost(cands[cands.length-1][j], cands[0][s])*0.7;
+      if (total < endBest){ endBest = total; endIdx = j; }
+    }
+    if (best === null || endBest < best.cost){
+      const path = new Array(cands.length);
+      path[cands.length-1] = endIdx;
+      for (let k=cands.length-1; k>0; k--) path[k-1] = back[k][path[k]];
+      best = { cost: endBest, voicings: path.map((idx,k)=>cands[k][idx]) };
+    }
+  }
+  return best.voicings;
+}
+
+/* Bygger hela det spelbara materialet för en progression i en tonart. */
+function realize(progression, tonic){
+  const mode = progression.mode;
+  const chords = progression.numerals.map(s => parseNumeral(s, tonic, mode));
+  const rh = voiceLead(chords.map(c=>c.pcs), {lo:59, hi:81, center:68, span:12});
+  const lh = voiceLead(chords.map(c=>c.pcs), {lo:40, hi:60, center:50, span:12});
+  /* basen röstförs också, annars hoppar den en oktav i onödan */
+  const bass = [];
+  let prev = 45;
+  for (const c of chords){
+    let best = null;
+    for (let m=36; m<=52; m++){
+      if (((m%12)+12)%12 !== c.root) continue;
+      const d = Math.abs(m-prev);
+      if (best === null || d < best.d) best = {m, d};
+    }
+    bass.push(best ? best.m : 45);
+    prev = bass[bass.length-1];
+  }
+  return { chords, rh, lh, bass, scale: scaleOf(tonic, mode), tonic, mode };
+}
+
+
+/* ==========================================================================
+   3. BIBLIOTEK
+
+   Progressioner som text. Varje rad blir spelbar i vilken tonart som helst
+   utan att någon arrangerar om något. Längden får vara 2, 4 eller 8 ackord
+   — loopen är alltid fyra takter, så antalet ackord sätter den harmoniska
+   rytmen.
+   ========================================================================== */
+
+const LIBRARY = [
+  { id:"axeln",     name:"Axeln",            mood:"ljus",      mode:"major", numerals:["I","V","vi","IV"] },
+  { id:"axeln-vi",  name:"Axeln, vemodig",   mood:"vemodig",   mode:"major", numerals:["vi","IV","I","V"] },
+  { id:"axeln-iv",  name:"Axeln, svävande",  mood:"svävande",  mode:"major", numerals:["IV","I","V","vi"] },
+  { id:"doowop",    name:"Doo-wop",          mood:"nostalgisk",mode:"major", numerals:["I","vi","IV","V"] },
+  { id:"tre",       name:"Tre ackord",       mood:"rak",       mode:"major", numerals:["I","IV","V","IV"] },
+  { id:"iiVI",      name:"ii–V–I",           mood:"jazzig",    mode:"major", numerals:["ii","V","I","I"] },
+  { id:"canon",     name:"Canon",            mood:"högtidlig", mode:"major", numerals:["I","V","vi","iii","IV","I","IV","V"] },
+  { id:"mixo",      name:"Mixolydiskt",      mood:"folkigt",   mode:"major", numerals:["I","bVII","IV","I"] },
+  { id:"japansk",   name:"Japansk",          mood:"längtande", mode:"major", numerals:["IV","V","iii","vi"] },
+  { id:"blues",     name:"Kort blues",       mood:"lurvig",    mode:"major", numerals:["I7","IV7","I7","V7"] },
+  { id:"gospel",    name:"Gospel",           mood:"varm",      mode:"major", numerals:["I","iii","IV","V"] },
+  { id:"mollvamp",  name:"Mollvamp",         mood:"mörk",      mode:"minor", numerals:["i","VII","VI","VII"] },
+  { id:"popmoll",   name:"Pop i moll",       mood:"driven",    mode:"minor", numerals:["i","VI","III","VII"] },
+  { id:"andalus",   name:"Andalusisk",       mood:"dramatisk", mode:"minor", numerals:["i","VII","VI","V"] },
+  { id:"vamp-dur",  name:"Två ackord, ljus", mood:"stillsam",  mode:"major", numerals:["I","IV"] },
+  { id:"vamp-moll", name:"Två ackord, mörk", mood:"stillsam",  mode:"minor", numerals:["i","iv"] }
+];
+
+const KEYS = [
+  { tonic:0, name:"C",  hard:0 },
+  { tonic:9, name:"Am", hard:0 },
+  { tonic:7, name:"G",  hard:1 },
+  { tonic:5, name:"F",  hard:1 },
+  { tonic:2, name:"D",  hard:2 }
+];
+
+const REALIZED = {};
+function realized(progId, tonic){
+  const k = progId+"@"+tonic;
+  if (!REALIZED[k]){
+    const p = LIBRARY.find(x=>x.id===progId);
+    REALIZED[k] = realize(p, tonic);
+  }
+  return REALIZED[k];
+}
+
+
+/* ==========================================================================
+   4. TEXTURER
+
+   En textur tar ackordplatserna och gör noter. Allt uttrycks i slag, så
+   samma textur fungerar i 3/4 och 4/4 och med vilken harmonisk rytm som
+   helst.
+   ========================================================================== */
+
+/* Synkoperade lägen inom en ackordplats, oavsett hur lång den är. */
+function syncoPositions(slot, bpb){
+  const base = bpb>=4 ? [0,1.5,2.5,3.5] : [0,1.5,2.5];
+  const out = [];
+  for (let off=0; off<slot.beats; off+=bpb)
+    base.forEach(b=>{ if (off+b < slot.beats) out.push(off+b); });
+  return out.length ? out : [0];
+}
+
+function slotsFor(mat, bpb){
+  const totalBeats = bpb*4;
+  const per = totalBeats/mat.chords.length;
+  return mat.chords.map((c,i)=>({
+    i, start: i*per, beats: per,
+    rh: mat.rh[i], lh: mat.lh[i], bass: mat.bass[i], name: c.label
+  }));
+}
+
+const TEXTURES = {
+  rootsWhole: { label:"Grundtoner", gen:(S)=>S.map(s=>({b:s.start,dur:s.beats*0.9,midi:s.rh[0],hand:"R"})) },
+
+  twoNote: { label:"Två toner", gen:(S)=>{
+    const e=[]; S.forEach(s=>{ e.push({b:s.start,dur:s.beats*0.9,midi:s.rh[0],hand:"R"});
+                               e.push({b:s.start,dur:s.beats*0.9,midi:s.rh[1],hand:"R"}); }); return e; } },
+
+  rootsQuarter: { label:"Grundtoner i fjärdedelar", gen:(S)=>{
+    const e=[]; S.forEach(s=>{ for(let k=0;k<s.beats;k++) e.push({b:s.start+k,dur:.85,midi:s.rh[0],hand:"R"}); }); return e; } },
+
+  triadWhole: { label:"Blockackord", gen:(S)=>{
+    const e=[]; S.forEach(s=>s.rh.forEach(m=>e.push({b:s.start,dur:s.beats*0.9,midi:m,hand:"R"}))); return e; } },
+
+  triadQuarter: { label:"Blockackord i fjärdedelar", gen:(S)=>{
+    const e=[]; S.forEach(s=>{ for(let k=0;k<s.beats;k++) s.rh.forEach(m=>e.push({b:s.start+k,dur:.8,midi:m,hand:"R"})); }); return e; } },
+
+  brokenQuarter: { label:"Brutna ackord", gen:(S)=>{
+    const p=[0,1,2,1]; const e=[];
+    S.forEach(s=>{ for(let k=0;k<s.beats;k++) e.push({b:s.start+k,dur:.85,midi:s.rh[p[k%4]%s.rh.length],hand:"R"}); }); return e; } },
+
+  brokenEighth: { label:"Brutna ackord, åttondelar", gen:(S)=>{
+    const p=[0,1,2,1]; const e=[];
+    S.forEach(s=>{ for(let k=0;k<s.beats*2;k++) e.push({b:s.start+k*0.5,dur:.45,midi:s.rh[p[k%4]%s.rh.length],hand:"R"}); }); return e; } },
+
+  bassTriad: { label:"Bas och ackord", gen:(S)=>{
+    const e=[]; S.forEach(s=>{ e.push({b:s.start,dur:s.beats*0.9,midi:s.bass,hand:"L"});
+                               s.rh.forEach(m=>e.push({b:s.start,dur:s.beats*0.9,midi:m,hand:"R"})); }); return e; } },
+
+  bassBroken: { label:"Bas och brutna ackord", gen:(S)=>{
+    const p=[0,1,2,1]; const e=[];
+    S.forEach(s=>{ e.push({b:s.start,dur:s.beats*0.9,midi:s.bass,hand:"L"});
+      for(let k=0;k<s.beats;k++) e.push({b:s.start+k,dur:.85,midi:s.rh[p[k%4]%s.rh.length],hand:"R"}); }); return e; } },
+
+  alberti: { label:"Alberti-bas", gen:(S)=>{
+    const p=[0,2,1,2]; const e=[];
+    S.forEach(s=>{ s.rh.forEach(m=>e.push({b:s.start,dur:s.beats*0.9,midi:m,hand:"R"}));
+      for(let k=0;k<s.beats*2;k++) e.push({b:s.start+k*0.5,dur:.45,midi:s.lh[p[k%4]%s.lh.length],hand:"L"}); }); return e; } },
+
+  melody: { label:"Melodi över bas", gen:(S)=>{
+    const p=[1,2,1,0]; const e=[];
+    S.forEach(s=>{ e.push({b:s.start,dur:s.beats*0.9,midi:s.bass,hand:"L"});
+      for(let k=0;k<s.beats;k++) e.push({b:s.start+k,dur:.85,midi:s.rh[p[k%4]%s.rh.length],hand:"R"}); }); return e; } },
+
+  wide: { label:"Vidgat grepp", gen:(S)=>{
+    const e=[]; S.forEach(s=>{ for(let k=0;k<s.beats;k++){
+      e.push({b:s.start+k,dur:.85,midi:s.rh[0],hand:"R"});
+      e.push({b:s.start+k,dur:.85,midi:s.rh[1]+12,hand:"R"}); } }); return e; } },
+
+  syncoSingle: { label:"Synkoperad enstämmig", gen:(S,bpb)=>{
+    const e=[]; S.forEach(s=>syncoPositions(s,bpb).forEach((o,k)=>
+      e.push({b:s.start+o, dur:.6, midi:s.rh[k%s.rh.length], hand:"R"}))); return e; } },
+
+  syncopated: { label:"Synkoperat", gen:(S,bpb)=>{
+    const e=[];
+    S.forEach(s=>{
+      const pos = syncoPositions(s,bpb);
+      for (let off=0; off<s.beats; off+=bpb){
+        e.push({b:s.start+off, dur:1.4, midi:s.bass, hand:"L"});
+        if (bpb>=4 && off+2 < s.beats) e.push({b:s.start+off+2, dur:1.4, midi:s.bass, hand:"L"});
+      }
+      pos.forEach(o=>s.rh.forEach(m=>e.push({b:s.start+o, dur:.6, midi:m, hand:"R"})));
+    });
+    return e; } }
+};
+const TEXTURE_IDS = Object.keys(TEXTURES);
+
+
+/* ==========================================================================
+   5. SVÅRIGHET
+
+   Räknas ur de faktiska tonerna, aldrig ur texturens namn. Det är det som
+   gör att motorn kan prissätta material den aldrig sett — förutsättningen
+   för att bredda biblioteket utan att bygga om motorn.
+
+   VIKTERNA ÄR GISSADE. De ska skattas ur speldata tillsammans med
+   spelarförmågan, som i vilken Elo-liknande modell som helst.
+   ========================================================================== */
+
+const W = {
+  base:        0.25,
+  density:     1.80,   // anslag per sekund, viktad med hur mycket som ändras
+  polyphony:   0.90,   // toner i samma anslag utöver den första
+  leap:        0.16,   // genomsnittligt intervall mellan anslag i samma hand
+  shift:       0.35,   // positionsbyten per takt
+  span:        0.10,   // bredaste samtidiga grepp utöver en oktav
+  independence:1.50,   // 0 en hand, 1 två i samma rytm, 2 olika rytm
+  syncopation: 2.80,   // andel anslag på tomt slag
+  black:       1.60,   // andel svarta tangenter
+  subdivision: 0.85    // finaste underdelning: 1 = åttondelar, 2 = sextondelar
+};
+
+/* Formvektorn — själva mätningen, oberoende av vikterna ovan. */
+function shapeOf(events, spb, bpb){
+  const dur = bpb*4*spb;
+  const byTime = {};
+  for (const e of events){
+    const k = e.b.toFixed(3);
+    (byTime[k] = byTime[k] || []).push(e);
+  }
+  const onsets = Object.keys(byTime).map(k=>({b:parseFloat(k), notes:byTime[k]})).sort((a,b)=>a.b-b.b);
+
+  let polySum = 0, changed = 0, prevSig = null, sync = 0, black = 0, notes = 0, maxSpan = 0;
+  for (const o of onsets){
+    polySum += o.notes.length;
+    const sig = o.notes.map(n=>n.midi).sort((a,b)=>a-b).join(",");
+    if (sig !== prevSig) changed++;
+    prevSig = sig;
+    if (Math.abs(o.b - Math.round(o.b)) > 0.01){
+      /* synkoperat först när slaget före är tomt — en åttondel på "och"
+         är underdelning, inte synkopering */
+      const beatBefore = Math.floor(o.b).toFixed(3);
+      if (!byTime[beatBefore]) sync++;
+    }
+    for (const n of o.notes){ notes++; if (isBlack(n.midi)) black++; }
+    const perHand = {R:[], L:[]};
+    o.notes.forEach(n=>perHand[n.hand].push(n.midi));
+    for (const h in perHand) if (perHand[h].length>1)
+      maxSpan = Math.max(maxSpan, Math.max.apply(null,perHand[h]) - Math.min.apply(null,perHand[h]));
+  }
+
+  /* melodiska intervall och positionsbyten, per hand */
+  const hands = {R:[], L:[]};
+  for (const o of onsets) for (const h of ["R","L"]){
+    const hs = o.notes.filter(n=>n.hand===h);
+    if (hs.length) hands[h].push({b:o.b, top:Math.max.apply(null,hs.map(n=>n.midi))});
+  }
+  let leapSum = 0, leapN = 0, shifts = 0, leapUp = 0, leapDown = 0;
+  for (const h of ["R","L"]){
+    const seq = hands[h];
+    for (let i=1;i<seq.length;i++){
+      const d = seq[i].top - seq[i-1].top;
+      leapSum += Math.abs(d); leapN++;
+      if (Math.abs(d) > 5){ shifts++; if (d>0) leapUp++; else leapDown++; }
+    }
+  }
+
+  /* händernas oberoende */
+  const rTimes = hands.R.map(x=>x.b.toFixed(3)).join("|");
+  const lTimes = hands.L.map(x=>x.b.toFixed(3)).join("|");
+  let independence = 0;
+  if (hands.L.length && hands.R.length) independence = (rTimes === lTimes) ? 1 : 2;
+
+  /* finaste underdelning */
+  let minGap = 4;
+  for (let i=1;i<onsets.length;i++) minGap = Math.min(minGap, onsets[i].b - onsets[i-1].b);
+  const subdivision = minGap <= 0.001 ? 1 : Math.max(0, Math.log2(1/Math.max(minGap,0.125)));
+
+  return {
+    nps: onsets.length/dur,
+    changeRatio: onsets.length ? changed/onsets.length : 1,
+    polyphony: onsets.length ? polySum/onsets.length : 1,
+    meanLeap: leapN ? leapSum/leapN : 0,
+    shiftsPerBar: shifts/4,
+    leapUp, leapDown,
+    maxSpan,
+    independence,
+    syncopation: onsets.length ? sync/onsets.length : 0,
+    blackRatio: notes ? black/notes : 0,
+    subdivision,
+    onsetCount: onsets.length
+  };
+}
+
+function costOf(shape){
+  const effNps = shape.nps * (0.42 + 0.58*shape.changeRatio);
+  return W.base
+    + W.density      * effNps
+    + W.polyphony    * Math.max(0, shape.polyphony-1)
+    + W.leap         * shape.meanLeap
+    + W.shift        * shape.shiftsPerBar
+    + W.span         * Math.max(0, shape.maxSpan-12)
+    + W.independence * shape.independence
+    + W.syncopation  * shape.syncopation
+    + W.black        * shape.blackRatio
+    + W.subdivision  * shape.subdivision;
+}
+
+/* En variant = progression + tonart + textur + tempo + taktart + swing.
+   Noterna genereras en gång och bär sin egen svårighet med sig. */
+function buildVariation(v){
+  const mat = realized(v.prog, v.tonic);
+  const bpb = v.meter;
+  const spb = 60/v.bpm;
+  const slots = slotsFor(mat, bpb);
+  const events = TEXTURES[v.texture].gen(slots, bpb);
+  const shape = shapeOf(events, spb, bpb);
+  shape.tempoFactor = v.bpm/80;
+  const cost = costOf(shape) * Math.pow(v.bpm/80, 1.25) + (v.swing ? 0.35 : 0);
+  return Object.assign({}, v, { mat, slots, events, shape, level: cost });
+}
+
+const varKey = v => [v.prog,v.tonic,v.texture,v.bpm,v.meter,v.swing?1:0].join("|");
+
+
+/* ==========================================================================
+   6. SPELARE (simulerad)
+   ========================================================================== */
+
+const AXES = ["tempo","span","leaps","shifts","independence","subdivision","syncopation","black","recovery"];
+const AXIS_LABEL = {
+  tempo:"Tempo", span:"Handspann", leaps:"Språng", shifts:"Positionsbyten",
+  independence:"Två händer", subdivision:"Underdelning", syncopation:"Synkopering",
+  black:"Svarta tangenter", recovery:"Återhämtning"
+};
+
+const player = {
+  trueLevel: 5.0,
+  /* dolda styrkor och svagheter — det motorn ska hitta */
+  weak: { tempo:+0.6, span:-0.3, leaps:+0.3, shifts:-0.5,
+          independence:-1.0, subdivision:-0.4, syncopation:-0.7, black:-0.5, recovery:-0.4 },
+  familiarity: {}
+};
+
+/* Vilka axlar en variant faktiskt belastar, 0..1 per axel. */
+function loadOf(v){
+  const s = v.shape;
+  return {
+    tempo:        Math.min(1, Math.max(0, (v.bpm-84)/28)),
+    span:         Math.min(1, Math.max(0, (s.maxSpan-8)/8)),
+    leaps:        Math.min(1, s.meanLeap/6),
+    shifts:       Math.min(1, s.shiftsPerBar/3),
+    independence: s.independence/2,
+    subdivision:  Math.min(1, s.subdivision/2),
+    syncopation:  Math.min(1, s.syncopation*2),
+    black:        Math.min(1, s.blackRatio*3),
+    recovery:     0.35
+  };
+}
+
+function effectiveSkill(v){
+  const load = loadOf(v);
+  let s = player.trueLevel;
+  for (const a of AXES) s += load[a]*player.weak[a];
+  const fam = player.familiarity[varKey(v)] || 0;
+  return s + Math.min(fam,4)*0.22;
+}
+
+function gauss(){
+  let u=0,x=0; while(u===0)u=Math.random(); while(x===0)x=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*x);
+}
+
+/* Avgör varje ton i förväg: träff, miss och timingfel. */
+function simulate(v){
+  const s = effectiveSkill(v);
+  const L = v.level;
+  let cascade = 0;
+  const lastBy = {R:null, L:null};
+  const out = v.events.map(e=>Object.assign({},e)).sort((a,b)=>a.b-b.b);
+  for (const ev of out){
+    const prev = lastBy[ev.hand];
+    const leap = prev===null ? 0 : Math.abs(ev.midi-prev);
+    lastBy[ev.hand] = ev.midi;
+
+    let d = L;
+    if (leap > 7) d += 0.45;
+    if (Math.abs(ev.b - Math.round(ev.b)) > 0.01) d += 0.3;
+    if (ev.hand === "L") d += 0.2;
+
+    const m = s + 1.7 - d - cascade;
+    ev.p = 1/(1+Math.exp(-m/0.75));
+    ev.hit = Math.random() < ev.p;
+    ev.after = cascade > 0.01;             /* spelades i skuggan av en miss */
+    cascade = ev.hit ? Math.max(0, cascade-0.16)
+                     : Math.min(0.7, cascade + 0.28 - player.weak.recovery*0.12);
+    const spread = 14 + 65*Math.max(0, d - s + 0.4);
+    ev.dt = gauss()*spread + (d > s ? 14 : 5);
+  }
+  return out;
+}
+
+
+/* ==========================================================================
+   7. MOTOR
+
+   Skattningen är hierarkisk: en allmän nivå plus en avvikelse per axel,
+   där avvikelsen krymps mot noll tills det finns observationer bakom den.
+   Det är enda sättet att bära nio axlar utan att drunkna i brus.
+   ========================================================================== */
+
+const PROBES = [
+  {texture:"rootsWhole",   bpm:80},
+  {texture:"rootsQuarter", bpm:80},
+  {texture:"triadWhole",   bpm:80},
+  {texture:"bassTriad",    bpm:80}
+];
+
+const engine = {
+  phase:"placement", probeIndex:0, probeResults:[],
+  est:null, sigma:1.15, target:null, current:null,
+  history:[], recent:[], recentTex:[], texRun:0, frame:null, frameRun:0,
+  cleanRun:0, loopsAtLevel:0,
+  layers:1, energy:.25,
+  breathIn:7, probeIn:9, progIn:6,
+  prog:"axeln", tonic:0,
+  safeHarbour:null, needsHarbour:false, preview:false,
+  fast:false,
+  /* per axel: summerad belastning och summerade fel, plus skattad avvikelse */
+  axis: {}
+};
+AXES.forEach(a=>{ engine.axis[a] = {load:0, miss:0, n:0, delta:0}; });
+
+function probeVariation(i){
+  const p = PROBES[i];
+  return buildVariation({prog:"axeln", tonic:0, texture:p.texture, bpm:p.bpm, meter:4, swing:false});
+}
+
+/* Hur säkra vi är på en axel: 0 = ingen aning, 1 = gott om data. */
+function axisConfidence(a){ return Math.min(1, engine.axis[a].load/6); }
+function axisWeak(a){ return axisConfidence(a) > 0.4 && engine.axis[a].delta < -0.45; }
+
+/* Alla varianter nära en målnivå. Byggs på begäran och cachas. */
+const VAR_CACHE = {};
+function candidates(target, tol){
+  const bpms = [64,72,80,88,96,104];
+  const out = [];
+  for (const texture of TEXTURE_IDS)
+    for (const bpm of bpms)
+      for (const meter of [4,3])
+        for (const swing of [false,true]){
+          const k = [engine.prog,engine.tonic,texture,bpm,meter,swing?1:0].join("|");
+          if (!VAR_CACHE[k]) VAR_CACHE[k] = buildVariation({prog:engine.prog, tonic:engine.tonic, texture, bpm, meter, swing});
+          const v = VAR_CACHE[k];
+          if (Math.abs(v.level-target) <= tol) out.push(v);
+        }
+  return out;
+}
+
+function chooseVariation(){
+  if (engine.phase === "placement"){ engine.preview = false; return probeVariation(engine.probeIndex); }
+
+  /* Progressionen roterar på sin egen, långsammare klocka. Musikalisk
+     variation är nästan gratis motoriskt och ska inte konkurrera om
+     samma en-axel-i-taget-budget som texturen. */
+  if (engine.progIn <= 0){
+    const pool = LIBRARY.filter(p=>p.id !== engine.prog &&
+      (engine.est > 5.5 || p.numerals.length <= 4));
+    const p = pool[Math.floor(Math.random()*pool.length)];
+    engine.prog = p.id;
+    if (engine.est > 6.5 && Math.random() < 0.3){
+      const k = KEYS[Math.floor(Math.random()*KEYS.length)];
+      engine.tonic = k.tonic;
+    } else if (p.mode === "minor" && engine.tonic === 0) engine.tonic = 9;
+    else if (p.mode === "major" && engine.tonic === 9) engine.tonic = 0;
+    engine.progIn = 6;
+    log(`Ny progression: ${p.name} (${p.numerals.join(" ")}) — ${p.mood}.`, "");
+    caption("Progressionen byts på egen klocka. Nya ackord är stor musikalisk variation och nästan ingen motorisk kostnad.");
+  }
+
+  const prev = engine.current;
+  let target = engine.target, intent = null;
+
+  if (engine.phase === "groove" && engine.probeIn <= 0 && engine.cleanRun >= 2){
+    target = engine.target + 1.1; intent = "probe"; engine.probeIn = 9;
+  } else if (engine.needsHarbour && engine.safeHarbour){
+    engine.needsHarbour = false; engine.preview = false;
+    const h = Object.assign({}, engine.safeHarbour, {intent:"harbour"});
+    return h;
+  }
+
+  let pool = candidates(target, intent==="probe" ? 0.5 : 0.45);
+  if (!pool.length) pool = candidates(target, 1.0);
+  if (!pool.length) pool = [probeVariation(2)];
+  if (engine.texRun >= 3 && prev){
+    const other = pool.filter(v=>v.texture !== prev.texture);
+    if (other.length) pool = other;
+  }
+
+  const scored = pool.map(v=>{
+    let score = Math.random()*1.2;
+    if (prev){
+      let diffs = 0;
+      if (v.texture !== prev.texture) diffs++;
+      if (Math.abs(v.bpm-prev.bpm) > 2) diffs++;
+      if (v.meter !== prev.meter) diffs++;
+      if (!!v.swing !== !!prev.swing) diffs++;
+      score += diffs===1 ? 2.5 : diffs===2 ? 1.5 : diffs===0 ? -8 : -1;
+    }
+    const i = engine.recent.indexOf(varKey(v));
+    score += i>=0 ? -(6-i) : 2;
+    const ti = engine.recentTex.indexOf(v.texture);
+    score += ti>=0 ? -(4-ti)*1.4 : 2.5;
+
+    /* stapla aldrig två axlar spelaren redan visat sig svag på */
+    const load = loadOf(v);
+    let weak = 0;
+    for (const a of AXES) if (load[a] > 0.45 && axisWeak(a)) weak++;
+    if (weak >= 2) score -= 5; else if (weak === 1) score -= 2;
+    return {v, score};
+  });
+  scored.sort((a,b)=>b.score-a.score);
+
+  const pick = Object.assign({}, scored[0].v, {intent});
+  engine.preview = !!(prev && pick.shape.independence > 0 && prev.shape.independence === 0);
+  return pick;
+}
+
+function updateEngine(st){
+  const v = engine.current, acc = st.acc;
+
+  if (engine.phase === "placement"){
+    engine.probeResults.push({level:v.level, acc});
+    log(`Prov ${engine.probeIndex+1}: ${TEXTURES[v.texture].label} — ${Math.round(acc*100)} %`);
+    const failed = acc < 0.72;
+    engine.probeIndex++;
+    if (failed || engine.probeIndex >= PROBES.length){
+      let passed = 0.8, ceiling = 99;
+      for (const r of engine.probeResults) if (r.acc >= 0.82) passed = r.level;
+      for (const r of engine.probeResults) if (r.acc < 0.72){ ceiling = r.level-0.4; break; }
+      engine.est = Math.max(1.2, Math.min(passed+1.0, ceiling));
+      engine.target = Math.max(1, engine.est-1.0);
+      engine.phase = "zoom"; engine.sigma = 1.15;
+      log(`Placering klar. Skattning ${engine.est.toFixed(1)} — startar på ${engine.target.toFixed(1)}.`, "phase");
+      caption("Start ett steg under skattningen. Ett bra första varv avgör om någon stannar, och fel nedåt är billigt.");
+    }
+    return;
+  }
+
+  /* allmän nivå */
+  const expected = 1/(1+Math.exp(-((engine.est+1.7)-v.level)/0.75));
+  let signal = acc - expected;
+  if (acc >= 0.99) signal += st.sd < 25 ? 0.12 : 0.05;
+  const load = loadOf(v);
+  let weakLoad = 0;
+  for (const a of AXES) if (axisWeak(a)) weakLoad = Math.max(weakLoad, load[a]);
+  if (signal < 0) signal *= (1 - 0.55*weakLoad);      /* svag axel får inte sänka helheten */
+  engine.est = Math.max(1, Math.min(14, engine.est + 2.4*engine.sigma*signal));
+  engine.sigma = Math.max(0.32, engine.sigma*(engine.fast ? 0.86 : 0.91));
+
+  /* axlarna: avvikelse från den allmänna nivån, krympt mot noll
+     tills det finns observationer bakom den */
+  for (const a of AXES){
+    const l = load[a];
+    if (l < 0.2) continue;
+    const ax = engine.axis[a];
+    ax.load += l; ax.n++;
+    ax.miss += l*(1-acc);
+    const observed = (acc - expected);
+    const k = 0.5*l*Math.min(1, ax.load/4);
+    ax.delta = ax.delta*(1-k*0.35) + observed*k*2.2;
+  }
+
+  if (acc >= 0.97 && v.level > engine.target-1.6 &&
+      (!engine.safeHarbour || v.level >= engine.safeHarbour.level)){
+    engine.safeHarbour = Object.assign({}, v, {intent:null});
+  }
+
+  if (engine.phase === "zoom"){
+    engine.target = Math.max(1, engine.est-0.4);
+    if (engine.history.length >= (engine.fast?4:6) && engine.sigma < 0.6){
+      engine.phase = "groove"; engine.target = engine.est;
+      log(`Nivån har satt sig på ${engine.est.toFixed(1)}. Nu bor vi här.`, "phase");
+      caption("Nivån sitter. Härifrån är normaltillståndet att inte höja — vilan är produkten, inte pausen mellan framstegen.");
+    }
+    return;
+  }
+
+  engine.probeIn--; engine.breathIn--; engine.progIn--;
+
+  if (v.intent === "probe"){
+    log(`Tyst prov på nivå ${v.level.toFixed(1)} — ${Math.round(acc*100)} %`, acc>=0.85?"up":"");
+    if (acc < 0.7) engine.needsHarbour = true;
+    return;
+  }
+
+  if (acc >= 0.94){
+    engine.cleanRun++;
+    if (st.sd < 42 && engine.cleanRun >= 3 && engine.loopsAtLevel >= 3){
+      engine.target += 0.45; engine.est += 0.1;
+      engine.cleanRun = 0; engine.loopsAtLevel = 0;
+      log(`Tre rena varv, jämn timing (${Math.round(st.sd)} ms) — höjer till ${engine.target.toFixed(1)}.`, "up");
+      caption("Tre rena varv i rad och samlad timing. Ett rent varv kan vara tur; tre betyder att mönstret sitter i handen.");
+    }
+  } else if (acc < 0.8){
+    engine.cleanRun = 0; engine.needsHarbour = true;
+    engine.target = Math.max(1, engine.target-0.3);
+    log(`${Math.round(acc*100)} % — sänker tyst och lägger in något som sitter.`, "down");
+    caption("Ingen ruta, ingen fanfar. Musiken rullar vidare och nästa varv blir något hon redan äger.");
+  } else engine.cleanRun = 0;
+
+  engine.loopsAtLevel++;
+
+  const want = Math.min(5, 1+Math.floor(engine.history.filter(h=>h.acc>=0.9).length/2));
+  if (want > engine.layers && acc >= 0.9){
+    engine.layers++;
+    const names = ["","padda","hi-hat","bas","bastrumma","virvel"];
+    log(`Lager in: ${names[engine.layers]}.`, "up");
+  }
+  engine.energy = Math.max(.15, Math.min(1, .25 + engine.layers*.15 + (acc-.8)));
+}
+
+
+/* ==========================================================================
+   8. LJUD
+   ========================================================================== */
+
+let ctx=null, master=null, musicGain=null, noiseBuf=null, soundOn=true;
+
+function ensureAudio(){
+  if (ctx) return;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  ctx = new AC();
+  master = ctx.createGain(); master.gain.value = .9;
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -14; comp.ratio.value = 4;
+  master.connect(comp); comp.connect(ctx.destination);
+  musicGain = ctx.createGain(); musicGain.gain.value = soundOn?1:0; musicGain.connect(master);
+  const len = ctx.sampleRate*0.5;
+  noiseBuf = ctx.createBuffer(1,len,ctx.sampleRate);
+  const d = noiseBuf.getChannelData(0);
+  for (let i=0;i<len;i++) d[i] = Math.random()*2-1;
+}
+const mtof = m => 440*Math.pow(2,(m-69)/12);
+
+function piano(t,midi,dur,gain,hand){
+  if (!ctx) return;
+  const g=ctx.createGain(), f=ctx.createBiquadFilter();
+  f.type="lowpass"; f.frequency.setValueAtTime(hand==="L"?1300:2900,t);
+  const o1=ctx.createOscillator(), o2=ctx.createOscillator(), g2=ctx.createGain();
+  o1.type="triangle"; o2.type="sine"; g2.gain.value=.2;
+  o1.frequency.value=mtof(midi); o2.frequency.value=mtof(midi)*2.001;
+  o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(f); f.connect(musicGain);
+  g.gain.setValueAtTime(.0001,t);
+  g.gain.exponentialRampToValueAtTime(gain,t+.012);
+  g.gain.exponentialRampToValueAtTime(gain*.3,t+.25);
+  g.gain.exponentialRampToValueAtTime(.0001,t+Math.max(.35,dur));
+  o1.start(t); o2.start(t); o1.stop(t+dur+.5); o2.stop(t+dur+.5);
+}
+function pad(t,midis,dur,open){
+  if (!ctx) return;
+  const g=ctx.createGain(), f=ctx.createBiquadFilter();
+  f.type="lowpass"; f.frequency.setValueAtTime(400+open*1900,t); f.Q.value=.7;
+  g.connect(f); f.connect(musicGain);
+  g.gain.setValueAtTime(.0001,t);
+  g.gain.exponentialRampToValueAtTime(.08,t+.5);
+  g.gain.setValueAtTime(.08,t+dur*.7);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  midis.forEach((m,i)=>{
+    const o=ctx.createOscillator(), og=ctx.createGain();
+    o.type = i===0?"triangle":"sawtooth";
+    o.frequency.value=mtof(m-12); o.detune.value=(i-1)*6;
+    og.gain.value = i===0?.5:.2;
+    o.connect(og); og.connect(g); o.start(t); o.stop(t+dur+.4);
+  });
+}
+function kick(t,v){ if(!ctx)return;
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  o.frequency.setValueAtTime(125,t); o.frequency.exponentialRampToValueAtTime(44,t+.11);
+  g.gain.setValueAtTime(v*.85,t); g.gain.exponentialRampToValueAtTime(.0001,t+.22);
+  o.connect(g); g.connect(musicGain); o.start(t); o.stop(t+.25); }
+function noiseHit(t,v,hp,dur){ if(!ctx||!noiseBuf)return;
+  const s=ctx.createBufferSource(); s.buffer=noiseBuf;
+  const f=ctx.createBiquadFilter(); f.type="highpass"; f.frequency.value=hp;
+  const g=ctx.createGain(); g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  s.connect(f); f.connect(g); g.connect(musicGain); s.start(t); s.stop(t+dur+.05); }
+function snare(t,v){ noiseHit(t,v*.5,1400,.16); if(!ctx)return;
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  o.type="triangle"; o.frequency.setValueAtTime(215,t);
+  g.gain.setValueAtTime(v*.3,t); g.gain.exponentialRampToValueAtTime(.0001,t+.1);
+  o.connect(g); g.connect(musicGain); o.start(t); o.stop(t+.12); }
+function bassNote(t,midi,dur){ if(!ctx)return;
+  const o=ctx.createOscillator(), g=ctx.createGain(), f=ctx.createBiquadFilter();
+  f.type="lowpass"; f.frequency.value=520; o.type="triangle"; o.frequency.value=mtof(midi-12);
+  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.16,t+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g); g.connect(f); f.connect(musicGain); o.start(t); o.stop(t+dur+.2); }
+
+
+/* ==========================================================================
+   9. VARVET
+
+   Nästa varv beslutas och schemaläggs medan det nuvarande fortfarande
+   låter — senast en takt före sista tonen. Musiken får aldrig stanna för
+   att motorn tänker.
+   ========================================================================== */
+
+const state = { running:false, started:false, loops:[], startedAt:0, loopIndex:0, shown:null, ending:false, mode:null };
+const flashes = [];
+
+function nearestScaleTone(midi, scale){
+  for (let d=1; d<=3; d++) for (const s of [midi-d, midi+d])
+    if (scale.indexOf(((s%12)+12)%12) >= 0) return s;
+  return midi-1;
+}
+
+function scheduleLoop(t0){
+  const v = chooseVariation();
+  engine.current = v;
+  const bpb = v.meter, spb = 60/v.bpm;
+  const swing = v.swing ? .14*spb : 0;
+  const barDur = bpb*spb, loopDur = bpb*4*spb, t1 = t0+loopDur;
+  const played = simulate(v);
+  const breath = engine.breathIn <= 0;
+  if (breath) engine.breathIn = 8;
+  const preview = engine.preview;
+
+  const loop = {
+    v, t0, t1, spb, bpb, breath, preview, layers: engine.layers,
+    commitAt: Math.max(t0+loopDur*.5, t1 - Math.max(2.9, barDur)),
+    committed:false, index: ++state.loopIndex, events:[]
+  };
+
+  loop.events = played.map(ev=>{
+    const off = (swing && Math.abs(ev.b%1-.5)<.01) ? swing : 0;
+    const base = t0 + ev.b*spb + off;
+    const ghost = preview && ev.hand==="L";
+    return Object.assign({}, ev, {t:base, tPlay: base + (ghost?0:ev.dt/1000), ghost, flashed:false});
+  });
+
+  for (const ev of loop.events){
+    if (ev.ghost){ piano(ev.tPlay, ev.midi, ev.dur*spb, .1, ev.hand); continue; }
+    if (ev.hit) piano(ev.tPlay, ev.midi, ev.dur*spb, ev.hand==="L"?.2:.26, ev.hand);
+    /* missen faller inom skalan och passerar som en dissonans, inte som tystnad */
+    else piano(ev.tPlay, nearestScaleTone(ev.midi, v.mat.scale), ev.dur*spb*.6, .09, ev.hand);
+  }
+
+  const L = engine.layers, open = engine.energy;
+  for (let bar=0; bar<4; bar++){
+    const slot = v.slots[Math.floor(bar*v.slots.length/4)];
+    const bt = t0 + bar*barDur;
+    pad(bt, slot.rh, barDur, open);
+    if (L>=3) bassNote(bt, slot.bass, barDur*.85);
+    if (breath) continue;
+    for (let beat=0; beat<bpb; beat++){
+      const tb = bt+beat*spb;
+      if (L>=2){ noiseHit(tb,.06+open*.05,7000,.03); noiseHit(tb+spb/2,.05+open*.05,7000,.03); }
+      if (L>=4 && (beat===0 || (bpb===4 && beat===2))) kick(tb,.5+open*.4);
+      if (L>=5 && bpb===4 && (beat===1||beat===3)) snare(tb,.32+open*.2);
+      if (L>=5 && bpb===3 && beat===2) snare(tb,.3);
+    }
+    if (L>=4 && bar===3) noiseHit(bt+(bpb-.5)*spb,.14,2500,.12);
+  }
+
+  logLoop(loop);
+  state.loops.push(loop);
+  return loop;
+}
+
+function logLoop(loop){
+  const v = loop.v;
+  const extra = [];
+  if (v.meter===3) extra.push("3/4");
+  if (v.swing) extra.push("swing");
+  const tag = extra.length ? " · "+extra.join(" · ") : "";
+  if (v.intent==="harbour") log(`Mjuk landning: ${TEXTURES[v.texture].label} — något som sitter.`);
+  else if (v.intent==="probe") log(`Tyst prov: ${TEXTURES[v.texture].label}, ${v.bpm} bpm${tag}`);
+  else if (engine.phase!=="placement")
+    log(`Varv ${loop.index}: ${TEXTURES[v.texture].label}, ${v.bpm} bpm${tag} — nivå ${v.level.toFixed(1)}`);
+  if (loop.preview){ log("Appen spelar vänsterhanden först."); caption("Appen spelar in det nya lagret ett varv medan hon fortsätter i höger. Nästa varv är det hennes tur — hon har redan hört hur det ska låta."); }
+  if (loop.breath) log("Trummorna ut ett varv — andrum.");
+}
+
+/* Beslut på det som redan spelats, tillämpat på nästa etta. */
+function commitLoop(loop){
+  loop.committed = true;
+  const done = loop.events.filter(e=>!e.ghost && e.t < loop.commitAt);
+  const total = done.length || 1;
+  const hits = done.filter(e=>e.hit).length;
+  const acc = hits/total;
+  const errs = done.filter(e=>e.hit).map(e=>e.dt);
+  const mean = errs.reduce((a,b)=>a+b,0)/(errs.length||1);
+  const sd = Math.sqrt(errs.reduce((a,b)=>a+(b-mean)*(b-mean),0)/(errs.length||1));
+  const after = done.filter(e=>e.after);
+  const rec = after.length ? after.filter(e=>!e.hit).length/after.length : null;
+
+  const k = varKey(loop.v);
+  player.familiarity[k] = (player.familiarity[k]||0)+1;
+  engine.recent.unshift(k); if (engine.recent.length>7) engine.recent.pop();
+  const fk = [loop.v.meter, loop.v.swing?1:0, loop.v.prog].join("|");
+  engine.frameRun = engine.frame===fk ? engine.frameRun+1 : 1; engine.frame = fk;
+  engine.texRun = engine.recentTex[0]===loop.v.texture ? engine.texRun+1 : 1;
+  engine.recentTex.unshift(loop.v.texture); if (engine.recentTex.length>4) engine.recentTex.pop();
+  engine.history.push({level:loop.v.level, acc, sd, est:engine.est});
+
+  updateEngine({acc, sd, total, missed:total-hits});
+  updatePanels(acc, sd, rec, loop.v);
+
+  const limit = state.mode==="demo" ? 186 : 300;
+  if (elapsed() > limit){
+    log("Slut på demot. Spelaren bor på sin nivå och kompet rullar.", "phase");
+    caption("Det här är tillståndet produkten siktar på: rätt nivå, ständig variation, och ingenting som stannar musiken.");
+    state.ending = true;
+    return;
+  }
+  scheduleLoop(loop.t1);
+}
+
+
+/* ==========================================================================
+   10. BILD
+   ========================================================================== */
+
+const lane = document.getElementById("lane");
+const lctx = lane.getContext("2d");
+const LOW = 38, HIGH = 81;
+const whites = [];
+for (let m=LOW;m<=HIGH;m++) if (!isBlack(m)) whites.push(m);
+
+function keyRect(midi, W){
+  const ww = W/whites.length;
+  if (!isBlack(midi)){ const i = whites.indexOf(midi); return {x:i*ww+.5, w:ww-1}; }
+  const i = whites.indexOf(midi-1), bw = ww*.62;
+  return {x:(i+1)*ww-bw/2, w:bw};
+}
+function resizeCanvas(cv){
+  const dpr = Math.min(window.devicePixelRatio||1,2);
+  const r = cv.getBoundingClientRect();
+  cv.width = Math.max(1,Math.round(r.width*dpr));
+  cv.height = Math.max(1,Math.round(r.height*dpr));
+  cv.getContext("2d").setTransform(dpr,0,0,dpr,0,0);
+  return {w:r.width, h:r.height};
+}
+let laneSize = {w:340,h:352};
+
+function flashColor(f, now){
+  const a = Math.max(0,1-(now-f.at)/.3)*.92;
+  if (f.ghost) return `rgba(243,236,224,${a*.45})`;
+  if (!f.hit)  return `rgba(226,96,127,${a})`;
+  return f.hand==="L" ? `rgba(122,168,255,${a})` : `rgba(255,201,77,${a})`;
+}
+
+function drawLane(){
+  const {w:W,h:H} = laneSize;
+  const kbH = 62, laneH = H-kbH, look = 2.6, pps = laneH/look;
+  const now = ctx ? ctx.currentTime : 0;
+
+  lctx.clearRect(0,0,W,H);
+  lctx.fillStyle = "#16242b"; lctx.fillRect(0,0,W,H);
+
+  lctx.strokeStyle = "rgba(43,70,80,.9)"; lctx.lineWidth = 1;
+  for (const loop of state.loops) for (let bar=0;bar<=4;bar++){
+    const y = laneH - (loop.t0+bar*loop.bpb*loop.spb-now)*pps;
+    if (y>0 && y<laneH){ lctx.beginPath(); lctx.moveTo(0,y); lctx.lineTo(W,y); lctx.stroke(); }
+  }
+
+  for (const loop of state.loops) for (const ev of loop.events){
+    if (!ev.flashed && now >= ev.tPlay){
+      ev.flashed = true;
+      flashes.push({midi:ev.midi, at:ev.tPlay, hit:ev.hit, ghost:ev.ghost, hand:ev.hand});
+    }
+    const y = laneH-(ev.t-now)*pps, h = Math.max(7, ev.dur*loop.spb*pps);
+    if (y < -h || y-h > laneH+40) continue;
+    const r = keyRect(ev.midi,W), passed = now > ev.t;
+    lctx.fillStyle = ev.ghost ? "rgba(243,236,224,.26)"
+      : (passed && !ev.hit) ? "rgba(226,96,127,.72)"
+      : ev.hand==="L" ? "#7aa8ff" : "#ffc94d";
+    const top = Math.min(y,laneH)-h, bh = Math.min(h, laneH-top);
+    if (bh>0){
+      const rad = Math.min(4,r.w/3), x=r.x, ww=r.w, yy=top, hh=bh;
+      lctx.beginPath();
+      lctx.moveTo(x+rad,yy);
+      lctx.lineTo(x+ww-rad,yy); lctx.quadraticCurveTo(x+ww,yy,x+ww,yy+rad);
+      lctx.lineTo(x+ww,yy+hh-rad); lctx.quadraticCurveTo(x+ww,yy+hh,x+ww-rad,yy+hh);
+      lctx.lineTo(x+rad,yy+hh); lctx.quadraticCurveTo(x,yy+hh,x,yy+hh-rad);
+      lctx.lineTo(x,yy+rad); lctx.quadraticCurveTo(x,yy,x+rad,yy);
+      lctx.fill();
+    }
+  }
+
+  lctx.strokeStyle = "rgba(243,236,224,.45)"; lctx.lineWidth = 2;
+  lctx.beginPath(); lctx.moveTo(0,laneH); lctx.lineTo(W,laneH); lctx.stroke();
+
+  /* Klaviaturen ritas i lager så att en vit tangent som lyser aldrig
+     målar över sina svarta grannar. Bara den tryckta tangenten lyser. */
+  for (let i=0;i<flashes.length;i++){
+    const age = now-flashes[i].at;
+    if (age>.3 || age<0){ flashes.splice(i,1); i--; }
+  }
+  const ww = W/whites.length;
+  lctx.fillStyle = "#f3ece0";
+  for (let i=0;i<whites.length;i++) lctx.fillRect(i*ww+.5, laneH+2, ww-1, kbH-4);
+  for (const f of flashes){
+    if (isBlack(f.midi)) continue;
+    const r = keyRect(f.midi,W);
+    lctx.fillStyle = flashColor(f,now); lctx.fillRect(r.x, laneH+2, r.w, kbH-4);
+  }
+  lctx.fillStyle = "#1d3038";
+  for (let m=LOW;m<=HIGH;m++){ if(!isBlack(m)) continue;
+    const r = keyRect(m,W); lctx.fillRect(r.x, laneH+2, r.w, kbH*.6); }
+  for (const f of flashes){
+    if (!isBlack(f.midi)) continue;
+    const r = keyRect(f.midi,W);
+    lctx.fillStyle = flashColor(f,now); lctx.fillRect(r.x, laneH+2, r.w, kbH*.6);
+  }
+}
+
+const chart = document.getElementById("chart");
+const cctx = chart.getContext("2d");
+let chartSize = {w:300,h:72};
+function drawChart(){
+  const {w:W,h:H} = chartSize;
+  cctx.clearRect(0,0,W,H);
+  const cs = getComputedStyle(document.body);
+  const border = cs.getPropertyValue("--border").trim()||"#ddd";
+  const muted = cs.getPropertyValue("--muted").trim()||"#888";
+  const accent = cs.getPropertyValue("--accent").trim()||"#1f6f6a";
+  const maxL = 12, pad = 6;
+  const y = L => H-pad-(L/maxL)*(H-pad*2);
+  const n = Math.max(22, engine.history.length);
+  const x = i => pad+(i/(n-1))*(W-pad*2);
+  cctx.strokeStyle = border; cctx.lineWidth = 1;
+  cctx.beginPath(); cctx.moveTo(0,y(0)); cctx.lineTo(W,y(0)); cctx.stroke();
+  cctx.strokeStyle = muted; cctx.setLineDash([3,3]); cctx.lineWidth = 1.5;
+  cctx.beginPath(); cctx.moveTo(0,y(player.trueLevel)); cctx.lineTo(W,y(player.trueLevel)); cctx.stroke();
+  cctx.setLineDash([]);
+  engine.history.forEach((h,i)=>{
+    cctx.fillStyle = h.acc>=.94 ? "#2e8b7a" : h.acc>=.8 ? "#ffc94d" : "#e2607f";
+    cctx.beginPath(); cctx.arc(x(i),y(h.level),2.6,0,Math.PI*2); cctx.fill();
+  });
+  cctx.strokeStyle = accent; cctx.lineWidth = 2; cctx.beginPath();
+  let started = false;
+  engine.history.forEach((h,i)=>{
+    if (h.est==null) return;
+    const px=x(i), py=y(h.est);
+    if (!started){ cctx.moveTo(px,py); started=true; } else cctx.lineTo(px,py);
+  });
+  if (started) cctx.stroke();
+}
+
+
+/* ==========================================================================
+   11. GRÄNSSNITT
+   ========================================================================== */
+
+const el = id => document.getElementById(id);
+/* ctx.currentTime kan mycket väl vara exakt 0 i en färsk AudioContext,
+   så starten måste markeras med en flagga och inte med en tidsstämpel */
+function elapsed(){ return (ctx && state.started) ? ctx.currentTime-state.startedAt : 0; }
+function clock(){ const s = Math.max(0,Math.floor(elapsed())); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); }
+
+function log(msg, kind){
+  const box = el("log");
+  const d = document.createElement("div");
+  d.className = "entry"+(kind?" "+kind:"");
+  const t = document.createElement("span"); t.className="t"; t.textContent=clock();
+  const m = document.createElement("span"); m.className="m"; m.textContent=msg;
+  d.appendChild(t); d.appendChild(m);
+  box.insertBefore(d, box.firstChild);
+  while (box.children.length>60) box.removeChild(box.children[box.children.length-1]);
+}
+let captionUntil = 0;
+function caption(text){
+  if (state.mode !== "demo") return;
+  el("caption").textContent = text;
+  captionUntil = (ctx?ctx.currentTime:0)+11;
+}
+
+function row(name, frac, val, weak, dim){
+  const d = document.createElement("div"); d.className = "row";
+  const n = document.createElement("span"); n.className="name"; n.textContent=name;
+  const tr = document.createElement("span"); tr.className="track";
+  const i = document.createElement("i");
+  i.style.width = Math.max(0,Math.min(100,frac*100)).toFixed(0)+"%";
+  if (weak) i.className = "weak"; if (dim) i.className += " dim";
+  tr.appendChild(i);
+  const v = document.createElement("span"); v.className="val"; v.textContent=val;
+  d.appendChild(n); d.appendChild(tr); d.appendChild(v);
+  return d;
+}
+
+function updatePanels(acc, sd, rec, v){
+  el("m-est").textContent = engine.est==null?"—":engine.est.toFixed(1);
+  el("m-true").textContent = player.trueLevel.toFixed(1);
+  el("m-sigma").textContent = "±"+engine.sigma.toFixed(2);
+  el("m-acc").textContent = Math.round(acc*100)+" %";
+  el("m-sd").textContent = Math.round(sd)+" ms";
+  el("m-rec").textContent = rec==null ? "–" : Math.round(rec*100)+" %";
+
+  const s = v.shape, shape = el("shape"); shape.innerHTML = "";
+  shape.appendChild(row("Anslag/sek", s.nps/6, s.nps.toFixed(1)));
+  shape.appendChild(row("Samtidiga", (s.polyphony-1)/2, s.polyphony.toFixed(1)));
+  shape.appendChild(row("Intervall", s.meanLeap/8, Math.round(s.meanLeap)));
+  shape.appendChild(row("Positionsbyten", s.shiftsPerBar/3, s.shiftsPerBar.toFixed(1)));
+  shape.appendChild(row("Handspann", s.maxSpan/16, s.maxSpan));
+  shape.appendChild(row("Två händer", s.independence/2, ["nej","samma","olika"][s.independence]));
+  shape.appendChild(row("Synkopering", s.syncopation, Math.round(s.syncopation*100)+"%"));
+  shape.appendChild(row("Svarta", s.blackRatio, Math.round(s.blackRatio*100)+"%"));
+
+  const box = el("axes"); box.innerHTML = "";
+  for (const a of AXES){
+    const ax = engine.axis[a], conf = axisConfidence(a);
+    const rel = 0.5 + ax.delta*0.55;
+    box.appendChild(row(AXIS_LABEL[a], conf<0.15?0:rel,
+      conf<0.15 ? "–" : (ax.delta>=0?"+":"")+ax.delta.toFixed(1),
+      axisWeak(a), conf<0.5));
+  }
+  drawChart();
+}
+
+function updateChips(loop){
+  const v = loop.v;
+  const p = LIBRARY.find(x=>x.id===v.prog);
+  const keyName = (KEYS.find(k=>k.tonic===v.tonic)||{name:PC_NAMES[v.tonic]}).name;
+  el("c-prog").textContent = p.name+" i "+keyName;
+  el("c-texture").textContent = TEXTURES[v.texture].label;
+  el("c-bpm").textContent = v.bpm+" bpm"+(v.meter===3?" · 3/4":"")+(v.swing?" · swing":"");
+  const names = ["","padda","padda + hi-hat","padda + bas","+ bastrumma","fullt komp"];
+  el("c-layers").textContent = loop.breath ? "andrum" : names[loop.layers];
+  el("c-texture").className = "chip"+(v.shape.independence>0?" two":"");
+}
+
+function frame(){
+  drawLane();
+  if (ctx && state.loops.length){
+    const now = ctx.currentTime;
+    const newest = state.loops[state.loops.length-1];
+    if (state.running && !newest.committed && now >= newest.commitAt){
+      commitLoop(newest);
+      if (state.ending) stop();
+    }
+    for (const loop of state.loops)
+      if (now>=loop.t0 && now<loop.t1 && state.shown!==loop){ state.shown=loop; updateChips(loop); }
+    while (state.loops.length>2 && state.loops[0].t1 < now-.5) state.loops.shift();
+    if (captionUntil && now>captionUntil){ el("caption").textContent=""; captionUntil=0; }
+  }
+  requestAnimationFrame(frame);
+}
+
+function begin(mode){
+  ensureAudio();
+  if (ctx.state==="suspended") ctx.resume();
+  if (state.started) return;
+  state.started = true;
+  state.mode = mode;
+  engine.fast = (mode==="demo");
+  state.running = true;
+  state.startedAt = ctx.currentTime;
+  el("btn-demo").disabled = true; el("btn-free").disabled = true;
+  log("Placering: fyra korta prov i C, samma padda, 80 bpm.","phase");
+  if (mode==="demo") caption("Fyra prov i stigande svårighet. Motorn stannar vid första riktiga misslyckandet — ingen ska plöja igenom något som uppenbart är för svårt.");
+  scheduleLoop(ctx.currentTime+.3);
+}
+function stop(){ state.running=false; }
+
+el("btn-demo").addEventListener("click", ()=>begin("demo"));
+el("btn-free").addEventListener("click", ()=>begin("free"));
+el("btn-reset").addEventListener("click", ()=>location.reload());
+el("btn-sound").addEventListener("click", ()=>{
+  soundOn = !soundOn;
+  if (musicGain) musicGain.gain.value = soundOn?1:0;
+  el("btn-sound").textContent = soundOn?"Ljud på":"Ljud av";
+  el("btn-sound").setAttribute("aria-pressed", soundOn?"true":"false");
+});
+el("truelevel").addEventListener("input", e=>{
+  player.trueLevel = parseFloat(e.target.value);
+  el("truelevel-v").textContent = player.trueLevel.toFixed(1);
+  el("m-true").textContent = player.trueLevel.toFixed(1);
+  drawChart();
+});
+
+function onResize(){ laneSize = resizeCanvas(lane); chartSize = resizeCanvas(chart); drawChart(); }
+window.addEventListener("resize", onResize);
+onResize();
+drawLane();
+drawChart();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
