@@ -1,0 +1,39 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Behörigheterna deploy-pages behöver: läsa koden, skriva en Pages-deploy
+# och hämta OIDC-token som deployen autentiseras med.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# En deploy i taget. Pågående deploy får slutföras — att avbryta den mitt i
+# kan lämna sajten i ett halvpublicerat läge.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+
+      # Prototypen är statisk och byggs inte. Hela reporoten laddas upp
+      # som den är; index.html hamnar på sajtens rot.
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
