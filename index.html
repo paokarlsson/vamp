@@ -38,6 +38,7 @@
   }
 
   *{box-sizing:border-box}
+  [hidden]{display:none !important}
   html,body{margin:0;padding:0}
   body{
     background:var(--surface); color:var(--text);
@@ -67,6 +68,15 @@
   .chip.two{background:rgba(122,168,255,.18);color:var(--hand-l)}
   .readout .grow{flex:1}
 
+  /* ---------- keyboard ---------- */
+  .device{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--muted)}
+  .device .grow{flex:1}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex:none}
+  .dot.on{background:var(--good)}
+  .check{display:flex;align-items:center;gap:6px;cursor:pointer}
+  .check input{accent-color:var(--accent);margin:0}
+  button.small{font-size:13px;padding:6px 11px;border-radius:8px}
+
   #caption{
     min-height:44px;display:flex;align-items:center;
     padding:11px 14px;margin-top:10px;
@@ -88,6 +98,8 @@
   button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
   button:disabled{opacity:.45;cursor:default}
+  button.transport{display:inline-flex;align-items:center;gap:8px;min-width:118px;justify-content:center}
+  button.transport svg{flex:none}
 
   .slider{display:flex;align-items:center;gap:10px;margin:12px 0 0;font-size:13.5px;color:var(--muted)}
   .slider input{flex:1;accent-color:var(--accent)}
@@ -139,7 +151,7 @@
 <div class="wrap">
 
 <h1 class="mark">vamp</h1>
-<p class="tag">Fyra ackord, en loop, och en motor som håller dig precis på din nivå. Spelaren nedan är simulerad — sann nivå 5, med dolda svagheter som motorn ska hitta.</p>
+<p class="tag">Fyra ackord, en loop, och en motor som håller dig precis på din nivå. Anslut ett MIDI-keyboard och tryck Spela.</p>
 
 <div class="stage">
   <canvas id="lane"></canvas>
@@ -152,27 +164,42 @@
   </div>
 </div>
 
+<div class="device">
+  <span class="dot" id="midi-dot"></span>
+  <span id="midi-status">Letar efter MIDI-keyboard…</span>
+  <span class="grow"></span>
+  <button class="small" id="btn-midi" hidden>Anslut keyboard</button>
+  <label class="check" id="echo-wrap" hidden><input type="checkbox" id="echo" checked> Mina toner i appen</label>
+</div>
+
 <div id="caption"></div>
 
 <div class="controls">
-  <button class="primary" id="btn-demo">Spela demo</button>
-  <button id="btn-free">Fritt läge</button>
+  <button class="primary transport" id="btn-play" disabled></button>
   <button id="btn-sound" aria-pressed="true">Ljud på</button>
   <button id="btn-reset">Börja om</button>
 </div>
 
-<div class="slider">
-  <label for="truelevel">Spelarens sanna nivå</label>
-  <input type="range" id="truelevel" min="2" max="10" step="0.5" value="5">
-  <b id="truelevel-v">5.0</b>
+<div class="panel">
+  <h2>Utan keyboard</h2>
+  <p class="hint">För att visa idén utan instrument. Spelaren är simulerad: reglaget sätter hennes sanna nivå, som motorn aldrig ser, och hon har dolda svagheter som motorn ska hitta. Fritt läge är samma sak utan berättelse.</p>
+  <div class="controls" style="margin:0">
+    <button id="btn-demo">Spela demo</button>
+    <button id="btn-free">Fritt läge</button>
+  </div>
+  <div class="slider">
+    <label for="truelevel">Spelarens sanna nivå</label>
+    <input type="range" id="truelevel" min="2" max="10" step="0.5" value="5">
+    <b id="truelevel-v">5.0</b>
+  </div>
 </div>
 
 <div class="panel">
   <h2>Skattning</h2>
-  <p class="hint">Motorn ser aldrig den sanna nivån. Den jämför varje varvs utfall med vad den väntade sig och flyttar sig proportionellt mot sin egen osäkerhet.</p>
+  <p class="hint">Motorn jämför varje varvs utfall med vad den väntade sig och flyttar sig proportionellt mot sin egen osäkerhet. I demot syns också den simulerade spelarens sanna nivå — den ser motorn aldrig.</p>
   <div class="levels">
     <div class="lv est"><span class="n" id="m-est">—</span><span class="l">skattad nivå</span></div>
-    <div class="lv"><span class="n" id="m-true">5.0</span><span class="l">sann nivå</span></div>
+    <div class="lv" id="lv-true"><span class="n" id="m-true">5.0</span><span class="l">sann nivå</span></div>
     <div class="lv"><span class="n" id="m-sigma">—</span><span class="l">osäkerhet</span></div>
   </div>
   <canvas id="chart"></canvas>
@@ -205,7 +232,8 @@
 "use strict";
 /* ==========================================================================
    VAMP — adaptiv loopmotor för piano
-   Prototyp. Simulerad spelare, simulerat anslag, riktig motor.
+   Prototyp. Riktig motor; spelaren är ett MIDI-keyboard, eller simulerad
+   i demot.
 
    Moduler, i ordning:
      1  TEORI          romerska siffror → tonhöjdsklasser
@@ -216,8 +244,10 @@
      6  SPELARE        simulerad hand med dolda styrkor och svagheter
      7  MOTOR          skattning, profil, val av nästa varv
      8  LJUD           Web Audio, inga samplingar
-     9  BILD           fallande noter, klaviatur
-    10  GRÄNSSNITT     demo, fritt läge, paneler
+     9  VARVET         schemaläggning, beslutsfönster
+    10  MIDI-IN        riktiga anslag matchade mot väntade toner
+    11  BILD           fallande noter, klaviatur
+    12  GRÄNSSNITT     spela/paus, demo, paneler
 
    Vad som är mätt och vad som är gissat: allt i modul 5 är gissat och ska
    skattas ur riktig speldata tillsammans med spelarförmågan. Resten av
@@ -957,6 +987,7 @@ function ensureAudio(){
   comp.threshold.value = -14; comp.ratio.value = 4;
   master.connect(comp); comp.connect(ctx.destination);
   musicGain = ctx.createGain(); musicGain.gain.value = soundOn?1:0; musicGain.connect(master);
+  ctx.onstatechange = updateTransport;
   const len = ctx.sampleRate*0.5;
   noiseBuf = ctx.createBuffer(1,len,ctx.sampleRate);
   const d = noiseBuf.getChannelData(0);
@@ -1026,7 +1057,7 @@ function bassNote(t,midi,dur){ if(!ctx)return;
    att motorn tänker.
    ========================================================================== */
 
-const state = { running:false, started:false, loops:[], startedAt:0, loopIndex:0, shown:null, ending:false, mode:null };
+const state = { running:false, started:false, over:false, loops:[], startedAt:0, loopIndex:0, shown:null, ending:false, mode:null };
 const flashes = [];
 
 function nearestScaleTone(midi, scale){
@@ -1041,7 +1072,12 @@ function scheduleLoop(t0){
   const bpb = v.meter, spb = 60/v.bpm;
   const swing = v.swing ? .14*spb : 0;
   const barDur = bpb*spb, loopDur = bpb*4*spb, t1 = t0+loopDur;
-  const played = simulate(v);
+  /* Med riktig spelare är ingenting avgjort i förväg: varje ton är en miss
+     tills ett anslag från keyboardet hittar den. */
+  const real = state.mode === "real";
+  const played = real
+    ? v.events.map(e=>Object.assign({},e,{hit:false, dt:0, after:false})).sort((a,b)=>a.b-b.b)
+    : simulate(v);
   const breath = engine.breathIn <= 0;
   if (breath) engine.breathIn = 8;
   const preview = engine.preview;
@@ -1049,7 +1085,8 @@ function scheduleLoop(t0){
   const loop = {
     v, t0, t1, spb, bpb, breath, preview, layers: engine.layers,
     commitAt: Math.max(t0+loopDur*.5, t1 - Math.max(2.9, barDur)),
-    committed:false, index: ++state.loopIndex, events:[]
+    committed:false, index: ++state.loopIndex, events:[],
+    real, win: Math.min(.2, spb*.45), extras:[]
   };
 
   loop.events = played.map(ev=>{
@@ -1061,6 +1098,7 @@ function scheduleLoop(t0){
 
   for (const ev of loop.events){
     if (ev.ghost){ piano(ev.tPlay, ev.midi, ev.dur*spb, .1, ev.hand); continue; }
+    if (real) continue;                    /* de tonerna spelar hon själv */
     if (ev.hit) piano(ev.tPlay, ev.midi, ev.dur*spb, ev.hand==="L"?.2:.26, ev.hand);
     /* missen faller inom skalan och passerar som en dissonans, inte som tystnad */
     else piano(ev.tPlay, nearestScaleTone(ev.midi, v.mat.scale), ev.dur*spb*.6, .09, ev.hand);
@@ -1105,10 +1143,18 @@ function logLoop(loop){
 /* Beslut på det som redan spelats, tillämpat på nästa etta. */
 function commitLoop(loop){
   loop.committed = true;
-  const done = loop.events.filter(e=>!e.ghost && e.t < loop.commitAt);
+  /* En riktig ton är avgjord först när dess tidsfönster har stängt. */
+  const cut = loop.real ? loop.commitAt - loop.win : loop.commitAt;
+  const done = loop.events.filter(e=>!e.ghost && e.t < cut);
+  if (loop.real){
+    let shadow = 0;
+    for (const e of done){ e.after = shadow > 0; shadow = e.hit ? Math.max(0, shadow-1) : 2; }
+  }
   const total = done.length || 1;
   const hits = done.filter(e=>e.hit).length;
-  const acc = hits/total;
+  /* feltoner kostar halvt — ett grepp med en ton för mycket är inte en miss */
+  const extras = loop.real ? loop.extras.filter(t=>t < cut).length : 0;
+  const acc = hits/(total + extras*.5);
   const errs = done.filter(e=>e.hit).map(e=>e.dt);
   const mean = errs.reduce((a,b)=>a+b,0)/(errs.length||1);
   const sd = Math.sqrt(errs.reduce((a,b)=>a+(b-mean)*(b-mean),0)/(errs.length||1));
@@ -1127,7 +1173,7 @@ function commitLoop(loop){
   updateEngine({acc, sd, total, missed:total-hits});
   updatePanels(acc, sd, rec, loop.v);
 
-  const limit = state.mode==="demo" ? 186 : 300;
+  const limit = {demo:186, free:300}[state.mode] || Infinity;
   if (elapsed() > limit){
     log("Slut på demot. Spelaren bor på sin nivå och kompet rullar.", "phase");
     caption("Det här är tillståndet produkten siktar på: rätt nivå, ständig variation, och ingenting som stannar musiken.");
@@ -1139,7 +1185,120 @@ function commitLoop(loop){
 
 
 /* ==========================================================================
-   10. BILD
+   10. MIDI-IN
+
+   Den riktiga spelaren. Varje anslag matchas mot närmaste väntade ton med
+   samma tonklass inom varvets tidsfönster. Oktaven spelar ingen roll, så
+   ett litet keyboard räcker. Det som inte hittar någon ton är en felton.
+
+   Tiden räknas mot det som hörs, inte mot det som schemalagts. Annars
+   skulle ljudkortets fördröjning få varje spelare att verka släpa.
+   ========================================================================== */
+
+const midi = { access:null, inputs:[], supported: !!navigator.requestMIDIAccess, denied:false, echo:true };
+const held = {};   /* tangent → rösten som låter medan den hålls ned */
+
+/* performance.now()-tid → den kontexttid som hörs i högtalaren just då */
+function heardTime(perfMs){
+  if (ctx.state === "running" && ctx.getOutputTimestamp){
+    const o = ctx.getOutputTimestamp();
+    if (o.performanceTime > 0)
+      return Math.min(ctx.currentTime, o.contextTime + (perfMs - o.performanceTime)/1000);
+  }
+  return ctx.currentTime - (ctx.outputLatency || ctx.baseLatency || 0);
+}
+const heardNow = () => heardTime(performance.now());
+
+function connectMidi(){
+  if (!midi.supported || midi.access) return;
+  navigator.requestMIDIAccess().then(access=>{
+    midi.access = access;
+    access.onstatechange = bindInputs;     /* keyboard in och ur under spel */
+    bindInputs();
+  }, ()=>{ midi.denied = true; updateDevice(); });
+}
+
+function bindInputs(){
+  midi.inputs = [];
+  midi.access.inputs.forEach(input=>{
+    if (input.state !== "connected") return;
+    input.onmidimessage = onMidi;
+    midi.inputs.push(input);
+  });
+  updateDevice(); updateTransport();
+}
+
+function onMidi(e){
+  const cmd = e.data[0] & 0xf0, note = e.data[1], vel = e.data[2];
+  if (cmd === 0x90 && vel > 0) noteOn(note, vel, e.timeStamp || performance.now());
+  else if (cmd === 0x80 || cmd === 0x90) noteOff(note);
+}
+
+function noteOn(note, vel, perfMs){
+  ensureAudio();
+  if (ctx.state !== "running"){
+    if (state.started) return;             /* pausat: inget låter, inget räknas */
+    ctx.resume();
+  }
+  if (midi.echo) liveOn(note, vel);
+  const tp = heardTime(perfMs);
+  const ev = (state.mode === "real" && state.running) ? matchPress(note, tp) : null;
+  let shown = ev ? ev.midi : note;
+  while (shown < LOW) shown += 12;
+  while (shown > HIGH) shown -= 12;
+  flashes.push({ midi:shown, at:tp, ghost:false,
+    hit: !!ev || state.mode !== "real",    /* före start: bara visa var handen är */
+    hand: ev ? ev.hand : (note < 60 ? "L" : "R") });
+}
+function noteOff(note){ if (ctx) liveOff(note); }
+
+function matchPress(note, tp){
+  let best = null, bestCost = Infinity, home = null;
+  for (const loop of state.loops){
+    if (!loop.real) continue;
+    if (tp >= loop.t0 && tp < loop.t1) home = loop;
+    for (const ev of loop.events){
+      if (ev.ghost || ev.hit || (ev.midi-note) % 12 !== 0) continue;
+      const d = Math.abs(tp - ev.t);
+      if (d > loop.win) continue;
+      const cost = d + (ev.midi === note ? 0 : .04);   /* rätt oktav vinner på lika villkor */
+      if (cost < bestCost){ best = ev; bestCost = cost; }
+    }
+  }
+  if (best){ best.hit = true; best.dt = (tp - best.t)*1000; return best; }
+  if (home) home.extras.push(tp);
+  return null;
+}
+
+/* Samma klang som piano(), men den klingar tills tangenten släpps. */
+function liveOn(note, vel){
+  liveOff(note);
+  const t = ctx.currentTime, peak = .08 + .22*(vel/127);
+  const g=ctx.createGain(), f=ctx.createBiquadFilter();
+  f.type="lowpass"; f.frequency.value = note<60 ? 1300 : 2900;
+  const o1=ctx.createOscillator(), o2=ctx.createOscillator(), g2=ctx.createGain();
+  o1.type="triangle"; o2.type="sine"; g2.gain.value=.2;
+  o1.frequency.value=mtof(note); o2.frequency.value=mtof(note)*2.001;
+  o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(f); f.connect(master);
+  g.gain.setValueAtTime(.0001,t);
+  g.gain.exponentialRampToValueAtTime(peak,t+.012);
+  g.gain.setTargetAtTime(peak*.15,t+.012,.6);
+  o1.start(t); o2.start(t);
+  held[note] = {g,o1,o2};
+}
+function liveOff(note){
+  const v = held[note]; if (!v) return;
+  delete held[note];
+  const t = ctx.currentTime;
+  if (v.g.gain.cancelAndHoldAtTime) v.g.gain.cancelAndHoldAtTime(t);
+  else { v.g.gain.cancelScheduledValues(t); v.g.gain.setValueAtTime(v.g.gain.value,t); }
+  v.g.gain.setTargetAtTime(.0001,t,.07);
+  v.o1.stop(t+.5); v.o2.stop(t+.5);
+}
+
+
+/* ==========================================================================
+   11. BILD
    ========================================================================== */
 
 const lane = document.getElementById("lane");
@@ -1174,7 +1333,8 @@ function flashColor(f, now){
 function drawLane(){
   const {w:W,h:H} = laneSize;
   const kbH = 62, laneH = H-kbH, look = 2.6, pps = laneH/look;
-  const now = ctx ? ctx.currentTime : 0;
+  /* det som hörs, inte det som schemalagts — annars ligger bilden före ljudet */
+  const now = ctx ? heardNow() : 0;
 
   lctx.clearRect(0,0,W,H);
   lctx.fillStyle = "#16242b"; lctx.fillRect(0,0,W,H);
@@ -1186,15 +1346,16 @@ function drawLane(){
   }
 
   for (const loop of state.loops) for (const ev of loop.events){
-    if (!ev.flashed && now >= ev.tPlay){
+    if ((!loop.real || ev.ghost) && !ev.flashed && now >= ev.tPlay){
       ev.flashed = true;
       flashes.push({midi:ev.midi, at:ev.tPlay, hit:ev.hit, ghost:ev.ghost, hand:ev.hand});
     }
     const y = laneH-(ev.t-now)*pps, h = Math.max(7, ev.dur*loop.spb*pps);
     if (y < -h || y-h > laneH+40) continue;
-    const r = keyRect(ev.midi,W), passed = now > ev.t;
+    const r = keyRect(ev.midi,W);
+    const missed = !ev.hit && now > ev.t + (loop.real ? loop.win : 0);
     lctx.fillStyle = ev.ghost ? "rgba(243,236,224,.26)"
-      : (passed && !ev.hit) ? "rgba(226,96,127,.72)"
+      : missed ? "rgba(226,96,127,.72)"
       : ev.hand==="L" ? "#7aa8ff" : "#ffc94d";
     const top = Math.min(y,laneH)-h, bh = Math.min(h, laneH-top);
     if (bh>0){
@@ -1234,6 +1395,16 @@ function drawLane(){
     const r = keyRect(f.midi,W);
     lctx.fillStyle = flashColor(f,now); lctx.fillRect(r.x, laneH+2, r.w, kbH*.6);
   }
+
+  if (state.started && !state.over && ctx && ctx.state !== "running"){
+    lctx.fillStyle = "rgba(22,36,43,.6)"; lctx.fillRect(0,0,W,laneH);
+    lctx.fillStyle = "#f3ece0"; lctx.textAlign = "center";
+    lctx.font = '600 16px "IBM Plex Sans",system-ui,sans-serif';
+    lctx.fillText("Pausad", W/2, laneH/2-4);
+    lctx.font = '400 12.5px "IBM Plex Sans",system-ui,sans-serif';
+    lctx.fillText("Mellanslag eller Fortsätt", W/2, laneH/2+16);
+    lctx.textAlign = "start";
+  }
 }
 
 const chart = document.getElementById("chart");
@@ -1252,9 +1423,11 @@ function drawChart(){
   const x = i => pad+(i/(n-1))*(W-pad*2);
   cctx.strokeStyle = border; cctx.lineWidth = 1;
   cctx.beginPath(); cctx.moveTo(0,y(0)); cctx.lineTo(W,y(0)); cctx.stroke();
-  cctx.strokeStyle = muted; cctx.setLineDash([3,3]); cctx.lineWidth = 1.5;
-  cctx.beginPath(); cctx.moveTo(0,y(player.trueLevel)); cctx.lineTo(W,y(player.trueLevel)); cctx.stroke();
-  cctx.setLineDash([]);
+  if (state.mode !== "real"){
+    cctx.strokeStyle = muted; cctx.setLineDash([3,3]); cctx.lineWidth = 1.5;
+    cctx.beginPath(); cctx.moveTo(0,y(player.trueLevel)); cctx.lineTo(W,y(player.trueLevel)); cctx.stroke();
+    cctx.setLineDash([]);
+  }
   engine.history.forEach((h,i)=>{
     cctx.fillStyle = h.acc>=.94 ? "#2e8b7a" : h.acc>=.8 ? "#ffc94d" : "#e2607f";
     cctx.beginPath(); cctx.arc(x(i),y(h.level),2.6,0,Math.PI*2); cctx.fill();
@@ -1271,7 +1444,7 @@ function drawChart(){
 
 
 /* ==========================================================================
-   11. GRÄNSSNITT
+   12. GRÄNSSNITT
    ========================================================================== */
 
 const el = id => document.getElementById(id);
@@ -1378,12 +1551,61 @@ function begin(mode){
   state.running = true;
   state.startedAt = ctx.currentTime;
   el("btn-demo").disabled = true; el("btn-free").disabled = true;
+  if (mode==="real"){
+    el("truelevel").disabled = true; el("lv-true").hidden = true; drawChart();
+    el("caption").textContent = "Spela tonerna när de når tangenterna. Oktaven spelar ingen roll.";
+    captionUntil = ctx.currentTime+10;
+  }
+  updateTransport();
   log("Placering: fyra korta prov i C, samma padda, 80 bpm.","phase");
   if (mode==="demo") caption("Fyra prov i stigande svårighet. Motorn stannar vid första riktiga misslyckandet — ingen ska plöja igenom något som uppenbart är för svårt.");
   scheduleLoop(ctx.currentTime+.3);
 }
-function stop(){ state.running=false; }
+function stop(){ state.running=false; state.over=true; updateTransport(); }
 
+/* Paus fryser ljudklockan. Allt — schemalagda toner, fallande noter,
+   beslutsfönstret — räknar på den, så allt står still på samma ställe. */
+function togglePlay(){
+  if (!state.started){ if (midi.inputs.length) begin("real"); return; }
+  if (state.over || !ctx) return;
+  if (ctx.state === "running") ctx.suspend(); else ctx.resume();
+}
+
+const ICON_PLAY  = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9.5-5.5z" fill="currentColor"/></svg>';
+const ICON_PAUSE = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z" fill="currentColor"/></svg>';
+function updateTransport(){
+  const b = el("btn-play");
+  let label = "Spela", icon = ICON_PLAY, off = false;
+  if (!state.started) off = !midi.inputs.length;
+  else if (state.over){ label = "Slut"; off = true; }
+  else if (ctx && ctx.state === "running"){ label = "Paus"; icon = ICON_PAUSE; }
+  else label = "Fortsätt";
+  b.innerHTML = icon + "<span>" + label + "</span>";
+  b.disabled = off;
+  b.title = off && !state.started ? "Anslut ett MIDI-keyboard först" : label + " (mellanslag)";
+}
+
+function updateDevice(){
+  const n = midi.inputs.length, s = el("midi-status");
+  el("midi-dot").className = "dot" + (n ? " on" : "");
+  el("btn-midi").hidden = !(midi.supported && !midi.access && !midi.denied);
+  el("echo-wrap").hidden = !n;
+  if (!window.isSecureContext) s.textContent = "MIDI kräver https eller localhost. Demot nedan fungerar ändå.";
+  else if (!midi.supported) s.textContent = "Webbläsaren saknar Web MIDI — prova Chrome eller Edge. Demot nedan fungerar ändå.";
+  else if (midi.denied) s.textContent = "MIDI-åtkomst nekad. Tillåt den i webbläsarens inställningar för sidan.";
+  else if (!midi.access) s.textContent = "Anslut ett MIDI-keyboard för att spela själv.";
+  else if (!n) s.textContent = "Inget keyboard hittat. Koppla in ett — det dyker upp här direkt.";
+  else s.textContent = midi.inputs.map(i=>i.name).join(", ");
+}
+
+el("btn-play").addEventListener("click", togglePlay);
+el("btn-midi").addEventListener("click", connectMidi);
+el("echo").addEventListener("change", e=>{ midi.echo = e.target.checked; });
+document.addEventListener("keydown", e=>{
+  if (e.code !== "Space" || e.repeat) return;
+  if (e.target.closest && e.target.closest("button,input,select,textarea,label")) return;
+  e.preventDefault(); togglePlay();
+});
 el("btn-demo").addEventListener("click", ()=>begin("demo"));
 el("btn-free").addEventListener("click", ()=>begin("free"));
 el("btn-reset").addEventListener("click", ()=>location.reload());
@@ -1403,6 +1625,14 @@ el("truelevel").addEventListener("input", e=>{
 function onResize(){ laneSize = resizeCanvas(lane); chartSize = resizeCanvas(chart); drawChart(); }
 window.addEventListener("resize", onResize);
 onResize();
+updateDevice(); updateTransport();
+/* Redan tillåtet → anslut direkt. Annars väntar vi på knappen, så att
+   ingen möts av en behörighetsfråga innan de ens sett sidan. */
+if (midi.supported && navigator.permissions)
+  navigator.permissions.query({name:"midi"}).then(p=>{
+    if (p.state === "granted") connectMidi();
+    else if (p.state === "denied"){ midi.denied = true; updateDevice(); }
+  }, ()=>{});
 drawLane();
 drawChart();
 requestAnimationFrame(frame);

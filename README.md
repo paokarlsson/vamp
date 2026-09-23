@@ -4,13 +4,28 @@ En adaptiv loopmotor för piano. Fyra ackord, fyra takter, och en motor som
 håller spelaren precis på gränsen av vad hon klarar — utan att musiken någonsin
 stannar för att motorn tänker.
 
-Hela prototypen är **en fil, noll beroenden**. Öppna `index.html` i en webbläsare
-och tryck *Spela demo*.
+Hela prototypen är **en fil, noll beroenden**. Öppna `index.html` i en webbläsare,
+anslut ett MIDI-keyboard och tryck *Spela*. Utan keyboard finns demot i panelen
+*Utan keyboard*.
 
 ```
 git clone https://github.com/paokarlsson/vamp.git
 open vamp/index.html     # eller: python3 -m http.server, och surfa dit
 ```
+
+### Utveckla med hot reload
+
+```
+docker compose up
+```
+
+Surfa till <http://localhost:3000>. Repot monteras in i containern och
+webbläsaren laddas om automatiskt när du sparar `index.html`. Inget att
+bygga och ingen Dockerfile — bara `node`-imagen och browser-sync via `npx`.
+
+**Spela/Paus** (eller mellanslag) fryser ljudklockan, så att musik, fallande noter
+och motor står still på exakt samma ställe tills du fortsätter. MIDI kräver Web
+MIDI (Chrome, Edge, Firefox) och https eller `localhost`.
 
 Spelaren i demot är **simulerad**. Reglaget sätter hennes sanna nivå; motorn ser
 den aldrig, utan måste hitta den ur utfallet. Hon har dessutom dolda svagheter
@@ -41,7 +56,7 @@ Tre påståenden som hela konstruktionen vilar på:
 
 ## Arkitektur
 
-Elva moduler i `index.html`, i den ordning de bygger på varandra:
+Tolv moduler i `index.html`, i den ordning de bygger på varandra:
 
 | # | Modul | Ansvar |
 |---|---|---|
@@ -54,8 +69,9 @@ Elva moduler i `index.html`, i den ordning de bygger på varandra:
 | 7 | Motor | Skattning, nio-axlig profil, val av nästa varv. |
 | 8 | Ljud | Web Audio. Piano, padda, bas, trummor — inga samplingar. |
 | 9 | Varvet | Schemaläggning, beslutsfönster, mjuka landningar. |
-| 10 | Bild | Fallande noter och klaviatur på canvas. |
-| 11 | Gränssnitt | Demo, fritt läge, paneler, logg. |
+| 10 | MIDI-in | Riktiga anslag matchade mot väntade toner. |
+| 11 | Bild | Fallande noter och klaviatur på canvas. |
+| 12 | Gränssnitt | Spela/paus, demo, paneler, logg. |
 
 ### Röstföring är det som gör biblioteket billigt
 
@@ -132,6 +148,23 @@ Runt det ligger tre musikaliska knep: **andrum** (trummorna ut ett varv),
 får ta över den) och lager som byggs upp padda → hi-hat → bas → bastrumma →
 virvel allteftersom det går bra.
 
+### MIDI-in: ett anslag letar upp sin ton
+
+Med en riktig spelare är ingenting avgjort i förväg. Varje väntad ton är en
+miss tills ett anslag hittar den: samma tonklass, inom ett tidsfönster på
+högst 200 ms (smalare vid högt tempo), närmast i tid. Oktaven spelar ingen roll,
+så att ett litet keyboard räcker. Ett anslag som inte hittar någon ton är en
+felton och kostar en halv miss, eftersom ett grepp med en ton för mycket inte
+är samma sak som en ton som aldrig kom.
+
+Tiden mäts mot det som **hörs**, inte mot det som schemalagts
+(`getOutputTimestamp()`). Annars skulle ljudkortets fördröjning få varje
+spelare att verka släpa. Samma klocka styr bilden, så de fallande noterna når
+klaviaturen när tonen faktiskt låter.
+
+Spelarens egna toner går genom appens piano (*Mina toner i appen*). Stäng av
+det om keyboardet har egna högtalare.
+
 ### Missar låter, de tystnar inte
 
 En missad ton spelas som närmaste skalton, svagare och kortare. Den passerar som
@@ -147,13 +180,13 @@ en-axel-i-taget-budget som texturen.
 | | |
 |---|---|
 | **Riktig** | Röstföring, formvektor, skattningsmatematiken, vallogiken, ljudet, bilden. |
-| **Simulerad** | Spelaren, anslaget, timingfelen, kaskaden efter en miss. |
-| **Gissad** | Alla vikter i `W`, belastningskurvorna i `loadOf()`, trösklarna i motorn. |
+| **Simulerad** (i demot) | Spelaren, anslaget, timingfelen, kaskaden efter en miss. |
+| **Gissad** | Alla vikter i `W`, belastningskurvorna i `loadOf()`, trösklarna i motorn, tidsfönstret och feltonskostnaden i MIDI-matchningen. |
 
 ## Nästa steg
 
 * Kalibrera `W` och axelbelastningarna mot riktig speldata i stället för mot magkänsla.
-* Byt den simulerade spelaren mot MIDI-in.
+* Kalibrera tidsfönstret och feltonskostnaden mot riktiga spelare.
 * Skatta spelarförmåga och materialsvårighet i samma modell, inte var för sig.
 * Bredda biblioteket — det är, som sagt, en rad text per progression.
 
@@ -174,7 +207,8 @@ Sajten hamnar på `https://paokarlsson.github.io/vamp/`.
 ## Filer
 
 ```
-index.html                    hela prototypen: teori, motor, ljud, bild, gränssnitt
+index.html                    hela prototypen: teori, motor, ljud, MIDI, bild, gränssnitt
+compose.yaml                  utvecklingsserver med live reload (docker compose up)
 .github/workflows/pages.yml   deploy till GitHub Pages vid push till main
 README.md                     den här filen
 ```
