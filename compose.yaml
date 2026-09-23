@@ -1,0 +1,24 @@
+services:
+  vamp:
+    image: node:22-alpine
+    working_dir: /app
+    # Prototypen byggs inte — browser-sync serverar reporoten och laddar om
+    # webbläsaren när en fil ändras.
+    command: >
+      npx --yes browser-sync@3 start --server
+      --files "**/*.html" "**/*.css" "**/*.js"
+      --port 3000 --no-open --no-notify --no-ui
+    ports:
+      - "3000:3000"
+    volumes:
+      # Koden monteras in, så ändringar syns direkt utan omstart.
+      - .:/app
+      # npm-cachen sparas, så browser-sync laddas bara ner första gången.
+      - npm-cache:/root/.npm
+    environment:
+      # Filhändelser går inte alltid igenom bindmonteringar (Docker Desktop på
+      # Windows/WSL, macOS). Pollning är billigt när det bara är ett par filer.
+      - CHOKIDAR_USEPOLLING=true
+
+volumes:
+  npm-cache:
