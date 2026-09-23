@@ -880,10 +880,22 @@ function chooseVariation(){
 function updateEngine(st){
   const v = engine.current, acc = st.acc;
 
+  /* Kompet byggs på från första varvet: varje bra varv tar in ett lager till,
+     i alla faser. Det är belöningen man hör. Ett dåligt varv tar inget ut —
+     sänkningar ska inte synas. */
+  if (acc >= 0.9 && engine.layers < 5){
+    engine.layers++;
+    const names = ["","padda","hi-hat","bas","bastrumma","virvel"];
+    log(`Lager in: ${names[engine.layers]}.`, "up");
+  }
+  engine.energy = Math.max(.15, Math.min(1, .25 + engine.layers*.15 + (acc-.8)));
+
   if (engine.phase === "placement"){
     engine.probeResults.push({level:v.level, acc});
     log(`Prov ${engine.probeIndex+1}: ${TEXTURES[v.texture].label} — ${Math.round(acc*100)} %`);
-    const failed = acc < 0.72;
+    /* Provens första tre takter har ibland bara tre toner. En enda miss är
+       inget riktigt misslyckande. */
+    const failed = acc < 0.72 && st.missed >= 2;
     engine.probeIndex++;
     if (failed || engine.probeIndex >= PROBES.length){
       let passed = 0.8, ceiling = 99;
@@ -901,13 +913,17 @@ function updateEngine(st){
   /* allmän nivå */
   const expected = 1/(1+Math.exp(-((engine.est+1.7)-v.level)/0.75));
   let signal = acc - expected;
-  if (acc >= 0.99) signal += st.sd < 25 ? 0.12 : 0.05;
+  /* Ett felfritt varv säger att nivån räcker, inte var gränsen går. Det ska
+     driva uppåt ordentligt, men inte göra motorn säkrare på var hon bor. */
+  const flawless = acc >= 0.97;
+  if (flawless) signal += st.sd < 25 ? 0.18 : 0.12;
   const load = loadOf(v);
   let weakLoad = 0;
   for (const a of AXES) if (axisWeak(a)) weakLoad = Math.max(weakLoad, load[a]);
   if (signal < 0) signal *= (1 - 0.55*weakLoad);      /* svag axel får inte sänka helheten */
   engine.est = Math.max(1, Math.min(14, engine.est + 2.4*engine.sigma*signal));
-  engine.sigma = Math.max(0.32, engine.sigma*(engine.fast ? 0.86 : 0.91));
+  /* (demot har en klocka att passa och krymper ändå) */
+  if (!flawless || engine.fast) engine.sigma = Math.max(0.32, engine.sigma*(engine.fast ? 0.86 : 0.91));
 
   /* axlarna: avvikelse från den allmänna nivån, krympt mot noll
      tills det finns observationer bakom den */
@@ -940,15 +956,22 @@ function updateEngine(st){
   engine.probeIn--; engine.breathIn--; engine.progIn--;
 
   if (v.intent === "probe"){
-    log(`Tyst prov på nivå ${v.level.toFixed(1)} — ${Math.round(acc*100)} %`, acc>=0.85?"up":"");
-    if (acc < 0.7) engine.needsHarbour = true;
+    /* Klarar hon ett varv en nivå över målet är målet för lågt. */
+    const passed = acc >= 0.85;
+    if (passed){ engine.target += 0.45; engine.cleanRun = 0; engine.loopsAtLevel = 0; }
+    else if (acc < 0.7) engine.needsHarbour = true;
+    log(`Tyst prov på nivå ${v.level.toFixed(1)} — ${Math.round(acc*100)} %` +
+        (passed ? ` — höjer till ${engine.target.toFixed(1)}.` : ""), passed?"up":"");
     return;
   }
 
+  /* Tidsgränsen ska gå att klara även på datorns tangentbord, som lägger
+     till egen spridning ovanpå spelarens. */
   if (acc >= 0.94){
     engine.cleanRun++;
-    if (st.sd < 42 && engine.cleanRun >= 3 && engine.loopsAtLevel >= 3){
-      engine.target += 0.45; engine.est += 0.1;
+    if (st.sd < 60 && engine.cleanRun >= 3 && engine.loopsAtLevel >= 3){
+      /* har skattningen sprungit ifrån under de rena varven, gå ikapp */
+      engine.target = Math.max(engine.target + 0.45, engine.est - 0.4); engine.est += 0.1;
       engine.cleanRun = 0; engine.loopsAtLevel = 0;
       log(`Tre rena varv, jämn timing (${Math.round(st.sd)} ms) — höjer till ${engine.target.toFixed(1)}.`, "up");
       caption("Tre rena varv i rad och samlad timing. Ett rent varv kan vara tur; tre betyder att mönstret sitter i handen.");
@@ -961,14 +984,6 @@ function updateEngine(st){
   } else engine.cleanRun = 0;
 
   engine.loopsAtLevel++;
-
-  const want = Math.min(5, 1+Math.floor(engine.history.filter(h=>h.acc>=0.9).length/2));
-  if (want > engine.layers && acc >= 0.9){
-    engine.layers++;
-    const names = ["","padda","hi-hat","bas","bastrumma","virvel"];
-    log(`Lager in: ${names[engine.layers]}.`, "up");
-  }
-  engine.energy = Math.max(.15, Math.min(1, .25 + engine.layers*.15 + (acc-.8)));
 }
 
 
@@ -1041,6 +1056,11 @@ function snare(t,v){ noiseHit(t,v*.5,1400,.16); if(!ctx)return;
   o.type="triangle"; o.frequency.setValueAtTime(215,t);
   g.gain.setValueAtTime(v*.3,t); g.gain.exponentialRampToValueAtTime(.0001,t+.1);
   o.connect(g); g.connect(musicGain); o.start(t); o.stop(t+.12); }
+function tick(t,accent){ if(!ctx)return;
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  o.frequency.value = accent ? 1760 : 1320;
+  g.gain.setValueAtTime(accent?.3:.18,t); g.gain.exponentialRampToValueAtTime(.0001,t+.05);
+  o.connect(g); g.connect(musicGain); o.start(t); o.stop(t+.06); }
 function bassNote(t,midi,dur){ if(!ctx)return;
   const o=ctx.createOscillator(), g=ctx.createGain(), f=ctx.createBiquadFilter();
   f.type="lowpass"; f.frequency.value=520; o.type="triangle"; o.frequency.value=mtof(midi-12);
@@ -1200,30 +1220,44 @@ const midi = { access:null, inputs:[], supported: !!navigator.requestMIDIAccess,
 const held = {};   /* tangent → rösten som låter medan den hålls ned */
 const lit = {};    /* tangent → dess ljus på klaviaturen medan den hålls ned */
 
-/* performance.now()-tid → den kontexttid som hörs i högtalaren just då */
-function heardTime(perfMs){
-  if (ctx.state === "running" && ctx.getOutputTimestamp){
-    const o = ctx.getOutputTimestamp();
-    if (o.performanceTime > 0)
-      return Math.min(ctx.currentTime, o.contextTime + (perfMs - o.performanceTime)/1000);
+/* Ljudklockan sedd från resten av sidan. ctx.currentTime går i hela
+   buffertar och står still mellan dem, och fördröjningen ut till högtalaren
+   (outputLatency, som getOutputTimestamp() också bygger på) kan hoppa
+   hundratals millisekunder mellan två bildrutor. Därför hålls en jämn
+   förskjutning mellan performance.now() och det som hörs. Den glider mot
+   rätt värde, högst 3 ms per bildruta, och hoppar bara efter paus eller om
+   den ligger en hel sekund fel. Samma klocka ritar bilden och tidsstämplar
+   anslagen, så det du ser och det som mäts är samma sak. */
+const audioClock = { off:null, now:0, pausedAt:null };
+const latency = () => Math.min(.5, (ctx.baseLatency||0) + (ctx.outputLatency||0));
+function syncClock(){
+  const p = performance.now()/1000;
+  if (ctx.state !== "running"){ if (audioClock.pausedAt === null) audioClock.pausedAt = p; return; }
+  if (audioClock.pausedAt !== null){      /* ljudklockan stod still under pausen */
+    if (audioClock.off !== null) audioClock.off -= p - audioClock.pausedAt;
+    audioClock.pausedAt = null;
   }
-  return ctx.currentTime - (ctx.outputLatency || ctx.baseLatency || 0);
+  const off = ctx.currentTime - latency() - p;
+  if (audioClock.off === null || Math.abs(off - audioClock.off) > 1) audioClock.off = off;
+  else audioClock.off += Math.max(-.003, Math.min(.003, (off - audioClock.off)*.05));
 }
-const heardNow = () => heardTime(performance.now());
 
-/* Bildens klocka. heardNow() hoppar fram och tillbaka i takt med ljudkortets
-   buffertar; ritad rakt av skakar noterna, och en tangent kan släckas i samma
-   bildruta som den tänds. Bilden följer därför performance.now() med en
-   utjämnad förskjutning mot det som hörs, och går aldrig bakåt. */
-const view = { off:null, now:0 };
+/* performance.now()-tid → den kontexttid som hörs i högtalaren just då.
+   Under paus står den still där bilden stannade. */
+function heardTime(perfMs){
+  if (ctx.state !== "running")
+    return audioClock.off === null ? ctx.currentTime - latency() : audioClock.now;
+  if (audioClock.off === null) syncClock();
+  return perfMs/1000 + audioClock.off;
+}
+
+/* Bildens tid går aldrig bakåt, så en tangent som tänts släcks inte i nästa
+   bildruta av att klockan rättat sig ett par millisekunder. */
 function viewNow(){
-  const raw = heardNow();
-  if (ctx.state !== "running"){ view.off = null; return view.now = raw; }
-  const p = performance.now()/1000, off = raw - p;
-  if (view.off === null || Math.abs(off - view.off) > .25) view.off = off;
-  else view.off += (off - view.off)*.05;
-  const t = p + view.off;
-  return view.now = (t < view.now && t > view.now-.25) ? view.now : t;
+  syncClock();
+  const t = heardTime(performance.now());
+  if (ctx.state !== "running") return audioClock.now = t;
+  return audioClock.now = (t < audioClock.now && t > audioClock.now-.15) ? audioClock.now : t;
 }
 
 function connectMidi(){
@@ -1307,7 +1341,7 @@ function noteOff(note){ if (ctx){ liveOff(note); unlight(note); } }
 function unlight(note){
   const f = lit[note]; if (!f) return;
   delete lit[note];
-  f.end = ctx.state === "running" ? view.now : -Infinity;
+  f.end = ctx.state === "running" ? audioClock.now : -Infinity;
 }
 /* Ett keyboard som försvinner mitt i ett grepp skickar aldrig sina note off. */
 function releaseAll(){
@@ -1638,7 +1672,15 @@ function begin(mode){
   updateTransport();
   log("Placering: fyra korta prov i C, samma padda, 80 bpm.","phase");
   if (mode==="demo") caption("Fyra prov i stigande svårighet. Motorn stannar vid första riktiga misslyckandet — ingen ska plöja igenom något som uppenbart är för svårt.");
-  scheduleLoop(ctx.currentTime+.3);
+  /* En takt inräkning när någon spelar själv. Utan den når första tonen
+     tangenterna innan den hunnit synas, och första provet börjar med en miss. */
+  let t0 = ctx.currentTime+.3;
+  if (mode==="real"){
+    const spb = 60/PROBES[0].bpm;
+    for (let k=0;k<4;k++) tick(t0+k*spb, k===0);
+    t0 += 4*spb;
+  }
+  scheduleLoop(t0);
 }
 function stop(){ state.running=false; state.over=true; updateTransport(); }
 

@@ -124,17 +124,26 @@ Motorn kör tre faser:
 
 * **Placering** — fyra korta prov i stigande svårighet, samma tonart och tempo.
   Avbryts vid första riktiga misslyckandet; ingen ska plöja igenom något som
-  uppenbart är för svårt. Startar sedan **ett steg under** skattningen: ett bra
-  första varv avgör om någon stannar kvar, och fel nedåt är billigt.
+  uppenbart är för svårt. En enda miss är inget riktigt misslyckande — provens
+  första tre takter har ibland bara tre toner — så det krävs två. Med riktig
+  spelare föregås första provet av en takts inräkning, annars når första tonen
+  tangenterna innan den hunnit synas. Startar sedan **ett steg under**
+  skattningen: ett bra första varv avgör om någon stannar kvar, och fel nedåt är
+  billigt.
 * **Zoom** — målnivån följer skattningen tätt medan osäkerheten krymper
-  (σ ← 0,91 σ per varv).
+  (σ ← 0,91 σ per varv). Ett felfritt varv säger bara att nivån räcker, inte var
+  gränsen går: det driver skattningen uppåt men krymper inte σ. Den som spelar
+  felfritt fortsätter alltså uppåt tills gränsen syns. (Demot krymper ändå, för
+  att hinna fram på sina tre minuter.)
 * **Groove** — motorn bor på nivån. Tre rena varv i rad *och* samlad timing
-  (< 42 ms spridning) krävs för +0,45. Under 80 % träffar sänks nivån tyst och
-  nästa varv blir en **safe harbour** — ett varv hon redan äger.
+  (< 60 ms spridning, som datorns tangentbord också klarar) krävs för +0,45 —
+  eller mer, om skattningen sprungit ifrån under de rena varven. Under 80 %
+  träffar sänks nivån tyst och nästa varv blir en **safe harbour** — ett varv hon
+  redan äger.
 
 Var nionde varv smyger motorn in ett **tyst prov** ~1,1 nivåer över målet. Går
-det bra vet den mer; går det dåligt loggas ingenting dramatiskt, och nästa varv
-landar mjukt.
+det bra (≥ 85 %) är målet för lågt och höjs; går det dåligt loggas ingenting
+dramatiskt, och nästa varv landar mjukt.
 
 Två skyddsmekanismer värda att känna till:
 
@@ -152,7 +161,8 @@ verkligt spelat material, aldrig på en gissning om resten av varvet.
 Runt det ligger tre musikaliska knep: **andrum** (trummorna ut ett varv),
 **förhandsvisning** (appen spelar vänsterhanden själv ett varv innan spelaren
 får ta över den) och lager som byggs upp padda → hi-hat → bas → bastrumma →
-virvel allteftersom det går bra.
+virvel, ett per bra varv (≥ 90 %) från första provet. Fullt komp efter fyra bra
+varv; ett dåligt varv tar inget ut.
 
 ### MIDI-in: ett anslag letar upp sin ton
 
@@ -163,10 +173,16 @@ så att ett litet keyboard räcker. Ett anslag som inte hittar någon ton är en
 felton och kostar en halv miss, eftersom ett grepp med en ton för mycket inte
 är samma sak som en ton som aldrig kom.
 
-Tiden mäts mot det som **hörs**, inte mot det som schemalagts
-(`getOutputTimestamp()`). Annars skulle ljudkortets fördröjning få varje
-spelare att verka släpa. Samma klocka styr bilden, så de fallande noterna når
-klaviaturen när tonen faktiskt låter.
+Tiden mäts mot det som **hörs**, inte mot det som schemalagts. Annars skulle
+ljudkortets fördröjning få varje spelare att verka släpa. Klockan är
+`ctx.currentTime` minus fördröjningen ut till högtalaren, hållen som en jämn
+förskjutning mot `performance.now()`: den glider mot rätt värde, högst 3 ms per
+bildruta, och står still under paus. Webbläsarens rapporterade fördröjning
+(`outputLatency`, som även `getOutputTimestamp()` bygger på) kan hoppa hundratals
+millisekunder mellan två bildrutor, och följd rakt av får det bilden att flimra.
+Samma klocka styr bilden och tidsstämplar anslagen, så de fallande noterna når
+klaviaturen när tonen faktiskt låter, och tidsspridningen som motorn mäter är
+spelarens, inte ljudkortets.
 
 Spelarens egna toner går genom appens piano (*Mina toner i appen*). Stäng av
 det om keyboardet har egna högtalare.
