@@ -33,6 +33,27 @@ från C4 (svarta på `2 3 5 6 7 9 0`). Utan MIDI-keyboard står bokstaven på va
 tangent i bilden. Många tangentbord registrerar bara två eller tre tangenter
 samtidigt i vissa kombinationer, så större grepp kan tappa toner.
 
+**Klaviaturen i bilden följer ditt keyboard.** Web MIDI säger inte hur många
+tangenter det har, så appen räknar fram det i tre steg, där varje steg går före
+det förra:
+
+1. **Namnet.** "Keystation 49" eller "Launchkey 25" ger en standardstorlek
+   (25, 32, 37, 49, 61, 76 eller 88).
+2. **Det du spelar.** Klaviaturen växer till närmaste standardstorlek som rymmer
+   lägsta och högsta ton du spelat, också efter en oktavknapp.
+3. **Mät keyboardet.** Tryck på lägsta och högsta tangenten, så är storleken exakt.
+
+Det inlärda och det mätta sparas per enhetsnamn. Toner utanför keyboardet flyttas
+i hela oktaver in på det. När vita tangenter annars skulle bli smalare än 16 px
+bryter scenen sig ur kolumnen, upp till hela fönsterbredden. Ryms det ändå inte
+(88 tangenter på en telefon) blir tangenterna smalare, och delen som varvet
+använder markeras.
+
+**Skärmen tänd** (bredvid Spela) hindrar skärmen från att slockna medan du
+spelar, via Screen Wake Lock. Webbläsaren släpper låset när fliken döljs; appen
+tar det igen när du kommer tillbaka. Valet sparas, och knappen syns bara i
+webbläsare som stöder det.
+
 Spelaren i demot är **simulerad**. Reglaget sätter hennes sanna nivå; motorn ser
 den aldrig, utan måste hitta den ur utfallet. Hon har dessutom dolda svagheter
 (tvåhandsspel, synkopering, svarta tangenter) som motorn ska upptäcka utan att
@@ -68,7 +89,7 @@ Tolv moduler i `index.html`, i den ordning de bygger på varandra:
 |---|---|---|
 | 1 | Teori | Romerska siffror → tonhöjdsklasser. `bVII`, `vi`, `V7`, `iio`. |
 | 2 | Röstföring | Ackord → grepp, via billigaste vägen genom hela progressionen. |
-| 3 | Bibliotek | 16 progressioner som text, 5 tonarter. |
+| 3 | Bibliotek | 16 progressioner som text, 4 dur- och 4 molltonarter. |
 | 4 | Texturer | 14 texturer: grepp → faktiska noter, uttryckt i slag. |
 | 5 | Svårighet | Noter → formvektor (12 mått) → ett tal. |
 | 6 | Spelare | Simulerad hand med dolda styrkor och svagheter. |
@@ -93,6 +114,15 @@ programmering den billigaste vägen genom progressionen, där kostnaden är hur
 långt rösterna måste flytta sig — och **stänger loopen** genom att koppla sista
 greppet tillbaka till det första. Det är därför handen ligger still och det
 låter arrangerat i stället för hoppigt. Varje ny progression kostar en rad.
+
+Basen röstförs också som en sluten loop, men med **en oktav per grundton**: samma
+ackord ligger på samma ton varje gång det kommer i varvet. En kortaste väg ger
+inte det — Canon fick C på både C2 och C3. Registret 36–52 ger högst två lägen
+per grundton, så alla kombinationer prövas.
+
+Paddan och basen följer **ackorden, inte takterna**. Canon har två ackord per
+takt och får två anslag per takt; ett ackord som varar två takter slås an igen
+vid taktstrecket.
 
 ### Svårighet räknas ur noterna
 

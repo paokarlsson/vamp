@@ -169,6 +169,7 @@
   <span id="midi-status">Letar efter MIDI-keyboard…</span>
   <span class="grow"></span>
   <button class="small" id="btn-midi" hidden>Anslut keyboard</button>
+  <button class="small" id="btn-measure" hidden>Mät keyboardet</button>
   <label class="check" id="echo-wrap" hidden><input type="checkbox" id="echo" checked> Mina toner i appen</label>
 </div>
 
@@ -176,6 +177,7 @@
 
 <div class="controls">
   <button class="primary transport" id="btn-play" disabled></button>
+  <button id="btn-wake" aria-pressed="false" hidden title="Hindrar skärmen från att slockna medan du spelar">Skärmen släcks</button>
   <button id="btn-sound" aria-pressed="true">Ljud på</button>
   <button id="btn-reset">Börja om</button>
 </div>
@@ -283,7 +285,9 @@ function parseNumeral(sym, tonic, mode){
   else iv = [0,4,7];
   if (seventh) iv = iv.concat([minorQuality || dim ? 10 : 10]);
 
-  return { pcs: iv.map(i => (root+i)%12), root, label: PC_NAMES[root] + (minorQuality?"m":"") + (seventh?"7":"") };
+  /* förminskat: viio → B°, iio7 (halvförminskat, liten septima) → Dm7b5 */
+  const label = PC_NAMES[root] + (dim ? (seventh ? "m7b5" : "°") : (minorQuality?"m":"") + (seventh?"7":""));
+  return { pcs: iv.map(i => (root+i)%12), root, label };
 }
 
 function scaleOf(tonic, mode){
@@ -384,25 +388,34 @@ function voiceLead(chordPcs, opts){
   return best.voicings;
 }
 
+/* Basen röstförs som en sluten loop den också, men med en oktav per
+   grundton: samma ackord ska ligga på samma ton varje gång det kommer.
+   En kortaste väg ger inte det (Canon fick C på både C2 och C3). Registret
+   36–52 ger högst två lägen per grundton, så alla val kan prövas. */
+function bassLine(roots){
+  const uniq = [...new Set(roots)];
+  const opts = uniq.map(pc => { const o = []; for (let m=36; m<=52; m++) if (m%12 === pc) o.push(m); return o; });
+  let best = null;
+  (function pick(i, chosen){
+    if (i === uniq.length){
+      const line = roots.map(pc => chosen[uniq.indexOf(pc)]);
+      let c = 0;
+      for (let k=0; k<line.length; k++) c += Math.abs(line[k]-line[(k+1)%line.length]) + Math.abs(line[k]-44)*.4;
+      if (!best || c < best.c) best = {c, line};
+      return;
+    }
+    for (const m of opts[i]) pick(i+1, chosen.concat(m));
+  })(0, []);
+  return best.line;
+}
+
 /* Bygger hela det spelbara materialet för en progression i en tonart. */
 function realize(progression, tonic){
   const mode = progression.mode;
   const chords = progression.numerals.map(s => parseNumeral(s, tonic, mode));
   const rh = voiceLead(chords.map(c=>c.pcs), {lo:59, hi:81, center:68, span:12});
   const lh = voiceLead(chords.map(c=>c.pcs), {lo:40, hi:60, center:50, span:12});
-  /* basen röstförs också, annars hoppar den en oktav i onödan */
-  const bass = [];
-  let prev = 45;
-  for (const c of chords){
-    let best = null;
-    for (let m=36; m<=52; m++){
-      if (((m%12)+12)%12 !== c.root) continue;
-      const d = Math.abs(m-prev);
-      if (best === null || d < best.d) best = {m, d};
-    }
-    bass.push(best ? best.m : 45);
-    prev = bass[bass.length-1];
-  }
+  const bass = bassLine(chords.map(c=>c.root));
   return { chords, rh, lh, bass, scale: scaleOf(tonic, mode), tonic, mode };
 }
 
@@ -435,13 +448,13 @@ const LIBRARY = [
   { id:"vamp-moll", name:"Två ackord, mörk", mood:"stillsam",  mode:"minor", numerals:["i","iv"] }
 ];
 
+/* Varje durtonart har sin parallella molltonart, så ett lägesbyte kan
+   landa på samma förtecken. */
 const KEYS = [
-  { tonic:0, name:"C",  hard:0 },
-  { tonic:9, name:"Am", hard:0 },
-  { tonic:7, name:"G",  hard:1 },
-  { tonic:5, name:"F",  hard:1 },
-  { tonic:2, name:"D",  hard:2 }
+  { tonic:0, mode:"major" }, { tonic:7, mode:"major" }, { tonic:5, mode:"major" }, { tonic:2, mode:"major" },
+  { tonic:9, mode:"minor" }, { tonic:4, mode:"minor" }, { tonic:2, mode:"minor" }, { tonic:11, mode:"minor" }
 ];
+const keyName = (tonic, mode) => PC_NAMES[tonic] + (mode === "minor" ? "-moll" : "-dur");
 
 const REALIZED = {};
 function realized(progId, tonic){
@@ -481,13 +494,13 @@ function slotsFor(mat, bpb){
 }
 
 const TEXTURES = {
-  rootsWhole: { label:"Grundtoner", gen:(S)=>S.map(s=>({b:s.start,dur:s.beats*0.9,midi:s.rh[0],hand:"R"})) },
+  rootsWhole: { label:"Enstaka toner", gen:(S)=>S.map(s=>({b:s.start,dur:s.beats*0.9,midi:s.rh[0],hand:"R"})) },
 
   twoNote: { label:"Två toner", gen:(S)=>{
     const e=[]; S.forEach(s=>{ e.push({b:s.start,dur:s.beats*0.9,midi:s.rh[0],hand:"R"});
                                e.push({b:s.start,dur:s.beats*0.9,midi:s.rh[1],hand:"R"}); }); return e; } },
 
-  rootsQuarter: { label:"Grundtoner i fjärdedelar", gen:(S)=>{
+  rootsQuarter: { label:"Enstaka toner i fjärdedelar", gen:(S)=>{
     const e=[]; S.forEach(s=>{ for(let k=0;k<s.beats;k++) e.push({b:s.start+k,dur:.85,midi:s.rh[0],hand:"R"}); }); return e; } },
 
   triadWhole: { label:"Blockackord", gen:(S)=>{
@@ -814,31 +827,32 @@ function chooseVariation(){
   /* Progressionen roterar på sin egen, långsammare klocka. Musikalisk
      variation är nästan gratis motoriskt och ska inte konkurrera om
      samma en-axel-i-taget-budget som texturen. */
+  /* Mjuk landning först: den spelar ett varv hon redan äger, i dess egen
+     progression. Ett progressionsbyte får vänta till varvet efter. */
+  const probe = engine.phase === "groove" && engine.probeIn <= 0 && engine.cleanRun >= 2;
+  if (!probe && engine.needsHarbour && engine.safeHarbour){
+    engine.needsHarbour = false; engine.preview = false;
+    return Object.assign({}, engine.safeHarbour, {intent:"harbour"});
+  }
+
+  /* Loggas när varvet börjar låta, i scheduleLoop/frame — inte här. */
   if (engine.progIn <= 0){
     const pool = LIBRARY.filter(p=>p.id !== engine.prog &&
       (engine.est > 5.5 || p.numerals.length <= 4));
     const p = pool[Math.floor(Math.random()*pool.length)];
+    const was = LIBRARY.find(x=>x.id===engine.prog).mode;
     engine.prog = p.id;
     if (engine.est > 6.5 && Math.random() < 0.3){
-      const k = KEYS[Math.floor(Math.random()*KEYS.length)];
-      engine.tonic = k.tonic;
-    } else if (p.mode === "minor" && engine.tonic === 0) engine.tonic = 9;
-    else if (p.mode === "major" && engine.tonic === 9) engine.tonic = 0;
+      const keys = KEYS.filter(k=>k.mode===p.mode);
+      engine.tonic = keys[Math.floor(Math.random()*keys.length)].tonic;
+    } else if (p.mode !== was)              /* parallell tonart: samma förtecken */
+      engine.tonic = (engine.tonic + (p.mode==="minor" ? 9 : 3)) % 12;
     engine.progIn = 6;
-    log(`Ny progression: ${p.name} (${p.numerals.join(" ")}) — ${p.mood}.`, "");
-    caption("Progressionen byts på egen klocka. Nya ackord är stor musikalisk variation och nästan ingen motorisk kostnad.");
   }
 
   const prev = engine.current;
   let target = engine.target, intent = null;
-
-  if (engine.phase === "groove" && engine.probeIn <= 0 && engine.cleanRun >= 2){
-    target = engine.target + 1.1; intent = "probe"; engine.probeIn = 9;
-  } else if (engine.needsHarbour && engine.safeHarbour){
-    engine.needsHarbour = false; engine.preview = false;
-    const h = Object.assign({}, engine.safeHarbour, {intent:"harbour"});
-    return h;
-  }
+  if (probe){ target = engine.target + 1.1; intent = "probe"; engine.probeIn = 9; }
 
   let pool = candidates(target, intent==="probe" ? 0.5 : 0.45);
   if (!pool.length) pool = candidates(target, 1.0);
@@ -1030,7 +1044,7 @@ function pad(t,midis,dur,open){
   f.type="lowpass"; f.frequency.setValueAtTime(400+open*1900,t); f.Q.value=.7;
   g.connect(f); f.connect(musicGain);
   g.gain.setValueAtTime(.0001,t);
-  g.gain.exponentialRampToValueAtTime(.08,t+.5);
+  g.gain.exponentialRampToValueAtTime(.08,t+Math.min(.5,dur*.4));  /* två ackord per takt blir korta */
   g.gain.setValueAtTime(.08,t+dur*.7);
   g.gain.exponentialRampToValueAtTime(.0001,t+dur);
   midis.forEach((m,i)=>{
@@ -1124,12 +1138,22 @@ function scheduleLoop(t0){
     else piano(ev.tPlay, nearestScaleTone(ev.midi, v.mat.scale), ev.dur*spb*.6, .09, ev.hand);
   }
 
+  /* Paddan och basen följer ackorden, inte takterna: Canon har två ackord
+     per takt, tvåackordsvampen ett ackord över två takter. Ett ackord som
+     varar längre än en takt slås an på nytt vid varje taktstreck. */
   const L = engine.layers, open = engine.energy;
+  for (const slot of v.slots){
+    const end = slot.start + slot.beats;
+    for (let b = slot.start; b < end - 1e-6; ){
+      const next = Math.min(end, (Math.floor(b/bpb + 1e-6) + 1)*bpb);
+      const t = t0 + b*spb, dur = (next-b)*spb;
+      pad(t, slot.rh, dur, open);
+      if (L>=3) bassNote(t, slot.bass, dur*.85);
+      b = next;
+    }
+  }
   for (let bar=0; bar<4; bar++){
-    const slot = v.slots[Math.floor(bar*v.slots.length/4)];
     const bt = t0 + bar*barDur;
-    pad(bt, slot.rh, barDur, open);
-    if (L>=3) bassNote(bt, slot.bass, barDur*.85);
     if (breath) continue;
     for (let beat=0; beat<bpb; beat++){
       const tb = bt+beat*spb;
@@ -1141,9 +1165,19 @@ function scheduleLoop(t0){
     if (L>=4 && bar===3) noiseHit(bt+(bpb-.5)*spb,.14,2500,.12);
   }
 
+  const before = state.loops[state.loops.length-1];
+  loop.newProg = !!before && (before.v.prog !== v.prog || before.v.tonic !== v.tonic);
   logLoop(loop);
   state.loops.push(loop);
   return loop;
+}
+
+/* Progressionsbytet loggas när det hörs, inte när det bestäms. */
+function announceLoop(loop){
+  if (!loop.newProg) return;
+  const p = LIBRARY.find(x=>x.id===loop.v.prog);
+  log(`Ny progression: ${p.name} i ${keyName(loop.v.tonic, p.mode)} (${p.numerals.join(" ")}) — ${p.mood}.`, "");
+  caption("Progressionen byts på egen klocka. Nya ackord är stor musikalisk variation och nästan ingen motorisk kostnad.");
 }
 
 function logLoop(loop){
@@ -1279,13 +1313,82 @@ function bindInputs(){
     input.onmidimessage = onMidi;
     midi.inputs.push(input);
   });
-  updateDevice(); updateTransport();
+  if (!midi.inputs.some(i=>i.name===kb.name)) kb.name = midi.inputs.length ? midi.inputs[0].name : null;
+  if (!midi.inputs.length) kb.measuring = null;
+  applyRange(); updateTransport();
 }
 
 function onMidi(e){
   const cmd = e.data[0] & 0xf0, note = e.data[1], vel = e.data[2];
-  if (cmd === 0x90 && vel > 0) noteOn(note, vel, e.timeStamp || performance.now(), midi.echo);
+  if (cmd === 0x90 && vel > 0){
+    if (e.target && e.target.name && e.target.name !== kb.name){ kb.name = e.target.name; applyRange(); }
+    if (kb.measuring){ measureKey(note); return; }
+    learnKey(note);
+    noteOn(note, vel, e.timeStamp || performance.now(), midi.echo);
+  }
   else if (cmd === 0x80 || cmd === 0x90) noteOff(note);
+}
+
+/* Keyboardets storlek. Web MIDI säger inte hur många tangenter det finns,
+   så den räknas fram i tre steg där varje steg går före det förra:
+   en gissning ur enhetens namn ("Keystation 49"), sedan inlärning — ytan
+   växer till närmaste standardstorlek som rymmer allt som spelats, också
+   efter en oktavknapp — och sist en mätning, lägsta och högsta tangent.
+   Det inlärda och det mätta sparas per enhetsnamn. */
+const KB_SIZES = [[25,48,72],[32,41,72],[37,48,84],[49,36,84],[61,36,96],[76,28,103],[88,21,108]];
+const KB_DEFAULT = [38,81];                /* utan MIDI: samma yta som alltid */
+const kb = { name:null, measuring:null, source:"standard" };
+function kbStore(){ try { return JSON.parse(localStorage.getItem("vamp.keyboards")) || {}; } catch(e){ return {}; } }
+function kbSave(name, patch){
+  const all = kbStore(); all[name] = Object.assign(all[name] || {}, patch);
+  try { localStorage.setItem("vamp.keyboards", JSON.stringify(all)); } catch(e){}
+}
+function sizeFromName(name){
+  const m = /(?:^|\D)(25|32|37|49|61|76|88)(?!\d)/.exec(name || "");
+  const s = m && KB_SIZES.find(x=>x[0]===+m[1]);
+  return s ? [s[1], s[2]] : null;
+}
+/* minsta standardstorlek, flyttad i hela oktaver, som rymmer lo..hi */
+function fitSize(lo, hi){
+  for (const [, a, b] of KB_SIZES)
+    for (const k of [0,-1,1,-2,2,-3,3,-4,4])
+      if (a+12*k >= 21 && b+12*k <= 108 && a+12*k <= lo && b+12*k >= hi) return [a+12*k, b+12*k];
+  return [21, 108];
+}
+function kbRange(){
+  if (!midi.inputs.length || !kb.name){ kb.source = "standard"; return KB_DEFAULT; }
+  const st = kbStore()[kb.name] || {};
+  if (st.measured){ kb.source = "mätt"; return st.measured; }
+  const guess = sizeFromName(kb.name);
+  let r = guess || KB_DEFAULT; kb.source = guess ? "från namnet" : "standard";
+  if (st.played && (st.played[0] < r[0] || st.played[1] > r[1])){
+    r = fitSize(Math.min(st.played[0], r[0]), Math.max(st.played[1], r[1])); kb.source = "inlärt";
+  }
+  return r;
+}
+function applyRange(){ const r = kbRange(); setRange(r[0], r[1]); updateDevice(); }
+function learnKey(note){
+  if (!kb.name) return;
+  const st = kbStore()[kb.name] || {}, p = st.played || [note, note];
+  if (st.played && note >= p[0] && note <= p[1]) return;
+  kbSave(kb.name, {played: [Math.min(p[0], note), Math.max(p[1], note)]});
+  if (!st.measured && (note < LOW || note > HIGH)) applyRange();
+}
+function say(text, secs){ el("caption").textContent = text; captionUntil = (ctx?ctx.currentTime:0)+secs; }
+function measureStart(){
+  if (kb.measuring){ kb.measuring = null; say("", 0); updateDevice(); return; }
+  kb.measuring = {};
+  say("Tryck på keyboardets lägsta tangent.", 60); updateDevice();
+}
+function measureKey(note){
+  const m = kb.measuring;
+  if (m.lo === undefined){ m.lo = note; say("Och nu den högsta.", 60); return; }
+  const lo = Math.min(m.lo, note), hi = Math.max(m.lo, note);
+  kb.measuring = null;
+  if (hi - lo < 12){ say("Det blev mindre än en oktav — mät igen med tangenterna längst ut.", 8); updateDevice(); return; }
+  kbSave(kb.name, {measured: [lo, hi]});
+  applyRange();
+  say(`Keyboardet har ${HIGH-LOW+1} tangenter.`, 6);
 }
 
 /* Datorns tangentbord, som i en tracker: nedre bokstavsraden är en oktav
@@ -1327,9 +1430,7 @@ function noteOn(note, vel, perfMs, echo){
   if (echo) liveOn(note, vel);
   const tp = heardTime(perfMs);
   const ev = (state.mode === "real" && state.running) ? matchPress(note, tp) : null;
-  let shown = ev ? ev.midi : note;
-  while (shown < LOW) shown += 12;
-  while (shown > HIGH) shown -= 12;
+  const shown = fold(ev ? ev.midi : note);
   unlight(note);
   flashes.push(lit[note] = { midi:shown, end:Infinity, ghost:false,
     hit: !!ev || state.mode !== "real",    /* före start: bara visa var handen är */
@@ -1357,7 +1458,7 @@ function matchPress(note, tp){
       if (ev.ghost || ev.hit || (ev.midi-note) % 12 !== 0) continue;
       const d = Math.abs(tp - ev.t);
       if (d > loop.win) continue;
-      const cost = d + (ev.midi === note ? 0 : .04);   /* rätt oktav vinner på lika villkor */
+      const cost = d + (fold(ev.midi) === note ? 0 : .04);   /* tangenten den visas på vinner på lika villkor */
       if (cost < bestCost){ best = ev; bestCost = cost; }
     }
   }
@@ -1399,9 +1500,17 @@ function liveOff(note){
 
 const lane = document.getElementById("lane");
 const lctx = lane.getContext("2d");
-const LOW = 38, HIGH = 81;
-const whites = [];
-for (let m=LOW;m<=HIGH;m++) if (!isBlack(m)) whites.push(m);
+/* Omfånget följer keyboardet (se MIDI-IN). Toner utanför flyttas i hela
+   oktaver in på det — matchningen bryr sig ändå inte om oktav. */
+let LOW = 0, HIGH = 0, whites = [];
+function setRange(lo, hi){
+  if (isBlack(lo)) lo--; if (isBlack(hi)) hi++;
+  if (lo === LOW && hi === HIGH) return;
+  LOW = lo; HIGH = hi; whites = [];
+  for (let m=LOW;m<=HIGH;m++) if (!isBlack(m)) whites.push(m);
+  layoutStage();
+}
+function fold(m){ while (m < LOW) m += 12; while (m > HIGH) m -= 12; return m; }
 
 function keyRect(midi, W){
   const ww = W/whites.length;
@@ -1430,6 +1539,20 @@ function resizeCanvas(cv){
 }
 let laneSize = {w:340,h:352};
 
+/* Vita tangenter smalare än så här blir svåra att hitta med blicken. Behövs
+   det bryter scenen sig ur kolumnen, upp till hela fönsterbredden. Räcker
+   inte ens den (88 tangenter på en telefon) blir tangenterna smalare, och
+   delen som varvet använder markeras. */
+const MIN_WHITE = 16;
+function layoutStage(){
+  const stage = lane.parentElement, col = document.querySelector(".device").offsetWidth;
+  const avail = document.documentElement.clientWidth - 32;
+  const w = Math.max(col, Math.min(avail, whites.length*MIN_WHITE));
+  stage.style.width = w > col ? w+"px" : "";
+  stage.style.marginLeft = w > col ? (col-w)/2+"px" : "";
+  laneSize = resizeCanvas(lane);
+}
+
 /* Full styrka så länge tangenten är nere, sedan en kort avklingning — kort
    nog att två anslag på samma tangent i rad syns som två. */
 const FADE = .12;
@@ -1449,6 +1572,16 @@ function drawLane(){
   lctx.clearRect(0,0,W,H);
   lctx.fillStyle = "#16242b"; lctx.fillRect(0,0,W,H);
 
+  /* Smala tangenter: markera delen som varvet använder, så att man hittar rätt. */
+  let used = null;
+  if (W/whites.length < MIN_WHITE-.5 && state.loops.length){
+    let lo = Infinity, hi = -Infinity;
+    for (const loop of state.loops) for (const ev of loop.events){ const m = fold(ev.midi); if (m<lo) lo=m; if (m>hi) hi=m; }
+    const a = keyRect(isBlack(lo)?lo-1:lo, W), b = keyRect(isBlack(hi)?hi+1:hi, W);
+    used = {x:a.x, w:b.x+b.w-a.x};
+    lctx.fillStyle = "rgba(243,236,224,.05)"; lctx.fillRect(used.x, 0, used.w, laneH);
+  }
+
   lctx.strokeStyle = "rgba(43,70,80,.9)"; lctx.lineWidth = 1;
   for (const loop of state.loops) for (let bar=0;bar<=4;bar++){
     const y = laneH - (loop.t0+bar*loop.bpb*loop.spb-now)*pps;
@@ -1458,11 +1591,11 @@ function drawLane(){
   for (const loop of state.loops) for (const ev of loop.events){
     if ((!loop.real || ev.ghost) && !ev.flashed && now >= ev.tPlay){
       ev.flashed = true;
-      flashes.push({midi:ev.midi, end:ev.tPlay + ev.dur*loop.spb, hit:ev.hit, ghost:ev.ghost, hand:ev.hand});
+      flashes.push({midi:fold(ev.midi), end:ev.tPlay + ev.dur*loop.spb, hit:ev.hit, ghost:ev.ghost, hand:ev.hand});
     }
     const y = laneH-(ev.t-now)*pps, h = Math.max(7, ev.dur*loop.spb*pps);
     if (y < 0 || y-h >= laneH) continue;
-    const r = keyRect(ev.midi,W);
+    const r = keyRect(fold(ev.midi),W);
     const missed = !ev.hit && now > ev.t + (loop.real ? loop.win : 0);
     lctx.fillStyle = ev.ghost ? "rgba(243,236,224,.26)"
       : missed ? "rgba(226,96,127,.72)"
@@ -1483,6 +1616,7 @@ function drawLane(){
 
   lctx.strokeStyle = "rgba(243,236,224,.45)"; lctx.lineWidth = 2;
   lctx.beginPath(); lctx.moveTo(0,laneH); lctx.lineTo(W,laneH); lctx.stroke();
+  if (used){ lctx.fillStyle = "rgba(255,201,77,.75)"; lctx.fillRect(used.x, laneH-4, used.w, 3); }
 
   /* Klaviaturen ritas i lager så att en vit tangent som lyser aldrig
      målar över sina svarta grannar. Bara den tryckta tangenten lyser. */
@@ -1626,8 +1760,7 @@ function updatePanels(acc, sd, rec, v){
 function updateChips(loop){
   const v = loop.v;
   const p = LIBRARY.find(x=>x.id===v.prog);
-  const keyName = (KEYS.find(k=>k.tonic===v.tonic)||{name:PC_NAMES[v.tonic]}).name;
-  el("c-prog").textContent = p.name+" i "+keyName;
+  el("c-prog").textContent = p.name+" i "+keyName(v.tonic, p.mode);
   el("c-texture").textContent = TEXTURES[v.texture].label;
   el("c-bpm").textContent = v.bpm+" bpm"+(v.meter===3?" · 3/4":"")+(v.swing?" · swing":"");
   const names = ["","padda","padda + hi-hat","padda + bas","+ bastrumma","fullt komp"];
@@ -1645,7 +1778,7 @@ function frame(){
       if (state.ending) stop();
     }
     for (const loop of state.loops)
-      if (now>=loop.t0 && now<loop.t1 && state.shown!==loop){ state.shown=loop; updateChips(loop); }
+      if (now>=loop.t0 && now<loop.t1 && state.shown!==loop){ state.shown=loop; updateChips(loop); announceLoop(loop); }
     while (state.loops.length>2 && state.loops[0].t1 < now-.5) state.loops.shift();
     if (captionUntil && now>captionUntil){ el("caption").textContent=""; captionUntil=0; }
   }
@@ -1711,17 +1844,52 @@ function updateDevice(){
   el("midi-dot").className = "dot" + (n ? " on" : "");
   el("btn-midi").hidden = !(midi.supported && !midi.access && !midi.denied);
   el("echo-wrap").hidden = !n;
+  el("btn-measure").hidden = !n;
+  el("btn-measure").textContent = kb.measuring ? "Avbryt mätning" : "Mät keyboardet";
   const typing = " Spela på datorns tangentbord så länge.";
   if (!window.isSecureContext) s.textContent = "MIDI kräver https eller localhost." + typing;
   else if (!midi.supported) s.textContent = "Webbläsaren saknar Web MIDI — prova Chrome eller Edge." + typing;
   else if (midi.denied) s.textContent = "MIDI-åtkomst nekad. Tillåt den i webbläsarens inställningar för sidan." + typing;
   else if (!midi.access) s.textContent = "Anslut ett MIDI-keyboard, eller spela på datorns tangentbord.";
   else if (!n) s.textContent = "Inget keyboard hittat — koppla in ett, eller spela på datorns tangentbord.";
-  else s.textContent = midi.inputs.map(i=>i.name).join(", ");
+  else s.textContent = midi.inputs.map(i=>i.name).join(", ") + (kb.source === "standard"
+    ? " · storleken okänd"
+    : ` · ${HIGH-LOW+1} tangenter (${kb.source === "från namnet" ? "gissat från namnet" : kb.source})`);
 }
 
 el("btn-play").addEventListener("click", togglePlay);
 el("btn-midi").addEventListener("click", connectMidi);
+el("btn-measure").addEventListener("click", measureStart);
+
+/* Skärmen tänd. Webbläsaren släpper låset när fliken döljs, så det begärs
+   igen när fliken syns. Valet sparas. */
+const wake = { on:false, lock:null };
+async function applyWake(){
+  if (wake.on && !wake.lock && document.visibilityState === "visible"){
+    try {
+      const lock = await navigator.wakeLock.request("screen");
+      if (!wake.on){ lock.release().catch(()=>{}); return; }   /* avslaget medan vi väntade */
+      wake.lock = lock;
+      lock.addEventListener("release", ()=>{ if (wake.lock === lock) wake.lock = null; });
+    } catch(e){ wake.lock = null; }
+  } else if (!wake.on && wake.lock){
+    const lock = wake.lock; wake.lock = null; lock.release().catch(()=>{});
+  }
+}
+function setWake(on){
+  wake.on = on;
+  try { localStorage.setItem("vamp.wake", on ? "1" : "0"); } catch(e){}
+  el("btn-wake").textContent = on ? "Skärmen tänd" : "Skärmen släcks";
+  el("btn-wake").setAttribute("aria-pressed", on ? "true" : "false");
+  applyWake();
+}
+if ("wakeLock" in navigator){
+  el("btn-wake").hidden = false;
+  let saved = false; try { saved = localStorage.getItem("vamp.wake") === "1"; } catch(e){}
+  setWake(saved);
+  el("btn-wake").addEventListener("click", ()=>setWake(!wake.on));
+  document.addEventListener("visibilitychange", applyWake);
+}
 el("echo").addEventListener("change", e=>{ midi.echo = e.target.checked; });
 document.addEventListener("keydown", e=>{
   if (e.code !== "Space" || e.repeat) return;
@@ -1747,8 +1915,9 @@ el("truelevel").addEventListener("input", e=>{
   drawChart();
 });
 
-function onResize(){ laneSize = resizeCanvas(lane); chartSize = resizeCanvas(chart); drawChart(); }
+function onResize(){ layoutStage(); chartSize = resizeCanvas(chart); drawChart(); }
 window.addEventListener("resize", onResize);
+setRange(KB_DEFAULT[0], KB_DEFAULT[1]);
 onResize();
 updateDevice(); updateTransport();
 /* Redan tillåtet → anslut direkt. Annars väntar vi på knappen, så att
