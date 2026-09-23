@@ -33,6 +33,27 @@ från C4 (svarta på `2 3 5 6 7 9 0`). Utan MIDI-keyboard står bokstaven på va
 tangent i bilden. Många tangentbord registrerar bara två eller tre tangenter
 samtidigt i vissa kombinationer, så större grepp kan tappa toner.
 
+**Klaviaturen i bilden följer ditt keyboard.** Web MIDI säger inte hur många
+tangenter det har, så appen räknar fram det i tre steg, där varje steg går före
+det förra:
+
+1. **Namnet.** "Keystation 49" eller "Launchkey 25" ger en standardstorlek
+   (25, 32, 37, 49, 61, 76 eller 88).
+2. **Det du spelar.** Klaviaturen växer till närmaste standardstorlek som rymmer
+   lägsta och högsta ton du spelat, också efter en oktavknapp.
+3. **Mät keyboardet.** Tryck på lägsta och högsta tangenten, så är storleken exakt.
+
+Det inlärda och det mätta sparas per enhetsnamn. Toner utanför keyboardet flyttas
+i hela oktaver in på det. När vita tangenter annars skulle bli smalare än 16 px
+bryter scenen sig ur kolumnen, upp till hela fönsterbredden. Ryms det ändå inte
+(88 tangenter på en telefon) blir tangenterna smalare, och delen som varvet
+använder markeras.
+
+**Skärmen tänd** (bredvid Spela) hindrar skärmen från att slockna medan du
+spelar, via Screen Wake Lock. Webbläsaren släpper låset när fliken döljs; appen
+tar det igen när du kommer tillbaka. Valet sparas, och knappen syns bara i
+webbläsare som stöder det.
+
 Spelaren i demot är **simulerad**. Reglaget sätter hennes sanna nivå; motorn ser
 den aldrig, utan måste hitta den ur utfallet. Hon har dessutom dolda svagheter
 (tvåhandsspel, synkopering, svarta tangenter) som motorn ska upptäcka utan att
@@ -68,7 +89,7 @@ Tolv moduler i `index.html`, i den ordning de bygger på varandra:
 |---|---|---|
 | 1 | Teori | Romerska siffror → tonhöjdsklasser. `bVII`, `vi`, `V7`, `iio`. |
 | 2 | Röstföring | Ackord → grepp, via billigaste vägen genom hela progressionen. |
-| 3 | Bibliotek | 16 progressioner som text, 5 tonarter. |
+| 3 | Bibliotek | 16 progressioner som text, 4 dur- och 4 molltonarter. |
 | 4 | Texturer | 14 texturer: grepp → faktiska noter, uttryckt i slag. |
 | 5 | Svårighet | Noter → formvektor (12 mått) → ett tal. |
 | 6 | Spelare | Simulerad hand med dolda styrkor och svagheter. |
@@ -93,6 +114,15 @@ programmering den billigaste vägen genom progressionen, där kostnaden är hur
 långt rösterna måste flytta sig — och **stänger loopen** genom att koppla sista
 greppet tillbaka till det första. Det är därför handen ligger still och det
 låter arrangerat i stället för hoppigt. Varje ny progression kostar en rad.
+
+Basen röstförs också som en sluten loop, men med **en oktav per grundton**: samma
+ackord ligger på samma ton varje gång det kommer i varvet. En kortaste väg ger
+inte det — Canon fick C på både C2 och C3. Registret 36–52 ger högst två lägen
+per grundton, så alla kombinationer prövas.
+
+Paddan och basen följer **ackorden, inte takterna**. Canon har två ackord per
+takt och får två anslag per takt; ett ackord som varar två takter slås an igen
+vid taktstrecket.
 
 ### Svårighet räknas ur noterna
 
@@ -124,17 +154,26 @@ Motorn kör tre faser:
 
 * **Placering** — fyra korta prov i stigande svårighet, samma tonart och tempo.
   Avbryts vid första riktiga misslyckandet; ingen ska plöja igenom något som
-  uppenbart är för svårt. Startar sedan **ett steg under** skattningen: ett bra
-  första varv avgör om någon stannar kvar, och fel nedåt är billigt.
+  uppenbart är för svårt. En enda miss är inget riktigt misslyckande — provens
+  första tre takter har ibland bara tre toner — så det krävs två. Med riktig
+  spelare föregås första provet av en takts inräkning, annars når första tonen
+  tangenterna innan den hunnit synas. Startar sedan **ett steg under**
+  skattningen: ett bra första varv avgör om någon stannar kvar, och fel nedåt är
+  billigt.
 * **Zoom** — målnivån följer skattningen tätt medan osäkerheten krymper
-  (σ ← 0,91 σ per varv).
+  (σ ← 0,91 σ per varv). Ett felfritt varv säger bara att nivån räcker, inte var
+  gränsen går: det driver skattningen uppåt men krymper inte σ. Den som spelar
+  felfritt fortsätter alltså uppåt tills gränsen syns. (Demot krymper ändå, för
+  att hinna fram på sina tre minuter.)
 * **Groove** — motorn bor på nivån. Tre rena varv i rad *och* samlad timing
-  (< 42 ms spridning) krävs för +0,45. Under 80 % träffar sänks nivån tyst och
-  nästa varv blir en **safe harbour** — ett varv hon redan äger.
+  (< 60 ms spridning, som datorns tangentbord också klarar) krävs för +0,45 —
+  eller mer, om skattningen sprungit ifrån under de rena varven. Under 80 %
+  träffar sänks nivån tyst och nästa varv blir en **safe harbour** — ett varv hon
+  redan äger.
 
 Var nionde varv smyger motorn in ett **tyst prov** ~1,1 nivåer över målet. Går
-det bra vet den mer; går det dåligt loggas ingenting dramatiskt, och nästa varv
-landar mjukt.
+det bra (≥ 85 %) är målet för lågt och höjs; går det dåligt loggas ingenting
+dramatiskt, och nästa varv landar mjukt.
 
 Två skyddsmekanismer värda att känna till:
 
@@ -152,7 +191,8 @@ verkligt spelat material, aldrig på en gissning om resten av varvet.
 Runt det ligger tre musikaliska knep: **andrum** (trummorna ut ett varv),
 **förhandsvisning** (appen spelar vänsterhanden själv ett varv innan spelaren
 får ta över den) och lager som byggs upp padda → hi-hat → bas → bastrumma →
-virvel allteftersom det går bra.
+virvel, ett per bra varv (≥ 90 %) från första provet. Fullt komp efter fyra bra
+varv; ett dåligt varv tar inget ut.
 
 ### MIDI-in: ett anslag letar upp sin ton
 
@@ -163,10 +203,16 @@ så att ett litet keyboard räcker. Ett anslag som inte hittar någon ton är en
 felton och kostar en halv miss, eftersom ett grepp med en ton för mycket inte
 är samma sak som en ton som aldrig kom.
 
-Tiden mäts mot det som **hörs**, inte mot det som schemalagts
-(`getOutputTimestamp()`). Annars skulle ljudkortets fördröjning få varje
-spelare att verka släpa. Samma klocka styr bilden, så de fallande noterna når
-klaviaturen när tonen faktiskt låter.
+Tiden mäts mot det som **hörs**, inte mot det som schemalagts. Annars skulle
+ljudkortets fördröjning få varje spelare att verka släpa. Klockan är
+`ctx.currentTime` minus fördröjningen ut till högtalaren, hållen som en jämn
+förskjutning mot `performance.now()`: den glider mot rätt värde, högst 3 ms per
+bildruta, och står still under paus. Webbläsarens rapporterade fördröjning
+(`outputLatency`, som även `getOutputTimestamp()` bygger på) kan hoppa hundratals
+millisekunder mellan två bildrutor, och följd rakt av får det bilden att flimra.
+Samma klocka styr bilden och tidsstämplar anslagen, så de fallande noterna når
+klaviaturen när tonen faktiskt låter, och tidsspridningen som motorn mäter är
+spelarens, inte ljudkortets.
 
 Spelarens egna toner går genom appens piano (*Mina toner i appen*). Stäng av
 det om keyboardet har egna högtalare.
