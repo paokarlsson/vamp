@@ -5,8 +5,8 @@ håller spelaren precis på gränsen av vad hon klarar — utan att musiken någ
 stannar för att motorn tänker.
 
 Hela prototypen är **en fil, noll beroenden**. Öppna `index.html` i en webbläsare,
-anslut ett MIDI-keyboard och tryck *Spela*. Utan keyboard finns demot i panelen
-*Utan keyboard*.
+anslut ett MIDI-keyboard och tryck *Spela*. Utan MIDI går det att spela på datorns
+tangentbord, och vill du bara titta finns demot i panelen *Utan keyboard*.
 
 ```
 git clone https://github.com/paokarlsson/vamp.git
@@ -26,6 +26,12 @@ bygga och ingen Dockerfile — bara `node`-imagen och browser-sync via `npx`.
 **Spela/Paus** (eller mellanslag) fryser ljudklockan, så att musik, fallande noter
 och motor står still på exakt samma ställe tills du fortsätter. MIDI kräver Web
 MIDI (Chrome, Edge, Firefox) och https eller `localhost`.
+
+**Datorns tangentbord** spelar som i en tracker: nedre bokstavsraden `Z`–`M` är
+en oktav från C3 (svarta tangenter på `S D G H J`), övre raden `Q`–`P` fortsätter
+från C4 (svarta på `2 3 5 6 7 9 0`). Utan MIDI-keyboard står bokstaven på varje
+tangent i bilden. Många tangentbord registrerar bara två eller tre tangenter
+samtidigt i vissa kombinationer, så större grepp kan tappa toner.
 
 Spelaren i demot är **simulerad**. Reglaget sätter hennes sanna nivå; motorn ser
 den aldrig, utan måste hitta den ur utfallet. Hon har dessutom dolda svagheter
@@ -69,7 +75,7 @@ Tolv moduler i `index.html`, i den ordning de bygger på varandra:
 | 7 | Motor | Skattning, nio-axlig profil, val av nästa varv. |
 | 8 | Ljud | Web Audio. Piano, padda, bas, trummor — inga samplingar. |
 | 9 | Varvet | Schemaläggning, beslutsfönster, mjuka landningar. |
-| 10 | MIDI-in | Riktiga anslag matchade mot väntade toner. |
+| 10 | MIDI-in | Riktiga anslag, från MIDI eller datorns tangentbord, matchade mot väntade toner. |
 | 11 | Bild | Fallande noter och klaviatur på canvas. |
 | 12 | Gränssnitt | Spela/paus, demo, paneler, logg. |
 

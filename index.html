@@ -151,7 +151,7 @@
 <div class="wrap">
 
 <h1 class="mark">vamp</h1>
-<p class="tag">Fyra ackord, en loop, och en motor som håller dig precis på din nivå. Anslut ett MIDI-keyboard och tryck Spela.</p>
+<p class="tag">Fyra ackord, en loop, och en motor som håller dig precis på din nivå. Anslut ett MIDI-keyboard, eller spela på datorns tangentbord, och tryck Spela.</p>
 
 <div class="stage">
   <canvas id="lane"></canvas>
@@ -232,8 +232,8 @@
 "use strict";
 /* ==========================================================================
    VAMP — adaptiv loopmotor för piano
-   Prototyp. Riktig motor; spelaren är ett MIDI-keyboard, eller simulerad
-   i demot.
+   Prototyp. Riktig motor; spelaren är ett MIDI-keyboard, datorns
+   tangentbord, eller simulerad i demot.
 
    Moduler, i ordning:
      1  TEORI          romerska siffror → tonhöjdsklasser
@@ -245,7 +245,7 @@
      7  MOTOR          skattning, profil, val av nästa varv
      8  LJUD           Web Audio, inga samplingar
      9  VARVET         schemaläggning, beslutsfönster
-    10  MIDI-IN        riktiga anslag matchade mot väntade toner
+    10  MIDI-IN        riktiga anslag (MIDI eller tangentbord) mot väntade toner
     11  BILD           fallande noter, klaviatur
     12  GRÄNSSNITT     spela/paus, demo, paneler
 
@@ -1187,7 +1187,8 @@ function commitLoop(loop){
 /* ==========================================================================
    10. MIDI-IN
 
-   Den riktiga spelaren. Varje anslag matchas mot närmaste väntade ton med
+   Den riktiga spelaren, på ett MIDI-keyboard eller datorns tangentbord.
+   Varje anslag matchas mot närmaste väntade ton med
    samma tonklass inom varvets tidsfönster. Oktaven spelar ingen roll, så
    ett litet keyboard räcker. Det som inte hittar någon ton är en felton.
 
@@ -1197,6 +1198,7 @@ function commitLoop(loop){
 
 const midi = { access:null, inputs:[], supported: !!navigator.requestMIDIAccess, denied:false, echo:true };
 const held = {};   /* tangent → rösten som låter medan den hålls ned */
+const lit = {};    /* tangent → dess ljus på klaviaturen medan den hålls ned */
 
 /* performance.now()-tid → den kontexttid som hörs i högtalaren just då */
 function heardTime(perfMs){
@@ -1209,11 +1211,29 @@ function heardTime(perfMs){
 }
 const heardNow = () => heardTime(performance.now());
 
+/* Bildens klocka. heardNow() hoppar fram och tillbaka i takt med ljudkortets
+   buffertar; ritad rakt av skakar noterna, och en tangent kan släckas i samma
+   bildruta som den tänds. Bilden följer därför performance.now() med en
+   utjämnad förskjutning mot det som hörs, och går aldrig bakåt. */
+const view = { off:null, now:0 };
+function viewNow(){
+  const raw = heardNow();
+  if (ctx.state !== "running"){ view.off = null; return view.now = raw; }
+  const p = performance.now()/1000, off = raw - p;
+  if (view.off === null || Math.abs(off - view.off) > .25) view.off = off;
+  else view.off += (off - view.off)*.05;
+  const t = p + view.off;
+  return view.now = (t < view.now && t > view.now-.25) ? view.now : t;
+}
+
 function connectMidi(){
   if (!midi.supported || midi.access) return;
   navigator.requestMIDIAccess().then(access=>{
     midi.access = access;
-    access.onstatechange = bindInputs;     /* keyboard in och ur under spel */
+    access.onstatechange = e=>{            /* keyboard in och ur under spel */
+      if (e.port.state === "disconnected") releaseAll();
+      bindInputs();
+    };
     bindInputs();
   }, ()=>{ midi.denied = true; updateDevice(); });
 }
@@ -1230,27 +1250,69 @@ function bindInputs(){
 
 function onMidi(e){
   const cmd = e.data[0] & 0xf0, note = e.data[1], vel = e.data[2];
-  if (cmd === 0x90 && vel > 0) noteOn(note, vel, e.timeStamp || performance.now());
+  if (cmd === 0x90 && vel > 0) noteOn(note, vel, e.timeStamp || performance.now(), midi.echo);
   else if (cmd === 0x80 || cmd === 0x90) noteOff(note);
 }
 
-function noteOn(note, vel, perfMs){
+/* Datorns tangentbord, som i en tracker: nedre bokstavsraden är en oktav
+   från C3, övre fortsätter från C4, och de svarta tangenterna ligger på
+   raden ovanför. Fysiska tangenter (e.code), så layouten spelar ingen roll. */
+const TYPE_ROWS = [
+  [48, "KeyZ KeyS KeyX KeyD KeyC KeyV KeyG KeyB KeyH KeyN KeyJ KeyM"],
+  [60, "KeyQ Digit2 KeyW Digit3 KeyE KeyR Digit5 KeyT Digit6 KeyY Digit7 KeyU KeyI Digit9 KeyO Digit0 KeyP"]
+];
+const typeNote = {}, typeLabel = {}, typed = new Set();
+for (const [base, codes] of TYPE_ROWS) codes.split(" ").forEach((code,i)=>{
+  typeNote[code] = base+i;
+  typeLabel[base+i] = code.slice(-1);    /* "KeyZ" → "Z", "Digit2" → "2" */
+});
+/* Står det något annat på tangenten i den här layouten, visa det. */
+if (navigator.keyboard && navigator.keyboard.getLayoutMap)
+  navigator.keyboard.getLayoutMap().then(map=>{
+    for (const code in typeNote){ const s = map.get(code); if (s) typeLabel[typeNote[code]] = s.toUpperCase(); }
+  }, ()=>{});
+
+function typeDown(e){
+  const note = typeNote[e.code];
+  if (note === undefined || e.ctrlKey || e.metaKey || e.altKey) return;
+  e.preventDefault();                      /* t.ex. snabbsök i Firefox */
+  if (e.repeat || typed.has(e.code)) return;
+  typed.add(e.code);
+  noteOn(note, 90, e.timeStamp || performance.now(), true);
+}
+function typeUp(e){ if (typed.delete(e.code)) noteOff(typeNote[e.code]); }
+/* Tappar sidan fokus kommer inga keyup — släpp allt som hålls. */
+function typeRelease(){ for (const code of typed) noteOff(typeNote[code]); typed.clear(); }
+
+function noteOn(note, vel, perfMs, echo){
   ensureAudio();
   if (ctx.state !== "running"){
     if (state.started) return;             /* pausat: inget låter, inget räknas */
     ctx.resume();
   }
-  if (midi.echo) liveOn(note, vel);
+  if (echo) liveOn(note, vel);
   const tp = heardTime(perfMs);
   const ev = (state.mode === "real" && state.running) ? matchPress(note, tp) : null;
   let shown = ev ? ev.midi : note;
   while (shown < LOW) shown += 12;
   while (shown > HIGH) shown -= 12;
-  flashes.push({ midi:shown, at:tp, ghost:false,
+  unlight(note);
+  flashes.push(lit[note] = { midi:shown, end:Infinity, ghost:false,
     hit: !!ev || state.mode !== "real",    /* före start: bara visa var handen är */
     hand: ev ? ev.hand : (note < 60 ? "L" : "R") });
 }
-function noteOff(note){ if (ctx) liveOff(note); }
+function noteOff(note){ if (ctx){ liveOff(note); unlight(note); } }
+/* Tangenten lyser tills den släpps. Släppt under paus släcks den direkt,
+   annars skulle den lysa kvar tills klockan går igen. */
+function unlight(note){
+  const f = lit[note]; if (!f) return;
+  delete lit[note];
+  f.end = ctx.state === "running" ? view.now : -Infinity;
+}
+/* Ett keyboard som försvinner mitt i ett grepp skickar aldrig sina note off. */
+function releaseAll(){
+  for (const n of Object.keys(Object.assign({}, held, lit))) noteOff(+n);
+}
 
 function matchPress(note, tp){
   let best = null, bestCost = Infinity, home = null;
@@ -1313,6 +1375,17 @@ function keyRect(midi, W){
   const i = whites.indexOf(midi-1), bw = ww*.62;
   return {x:(i+1)*ww-bw/2, w:bw};
 }
+/* Utan MIDI-keyboard står datortangenten på varje pianotangent den spelar. */
+function drawTypeLabels(W, black, color, y){
+  if (midi.inputs.length) return;
+  lctx.fillStyle = color; lctx.textAlign = "center";
+  lctx.font = `600 ${Math.min(11, W/whites.length*.62).toFixed(1)}px "IBM Plex Sans",system-ui,sans-serif`;
+  for (const m in typeLabel){
+    if (isBlack(+m) !== black) continue;
+    const r = keyRect(+m,W); lctx.fillText(typeLabel[m], r.x+r.w/2, y);
+  }
+  lctx.textAlign = "start";
+}
 function resizeCanvas(cv){
   const dpr = Math.min(window.devicePixelRatio||1,2);
   const r = cv.getBoundingClientRect();
@@ -1323,8 +1396,11 @@ function resizeCanvas(cv){
 }
 let laneSize = {w:340,h:352};
 
+/* Full styrka så länge tangenten är nere, sedan en kort avklingning — kort
+   nog att två anslag på samma tangent i rad syns som två. */
+const FADE = .12;
 function flashColor(f, now){
-  const a = Math.max(0,1-(now-f.at)/.3)*.92;
+  const a = (now < f.end ? 1 : Math.max(0,1-(now-f.end)/FADE))*.92;
   if (f.ghost) return `rgba(243,236,224,${a*.45})`;
   if (!f.hit)  return `rgba(226,96,127,${a})`;
   return f.hand==="L" ? `rgba(122,168,255,${a})` : `rgba(255,201,77,${a})`;
@@ -1334,7 +1410,7 @@ function drawLane(){
   const {w:W,h:H} = laneSize;
   const kbH = 62, laneH = H-kbH, look = 2.6, pps = laneH/look;
   /* det som hörs, inte det som schemalagts — annars ligger bilden före ljudet */
-  const now = ctx ? heardNow() : 0;
+  const now = ctx ? viewNow() : 0;
 
   lctx.clearRect(0,0,W,H);
   lctx.fillStyle = "#16242b"; lctx.fillRect(0,0,W,H);
@@ -1348,18 +1424,19 @@ function drawLane(){
   for (const loop of state.loops) for (const ev of loop.events){
     if ((!loop.real || ev.ghost) && !ev.flashed && now >= ev.tPlay){
       ev.flashed = true;
-      flashes.push({midi:ev.midi, at:ev.tPlay, hit:ev.hit, ghost:ev.ghost, hand:ev.hand});
+      flashes.push({midi:ev.midi, end:ev.tPlay + ev.dur*loop.spb, hit:ev.hit, ghost:ev.ghost, hand:ev.hand});
     }
     const y = laneH-(ev.t-now)*pps, h = Math.max(7, ev.dur*loop.spb*pps);
-    if (y < -h || y-h > laneH+40) continue;
+    if (y < 0 || y-h >= laneH) continue;
     const r = keyRect(ev.midi,W);
     const missed = !ev.hit && now > ev.t + (loop.real ? loop.win : 0);
     lctx.fillStyle = ev.ghost ? "rgba(243,236,224,.26)"
       : missed ? "rgba(226,96,127,.72)"
       : ev.hand==="L" ? "#7aa8ff" : "#ffc94d";
-    const top = Math.min(y,laneH)-h, bh = Math.min(h, laneH-top);
+    /* Noten glider vidare ner i tangenten och kapas vid linjen. */
+    const top = y-h, bh = Math.min(y,laneH)-top;
     if (bh>0){
-      const rad = Math.min(4,r.w/3), x=r.x, ww=r.w, yy=top, hh=bh;
+      const rad = Math.min(4,r.w/3,bh/2), x=r.x, ww=r.w, yy=top, hh=bh;
       lctx.beginPath();
       lctx.moveTo(x+rad,yy);
       lctx.lineTo(x+ww-rad,yy); lctx.quadraticCurveTo(x+ww,yy,x+ww,yy+rad);
@@ -1375,10 +1452,8 @@ function drawLane(){
 
   /* Klaviaturen ritas i lager så att en vit tangent som lyser aldrig
      målar över sina svarta grannar. Bara den tryckta tangenten lyser. */
-  for (let i=0;i<flashes.length;i++){
-    const age = now-flashes[i].at;
-    if (age>.3 || age<0){ flashes.splice(i,1); i--; }
-  }
+  for (let i=0;i<flashes.length;i++)
+    if (now-flashes[i].end > FADE){ flashes.splice(i,1); i--; }
   const ww = W/whites.length;
   lctx.fillStyle = "#f3ece0";
   for (let i=0;i<whites.length;i++) lctx.fillRect(i*ww+.5, laneH+2, ww-1, kbH-4);
@@ -1387,6 +1462,7 @@ function drawLane(){
     const r = keyRect(f.midi,W);
     lctx.fillStyle = flashColor(f,now); lctx.fillRect(r.x, laneH+2, r.w, kbH-4);
   }
+  drawTypeLabels(W, false, "rgba(22,36,43,.5)", laneH+kbH-10);
   lctx.fillStyle = "#1d3038";
   for (let m=LOW;m<=HIGH;m++){ if(!isBlack(m)) continue;
     const r = keyRect(m,W); lctx.fillRect(r.x, laneH+2, r.w, kbH*.6); }
@@ -1395,6 +1471,7 @@ function drawLane(){
     const r = keyRect(f.midi,W);
     lctx.fillStyle = flashColor(f,now); lctx.fillRect(r.x, laneH+2, r.w, kbH*.6);
   }
+  drawTypeLabels(W, true, "rgba(243,236,224,.65)", laneH+kbH*.6-4);
 
   if (state.started && !state.over && ctx && ctx.state !== "running"){
     lctx.fillStyle = "rgba(22,36,43,.6)"; lctx.fillRect(0,0,W,laneH);
@@ -1553,7 +1630,9 @@ function begin(mode){
   el("btn-demo").disabled = true; el("btn-free").disabled = true;
   if (mode==="real"){
     el("truelevel").disabled = true; el("lv-true").hidden = true; drawChart();
-    el("caption").textContent = "Spela tonerna när de når tangenterna. Oktaven spelar ingen roll.";
+    el("caption").textContent = midi.inputs.length
+      ? "Spela tonerna när de når tangenterna. Oktaven spelar ingen roll."
+      : "Spela tonerna när de når tangenterna, med datortangenten som står på dem. Oktaven spelar ingen roll.";
     captionUntil = ctx.currentTime+10;
   }
   updateTransport();
@@ -1566,7 +1645,7 @@ function stop(){ state.running=false; state.over=true; updateTransport(); }
 /* Paus fryser ljudklockan. Allt — schemalagda toner, fallande noter,
    beslutsfönstret — räknar på den, så allt står still på samma ställe. */
 function togglePlay(){
-  if (!state.started){ if (midi.inputs.length) begin("real"); return; }
+  if (!state.started){ begin("real"); return; }
   if (state.over || !ctx) return;
   if (ctx.state === "running") ctx.suspend(); else ctx.resume();
 }
@@ -1576,13 +1655,13 @@ const ICON_PAUSE = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden=
 function updateTransport(){
   const b = el("btn-play");
   let label = "Spela", icon = ICON_PLAY, off = false;
-  if (!state.started) off = !midi.inputs.length;
-  else if (state.over){ label = "Slut"; off = true; }
+  if (state.over){ label = "Slut"; off = true; }
+  else if (!state.started) ;               /* går alltid: MIDI eller datorns tangentbord */
   else if (ctx && ctx.state === "running"){ label = "Paus"; icon = ICON_PAUSE; }
   else label = "Fortsätt";
   b.innerHTML = icon + "<span>" + label + "</span>";
   b.disabled = off;
-  b.title = off && !state.started ? "Anslut ett MIDI-keyboard först" : label + " (mellanslag)";
+  b.title = off ? label : label + " (mellanslag)";
 }
 
 function updateDevice(){
@@ -1590,11 +1669,12 @@ function updateDevice(){
   el("midi-dot").className = "dot" + (n ? " on" : "");
   el("btn-midi").hidden = !(midi.supported && !midi.access && !midi.denied);
   el("echo-wrap").hidden = !n;
-  if (!window.isSecureContext) s.textContent = "MIDI kräver https eller localhost. Demot nedan fungerar ändå.";
-  else if (!midi.supported) s.textContent = "Webbläsaren saknar Web MIDI — prova Chrome eller Edge. Demot nedan fungerar ändå.";
-  else if (midi.denied) s.textContent = "MIDI-åtkomst nekad. Tillåt den i webbläsarens inställningar för sidan.";
-  else if (!midi.access) s.textContent = "Anslut ett MIDI-keyboard för att spela själv.";
-  else if (!n) s.textContent = "Inget keyboard hittat. Koppla in ett — det dyker upp här direkt.";
+  const typing = " Spela på datorns tangentbord så länge.";
+  if (!window.isSecureContext) s.textContent = "MIDI kräver https eller localhost." + typing;
+  else if (!midi.supported) s.textContent = "Webbläsaren saknar Web MIDI — prova Chrome eller Edge." + typing;
+  else if (midi.denied) s.textContent = "MIDI-åtkomst nekad. Tillåt den i webbläsarens inställningar för sidan." + typing;
+  else if (!midi.access) s.textContent = "Anslut ett MIDI-keyboard, eller spela på datorns tangentbord.";
+  else if (!n) s.textContent = "Inget keyboard hittat — koppla in ett, eller spela på datorns tangentbord.";
   else s.textContent = midi.inputs.map(i=>i.name).join(", ");
 }
 
@@ -1606,6 +1686,9 @@ document.addEventListener("keydown", e=>{
   if (e.target.closest && e.target.closest("button,input,select,textarea,label")) return;
   e.preventDefault(); togglePlay();
 });
+document.addEventListener("keydown", typeDown);
+document.addEventListener("keyup", typeUp);
+window.addEventListener("blur", typeRelease);
 el("btn-demo").addEventListener("click", ()=>begin("demo"));
 el("btn-free").addEventListener("click", ()=>begin("free"));
 el("btn-reset").addEventListener("click", ()=>location.reload());
