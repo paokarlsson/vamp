@@ -1,0 +1,3616 @@
+{
+ "meta": {
+  "description": "Ackordträd för C-dur, 4 ackord djupt. Varje nivå visar vilka ackord som följer efter vägen dit, med sannolikhet.",
+  "source": "McGill Billboard Project 2.0 (CC0), Burgoyne, Wild & Fujinaga, ISMIR 2011. Nyckelrelativ version från github.com/corpusmusic/bb-cluster.",
+  "songs_used": 677,
+  "years": "1958-1991",
+  "max_depth": 4,
+  "rules": [
+   "Alla låtar transponerade till C; endast ackord ur C-durskalan (C, Dm, Em, F, G, Am, Bdim).",
+   "Sjuackord och utvidgningar räknas som grundackordet (G7 = G).",
+   "Upprepningar slås ihop (C C G = C G). En följd bryts vid ackord utanför skalan.",
+   "probability = count / summan av count på samma nivå. count = antal ackordbyten, songs = antal olika låtar.",
+   "Nivån under ett ackord ('next') finns bara om minst 3 olika låtar går den vägen, och högst 4 nivåer ner.",
+   "Toppnivån visar hur vanligt varje ackord är totalt."
+  ]
+ },
+ "tree": {
+  "C": {
+   "probability": 0.3577,
+   "count": 5059,
+   "songs": 621,
+   "next": {
+    "F": {
+     "probability": 0.4525,
+     "count": 1649,
+     "songs": 356,
+     "next": {
+      "C": {
+       "probability": 0.6667,
+       "count": 930,
+       "songs": 237,
+       "next": {
+        "F": {
+         "probability": 0.6354,
+         "count": 514,
+         "songs": 115
+        },
+        "G": {
+         "probability": 0.2806,
+         "count": 227,
+         "songs": 113
+        },
+        "Am": {
+         "probability": 0.042,
+         "count": 34,
+         "songs": 16
+        },
+        "Dm": {
+         "probability": 0.0346,
+         "count": 28,
+         "songs": 18
+        },
+        "Em": {
+         "probability": 0.0049,
+         "count": 4,
+         "songs": 2
+        },
+        "Bdim": {
+         "probability": 0.0025,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "G": {
+       "probability": 0.2559,
+       "count": 357,
+       "songs": 113,
+       "next": {
+        "C": {
+         "probability": 0.6946,
+         "count": 232,
+         "songs": 78
+        },
+        "F": {
+         "probability": 0.2455,
+         "count": 82,
+         "songs": 32
+        },
+        "Am": {
+         "probability": 0.0419,
+         "count": 14,
+         "songs": 7
+        },
+        "Em": {
+         "probability": 0.015,
+         "count": 5,
+         "songs": 2
+        },
+        "Dm": {
+         "probability": 0.003,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.0287,
+       "count": 40,
+       "songs": 19,
+       "next": {
+        "G": {
+         "probability": 0.7667,
+         "count": 23,
+         "songs": 11
+        },
+        "F": {
+         "probability": 0.1,
+         "count": 3,
+         "songs": 1
+        },
+        "C": {
+         "probability": 0.0667,
+         "count": 2,
+         "songs": 2
+        },
+        "Em": {
+         "probability": 0.0667,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.0265,
+       "count": 37,
+       "songs": 14,
+       "next": {
+        "G": {
+         "probability": 0.4062,
+         "count": 13,
+         "songs": 5
+        },
+        "Dm": {
+         "probability": 0.25,
+         "count": 8,
+         "songs": 2
+        },
+        "F": {
+         "probability": 0.2188,
+         "count": 7,
+         "songs": 5
+        },
+        "C": {
+         "probability": 0.125,
+         "count": 4,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.0222,
+       "count": 31,
+       "songs": 17,
+       "next": {
+        "Dm": {
+         "probability": 0.4815,
+         "count": 13,
+         "songs": 6
+        },
+        "F": {
+         "probability": 0.2593,
+         "count": 7,
+         "songs": 5
+        },
+        "Am": {
+         "probability": 0.1852,
+         "count": 5,
+         "songs": 2
+        },
+        "G": {
+         "probability": 0.0741,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      }
+     }
+    },
+    "G": {
+     "probability": 0.2739,
+     "count": 998,
+     "songs": 272,
+     "next": {
+      "C": {
+       "probability": 0.5342,
+       "count": 477,
+       "songs": 158,
+       "next": {
+        "G": {
+         "probability": 0.4988,
+         "count": 207,
+         "songs": 71
+        },
+        "F": {
+         "probability": 0.3976,
+         "count": 165,
+         "songs": 85
+        },
+        "Am": {
+         "probability": 0.0602,
+         "count": 25,
+         "songs": 15
+        },
+        "Dm": {
+         "probability": 0.0217,
+         "count": 9,
+         "songs": 6
+        },
+        "Em": {
+         "probability": 0.0217,
+         "count": 9,
+         "songs": 5
+        }
+       }
+      },
+      "F": {
+       "probability": 0.3348,
+       "count": 299,
+       "songs": 102,
+       "next": {
+        "C": {
+         "probability": 0.6043,
+         "count": 168,
+         "songs": 62
+        },
+        "G": {
+         "probability": 0.3309,
+         "count": 92,
+         "songs": 27
+        },
+        "Am": {
+         "probability": 0.036,
+         "count": 10,
+         "songs": 5
+        },
+        "Dm": {
+         "probability": 0.0144,
+         "count": 4,
+         "songs": 4
+        },
+        "Em": {
+         "probability": 0.0144,
+         "count": 4,
+         "songs": 4
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.0773,
+       "count": 69,
+       "songs": 29,
+       "next": {
+        "F": {
+         "probability": 0.3651,
+         "count": 23,
+         "songs": 6
+        },
+        "Em": {
+         "probability": 0.2381,
+         "count": 15,
+         "songs": 7
+        },
+        "C": {
+         "probability": 0.1905,
+         "count": 12,
+         "songs": 5
+        },
+        "G": {
+         "probability": 0.1905,
+         "count": 12,
+         "songs": 7
+        },
+        "Dm": {
+         "probability": 0.0159,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.0403,
+       "count": 36,
+       "songs": 15,
+       "next": {
+        "G": {
+         "probability": 0.4516,
+         "count": 14,
+         "songs": 7
+        },
+        "F": {
+         "probability": 0.2903,
+         "count": 9,
+         "songs": 2
+        },
+        "C": {
+         "probability": 0.129,
+         "count": 4,
+         "songs": 2
+        },
+        "Am": {
+         "probability": 0.129,
+         "count": 4,
+         "songs": 2
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.0134,
+       "count": 12,
+       "songs": 4,
+       "next": {
+        "F": {
+         "probability": 0.7778,
+         "count": 7,
+         "songs": 1
+        },
+        "C": {
+         "probability": 0.1111,
+         "count": 1,
+         "songs": 1
+        },
+        "G": {
+         "probability": 0.1111,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      }
+     }
+    },
+    "Am": {
+     "probability": 0.1432,
+     "count": 522,
+     "songs": 131,
+     "next": {
+      "F": {
+       "probability": 0.4693,
+       "count": 214,
+       "songs": 68,
+       "next": {
+        "G": {
+         "probability": 0.7225,
+         "count": 138,
+         "songs": 45
+        },
+        "C": {
+         "probability": 0.1466,
+         "count": 28,
+         "songs": 13
+        },
+        "Dm": {
+         "probability": 0.0681,
+         "count": 13,
+         "songs": 7
+        },
+        "Am": {
+         "probability": 0.0366,
+         "count": 7,
+         "songs": 3
+        },
+        "Em": {
+         "probability": 0.0262,
+         "count": 5,
+         "songs": 2
+        }
+       }
+      },
+      "C": {
+       "probability": 0.2873,
+       "count": 131,
+       "songs": 31,
+       "next": {
+        "Am": {
+         "probability": 0.752,
+         "count": 94,
+         "songs": 23
+        },
+        "F": {
+         "probability": 0.152,
+         "count": 19,
+         "songs": 7
+        },
+        "G": {
+         "probability": 0.096,
+         "count": 12,
+         "songs": 4
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.1579,
+       "count": 72,
+       "songs": 24,
+       "next": {
+        "G": {
+         "probability": 0.78,
+         "count": 39,
+         "songs": 15
+        },
+        "C": {
+         "probability": 0.14,
+         "count": 7,
+         "songs": 1
+        },
+        "F": {
+         "probability": 0.08,
+         "count": 4,
+         "songs": 3
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.0526,
+       "count": 24,
+       "songs": 10,
+       "next": {
+        "F": {
+         "probability": 0.5625,
+         "count": 9,
+         "songs": 5
+        },
+        "Am": {
+         "probability": 0.25,
+         "count": 4,
+         "songs": 3
+        },
+        "C": {
+         "probability": 0.1875,
+         "count": 3,
+         "songs": 1
+        }
+       }
+      },
+      "G": {
+       "probability": 0.0329,
+       "count": 15,
+       "songs": 9,
+       "next": {
+        "C": {
+         "probability": 0.5333,
+         "count": 8,
+         "songs": 4
+        },
+        "F": {
+         "probability": 0.2667,
+         "count": 4,
+         "songs": 4
+        },
+        "Em": {
+         "probability": 0.2,
+         "count": 3,
+         "songs": 2
+        }
+       }
+      }
+     }
+    },
+    "Dm": {
+     "probability": 0.0939,
+     "count": 342,
+     "songs": 103,
+     "next": {
+      "C": {
+       "probability": 0.458,
+       "count": 131,
+       "songs": 35,
+       "next": {
+        "Dm": {
+         "probability": 0.6638,
+         "count": 77,
+         "songs": 13
+        },
+        "F": {
+         "probability": 0.2586,
+         "count": 30,
+         "songs": 18
+        },
+        "G": {
+         "probability": 0.0431,
+         "count": 5,
+         "songs": 4
+        },
+        "Em": {
+         "probability": 0.0172,
+         "count": 2,
+         "songs": 2
+        },
+        "Am": {
+         "probability": 0.0172,
+         "count": 2,
+         "songs": 2
+        }
+       }
+      },
+      "G": {
+       "probability": 0.2692,
+       "count": 77,
+       "songs": 35,
+       "next": {
+        "C": {
+         "probability": 0.7083,
+         "count": 51,
+         "songs": 23
+        },
+        "Dm": {
+         "probability": 0.25,
+         "count": 18,
+         "songs": 11
+        },
+        "F": {
+         "probability": 0.0417,
+         "count": 3,
+         "songs": 2
+        }
+       }
+      },
+      "F": {
+       "probability": 0.1958,
+       "count": 56,
+       "songs": 16,
+       "next": {
+        "C": {
+         "probability": 0.5111,
+         "count": 23,
+         "songs": 5
+        },
+        "G": {
+         "probability": 0.4444,
+         "count": 20,
+         "songs": 8
+        },
+        "Am": {
+         "probability": 0.0444,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.049,
+       "count": 14,
+       "songs": 8,
+       "next": {
+        "Dm": {
+         "probability": 0.75,
+         "count": 9,
+         "songs": 4
+        },
+        "G": {
+         "probability": 0.1667,
+         "count": 2,
+         "songs": 2
+        },
+        "F": {
+         "probability": 0.0833,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.0245,
+       "count": 7,
+       "songs": 4,
+       "next": {
+        "Em": {
+         "probability": 0.6,
+         "count": 3,
+         "songs": 2
+        },
+        "Dm": {
+         "probability": 0.4,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "Bdim": {
+       "probability": 0.0035,
+       "count": 1,
+       "songs": 1
+      }
+     }
+    },
+    "Em": {
+     "probability": 0.0349,
+     "count": 127,
+     "songs": 47,
+     "next": {
+      "F": {
+       "probability": 0.3394,
+       "count": 37,
+       "songs": 20,
+       "next": {
+        "C": {
+         "probability": 0.5217,
+         "count": 12,
+         "songs": 6
+        },
+        "G": {
+         "probability": 0.2174,
+         "count": 5,
+         "songs": 3
+        },
+        "Dm": {
+         "probability": 0.1304,
+         "count": 3,
+         "songs": 3
+        },
+        "Em": {
+         "probability": 0.0435,
+         "count": 1,
+         "songs": 1
+        },
+        "Am": {
+         "probability": 0.0435,
+         "count": 1,
+         "songs": 1
+        },
+        "Bdim": {
+         "probability": 0.0435,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.3028,
+       "count": 33,
+       "songs": 7,
+       "next": {
+        "F": {
+         "probability": 0.7241,
+         "count": 21,
+         "songs": 3
+        },
+        "C": {
+         "probability": 0.2069,
+         "count": 6,
+         "songs": 3
+        },
+        "G": {
+         "probability": 0.069,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.2294,
+       "count": 25,
+       "songs": 13,
+       "next": {
+        "C": {
+         "probability": 0.3913,
+         "count": 9,
+         "songs": 4
+        },
+        "F": {
+         "probability": 0.2609,
+         "count": 6,
+         "songs": 3
+        },
+        "G": {
+         "probability": 0.1739,
+         "count": 4,
+         "songs": 3
+        },
+        "Em": {
+         "probability": 0.1304,
+         "count": 3,
+         "songs": 2
+        },
+        "Dm": {
+         "probability": 0.0435,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "C": {
+       "probability": 0.1193,
+       "count": 13,
+       "songs": 2
+      },
+      "G": {
+       "probability": 0.0092,
+       "count": 1,
+       "songs": 1
+      }
+     }
+    },
+    "Bdim": {
+     "probability": 0.0016,
+     "count": 6,
+     "songs": 3
+    }
+   }
+  },
+  "F": {
+   "probability": 0.2568,
+   "count": 3632,
+   "songs": 550,
+   "next": {
+    "C": {
+     "probability": 0.5805,
+     "count": 1673,
+     "songs": 351,
+     "next": {
+      "F": {
+       "probability": 0.5503,
+       "count": 711,
+       "songs": 165,
+       "next": {
+        "C": {
+         "probability": 0.8077,
+         "count": 525,
+         "songs": 125
+        },
+        "G": {
+         "probability": 0.14,
+         "count": 91,
+         "songs": 48
+        },
+        "Am": {
+         "probability": 0.0277,
+         "count": 18,
+         "songs": 9
+        },
+        "Em": {
+         "probability": 0.0138,
+         "count": 9,
+         "songs": 5
+        },
+        "Dm": {
+         "probability": 0.0108,
+         "count": 7,
+         "songs": 6
+        }
+       }
+      },
+      "G": {
+       "probability": 0.3088,
+       "count": 399,
+       "songs": 157,
+       "next": {
+        "F": {
+         "probability": 0.4788,
+         "count": 169,
+         "songs": 63
+        },
+        "C": {
+         "probability": 0.4164,
+         "count": 147,
+         "songs": 76
+        },
+        "Am": {
+         "probability": 0.068,
+         "count": 24,
+         "songs": 10
+        },
+        "Dm": {
+         "probability": 0.034,
+         "count": 12,
+         "songs": 4
+        },
+        "Em": {
+         "probability": 0.0028,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.0611,
+       "count": 79,
+       "songs": 36,
+       "next": {
+        "F": {
+         "probability": 0.5231,
+         "count": 34,
+         "songs": 18
+        },
+        "C": {
+         "probability": 0.2615,
+         "count": 17,
+         "songs": 7
+        },
+        "Dm": {
+         "probability": 0.1385,
+         "count": 9,
+         "songs": 7
+        },
+        "G": {
+         "probability": 0.0615,
+         "count": 4,
+         "songs": 3
+        },
+        "Em": {
+         "probability": 0.0154,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.0511,
+       "count": 66,
+       "songs": 32,
+       "next": {
+        "F": {
+         "probability": 0.4074,
+         "count": 22,
+         "songs": 5
+        },
+        "C": {
+         "probability": 0.3148,
+         "count": 17,
+         "songs": 12
+        },
+        "G": {
+         "probability": 0.2037,
+         "count": 11,
+         "songs": 7
+        },
+        "Am": {
+         "probability": 0.0556,
+         "count": 3,
+         "songs": 2
+        },
+        "Em": {
+         "probability": 0.0185,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.0271,
+       "count": 35,
+       "songs": 13,
+       "next": {
+        "Dm": {
+         "probability": 0.5484,
+         "count": 17,
+         "songs": 2
+        },
+        "F": {
+         "probability": 0.2258,
+         "count": 7,
+         "songs": 5
+        },
+        "Am": {
+         "probability": 0.1935,
+         "count": 6,
+         "songs": 3
+        },
+        "G": {
+         "probability": 0.0323,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Bdim": {
+       "probability": 0.0015,
+       "count": 2,
+       "songs": 1
+      }
+     }
+    },
+    "G": {
+     "probability": 0.313,
+     "count": 902,
+     "songs": 231,
+     "next": {
+      "C": {
+       "probability": 0.6406,
+       "count": 524,
+       "songs": 166,
+       "next": {
+        "F": {
+         "probability": 0.4924,
+         "count": 228,
+         "songs": 83
+        },
+        "G": {
+         "probability": 0.2354,
+         "count": 109,
+         "songs": 42
+        },
+        "Am": {
+         "probability": 0.203,
+         "count": 94,
+         "songs": 35
+        },
+        "Dm": {
+         "probability": 0.0475,
+         "count": 22,
+         "songs": 13
+        },
+        "Em": {
+         "probability": 0.0216,
+         "count": 10,
+         "songs": 8
+        }
+       }
+      },
+      "F": {
+       "probability": 0.2396,
+       "count": 196,
+       "songs": 64,
+       "next": {
+        "C": {
+         "probability": 0.4811,
+         "count": 89,
+         "songs": 35
+        },
+        "G": {
+         "probability": 0.4703,
+         "count": 87,
+         "songs": 33
+        },
+        "Dm": {
+         "probability": 0.0216,
+         "count": 4,
+         "songs": 1
+        },
+        "Am": {
+         "probability": 0.0162,
+         "count": 3,
+         "songs": 3
+        },
+        "Em": {
+         "probability": 0.0108,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.0795,
+       "count": 65,
+       "songs": 26,
+       "next": {
+        "G": {
+         "probability": 0.4821,
+         "count": 27,
+         "songs": 5
+        },
+        "Em": {
+         "probability": 0.2321,
+         "count": 13,
+         "songs": 6
+        },
+        "F": {
+         "probability": 0.1964,
+         "count": 11,
+         "songs": 5
+        },
+        "C": {
+         "probability": 0.0714,
+         "count": 4,
+         "songs": 4
+        },
+        "Dm": {
+         "probability": 0.0179,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.0318,
+       "count": 26,
+       "songs": 9,
+       "next": {
+        "Am": {
+         "probability": 0.8333,
+         "count": 15,
+         "songs": 5
+        },
+        "G": {
+         "probability": 0.1667,
+         "count": 3,
+         "songs": 2
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.0086,
+       "count": 7,
+       "songs": 6,
+       "next": {
+        "G": {
+         "probability": 0.4286,
+         "count": 3,
+         "songs": 3
+        },
+        "F": {
+         "probability": 0.2857,
+         "count": 2,
+         "songs": 2
+        },
+        "Em": {
+         "probability": 0.1429,
+         "count": 1,
+         "songs": 1
+        },
+        "Am": {
+         "probability": 0.1429,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      }
+     }
+    },
+    "Am": {
+     "probability": 0.0378,
+     "count": 109,
+     "songs": 37,
+     "next": {
+      "F": {
+       "probability": 0.2889,
+       "count": 26,
+       "songs": 13,
+       "next": {
+        "C": {
+         "probability": 0.36,
+         "count": 9,
+         "songs": 5
+        },
+        "G": {
+         "probability": 0.32,
+         "count": 8,
+         "songs": 6
+        },
+        "Am": {
+         "probability": 0.2,
+         "count": 5,
+         "songs": 2
+        },
+        "Em": {
+         "probability": 0.12,
+         "count": 3,
+         "songs": 1
+        }
+       }
+      },
+      "G": {
+       "probability": 0.2556,
+       "count": 23,
+       "songs": 8,
+       "next": {
+        "F": {
+         "probability": 0.4737,
+         "count": 9,
+         "songs": 5
+        },
+        "C": {
+         "probability": 0.4211,
+         "count": 8,
+         "songs": 3
+        },
+        "Em": {
+         "probability": 0.1053,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.2444,
+       "count": 22,
+       "songs": 5,
+       "next": {
+        "Dm": {
+         "probability": 0.6,
+         "count": 12,
+         "songs": 1
+        },
+        "F": {
+         "probability": 0.4,
+         "count": 8,
+         "songs": 3
+        }
+       }
+      },
+      "C": {
+       "probability": 0.1222,
+       "count": 11,
+       "songs": 5,
+       "next": {
+        "F": {
+         "probability": 0.8,
+         "count": 8,
+         "songs": 3
+        },
+        "G": {
+         "probability": 0.2,
+         "count": 2,
+         "songs": 2
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.0889,
+       "count": 8,
+       "songs": 2
+      }
+     }
+    },
+    "Em": {
+     "probability": 0.0368,
+     "count": 106,
+     "songs": 43,
+     "next": {
+      "Dm": {
+       "probability": 0.4239,
+       "count": 39,
+       "songs": 23,
+       "next": {
+        "C": {
+         "probability": 0.375,
+         "count": 12,
+         "songs": 7
+        },
+        "G": {
+         "probability": 0.3438,
+         "count": 11,
+         "songs": 7
+        },
+        "Em": {
+         "probability": 0.0938,
+         "count": 3,
+         "songs": 3
+        },
+        "F": {
+         "probability": 0.0938,
+         "count": 3,
+         "songs": 3
+        },
+        "Am": {
+         "probability": 0.0938,
+         "count": 3,
+         "songs": 1
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.2174,
+       "count": 20,
+       "songs": 6,
+       "next": {
+        "F": {
+         "probability": 0.625,
+         "count": 10,
+         "songs": 2
+        },
+        "Dm": {
+         "probability": 0.1875,
+         "count": 3,
+         "songs": 2
+        },
+        "Em": {
+         "probability": 0.1875,
+         "count": 3,
+         "songs": 2
+        }
+       }
+      },
+      "F": {
+       "probability": 0.2065,
+       "count": 19,
+       "songs": 7,
+       "next": {
+        "Em": {
+         "probability": 0.5385,
+         "count": 7,
+         "songs": 2
+        },
+        "G": {
+         "probability": 0.2308,
+         "count": 3,
+         "songs": 1
+        },
+        "Am": {
+         "probability": 0.1538,
+         "count": 2,
+         "songs": 1
+        },
+        "Dm": {
+         "probability": 0.0769,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "C": {
+       "probability": 0.0761,
+       "count": 7,
+       "songs": 5,
+       "next": {
+        "Am": {
+         "probability": 0.5,
+         "count": 3,
+         "songs": 2
+        },
+        "Dm": {
+         "probability": 0.1667,
+         "count": 1,
+         "songs": 1
+        },
+        "Em": {
+         "probability": 0.1667,
+         "count": 1,
+         "songs": 1
+        },
+        "G": {
+         "probability": 0.1667,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "G": {
+       "probability": 0.0761,
+       "count": 7,
+       "songs": 3,
+       "next": {
+        "C": {
+         "probability": 0.5,
+         "count": 3,
+         "songs": 2
+        },
+        "F": {
+         "probability": 0.3333,
+         "count": 2,
+         "songs": 1
+        },
+        "Em": {
+         "probability": 0.1667,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      }
+     }
+    },
+    "Dm": {
+     "probability": 0.0316,
+     "count": 91,
+     "songs": 44,
+     "next": {
+      "G": {
+       "probability": 0.5077,
+       "count": 33,
+       "songs": 18,
+       "next": {
+        "C": {
+         "probability": 0.6923,
+         "count": 18,
+         "songs": 9
+        },
+        "Dm": {
+         "probability": 0.1538,
+         "count": 4,
+         "songs": 3
+        },
+        "Am": {
+         "probability": 0.0769,
+         "count": 2,
+         "songs": 2
+        },
+        "Em": {
+         "probability": 0.0385,
+         "count": 1,
+         "songs": 1
+        },
+        "F": {
+         "probability": 0.0385,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "C": {
+       "probability": 0.2923,
+       "count": 19,
+       "songs": 14,
+       "next": {
+        "F": {
+         "probability": 0.6,
+         "count": 9,
+         "songs": 8
+        },
+        "Am": {
+         "probability": 0.2,
+         "count": 3,
+         "songs": 1
+        },
+        "Dm": {
+         "probability": 0.0667,
+         "count": 1,
+         "songs": 1
+        },
+        "Em": {
+         "probability": 0.0667,
+         "count": 1,
+         "songs": 1
+        },
+        "G": {
+         "probability": 0.0667,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "F": {
+       "probability": 0.1231,
+       "count": 8,
+       "songs": 4,
+       "next": {
+        "C": {
+         "probability": 0.8571,
+         "count": 6,
+         "songs": 3
+        },
+        "Am": {
+         "probability": 0.1429,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.0615,
+       "count": 4,
+       "songs": 3,
+       "next": {
+        "Am": {
+         "probability": 1.0,
+         "count": 4,
+         "songs": 3
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.0154,
+       "count": 1,
+       "songs": 1
+      }
+     }
+    },
+    "Bdim": {
+     "probability": 0.0003,
+     "count": 1,
+     "songs": 1
+    }
+   }
+  },
+  "G": {
+   "probability": 0.205,
+   "count": 2900,
+   "songs": 523,
+   "next": {
+    "C": {
+     "probability": 0.6033,
+     "count": 1454,
+     "songs": 382,
+     "next": {
+      "F": {
+       "probability": 0.4314,
+       "count": 522,
+       "songs": 196,
+       "next": {
+        "G": {
+         "probability": 0.4834,
+         "count": 218,
+         "songs": 69
+        },
+        "C": {
+         "probability": 0.4457,
+         "count": 201,
+         "songs": 111
+        },
+        "Dm": {
+         "probability": 0.0421,
+         "count": 19,
+         "songs": 7
+        },
+        "Am": {
+         "probability": 0.02,
+         "count": 9,
+         "songs": 4
+        },
+        "Em": {
+         "probability": 0.0089,
+         "count": 4,
+         "songs": 3
+        }
+       }
+      },
+      "G": {
+       "probability": 0.3165,
+       "count": 383,
+       "songs": 127,
+       "next": {
+        "C": {
+         "probability": 0.6243,
+         "count": 216,
+         "songs": 82
+        },
+        "F": {
+         "probability": 0.2341,
+         "count": 81,
+         "songs": 29
+        },
+        "Am": {
+         "probability": 0.0751,
+         "count": 26,
+         "songs": 13
+        },
+        "Dm": {
+         "probability": 0.0376,
+         "count": 13,
+         "songs": 8
+        },
+        "Em": {
+         "probability": 0.0289,
+         "count": 10,
+         "songs": 3
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.1529,
+       "count": 185,
+       "songs": 69,
+       "next": {
+        "F": {
+         "probability": 0.5732,
+         "count": 94,
+         "songs": 37
+        },
+        "Dm": {
+         "probability": 0.189,
+         "count": 31,
+         "songs": 11
+        },
+        "C": {
+         "probability": 0.1402,
+         "count": 23,
+         "songs": 12
+        },
+        "Em": {
+         "probability": 0.0488,
+         "count": 8,
+         "songs": 4
+        },
+        "G": {
+         "probability": 0.0488,
+         "count": 8,
+         "songs": 3
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.0686,
+       "count": 83,
+       "songs": 37,
+       "next": {
+        "G": {
+         "probability": 0.5641,
+         "count": 44,
+         "songs": 20
+        },
+        "F": {
+         "probability": 0.1923,
+         "count": 15,
+         "songs": 6
+        },
+        "C": {
+         "probability": 0.1667,
+         "count": 13,
+         "songs": 8
+        },
+        "Em": {
+         "probability": 0.0513,
+         "count": 4,
+         "songs": 3
+        },
+        "Am": {
+         "probability": 0.0128,
+         "count": 1,
+         "songs": 1
+        },
+        "Bdim": {
+         "probability": 0.0128,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.0289,
+       "count": 35,
+       "songs": 25,
+       "next": {
+        "F": {
+         "probability": 0.4643,
+         "count": 13,
+         "songs": 10
+        },
+        "Am": {
+         "probability": 0.3929,
+         "count": 11,
+         "songs": 8
+        },
+        "Dm": {
+         "probability": 0.1429,
+         "count": 4,
+         "songs": 3
+        }
+       }
+      },
+      "Bdim": {
+       "probability": 0.0017,
+       "count": 2,
+       "songs": 1
+      }
+     }
+    },
+    "F": {
+     "probability": 0.2531,
+     "count": 610,
+     "songs": 172,
+     "next": {
+      "C": {
+       "probability": 0.524,
+       "count": 295,
+       "songs": 104,
+       "next": {
+        "F": {
+         "probability": 0.4862,
+         "count": 123,
+         "songs": 50
+        },
+        "G": {
+         "probability": 0.4229,
+         "count": 107,
+         "songs": 31
+        },
+        "Am": {
+         "probability": 0.0395,
+         "count": 10,
+         "songs": 6
+        },
+        "Dm": {
+         "probability": 0.0316,
+         "count": 8,
+         "songs": 6
+        },
+        "Em": {
+         "probability": 0.0198,
+         "count": 5,
+         "songs": 4
+        }
+       }
+      },
+      "G": {
+       "probability": 0.3996,
+       "count": 225,
+       "songs": 62,
+       "next": {
+        "C": {
+         "probability": 0.47,
+         "count": 102,
+         "songs": 42
+        },
+        "F": {
+         "probability": 0.3318,
+         "count": 72,
+         "songs": 24
+        },
+        "Am": {
+         "probability": 0.1475,
+         "count": 32,
+         "songs": 9
+        },
+        "Em": {
+         "probability": 0.0461,
+         "count": 10,
+         "songs": 3
+        },
+        "Dm": {
+         "probability": 0.0046,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.0355,
+       "count": 20,
+       "songs": 10,
+       "next": {
+        "G": {
+         "probability": 0.4118,
+         "count": 7,
+         "songs": 3
+        },
+        "F": {
+         "probability": 0.2353,
+         "count": 4,
+         "songs": 2
+        },
+        "C": {
+         "probability": 0.1765,
+         "count": 3,
+         "songs": 3
+        },
+        "Em": {
+         "probability": 0.1765,
+         "count": 3,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.0249,
+       "count": 14,
+       "songs": 9,
+       "next": {
+        "Dm": {
+         "probability": 0.7857,
+         "count": 11,
+         "songs": 7
+        },
+        "G": {
+         "probability": 0.1429,
+         "count": 2,
+         "songs": 1
+        },
+        "C": {
+         "probability": 0.0714,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.016,
+       "count": 9,
+       "songs": 6,
+       "next": {
+        "C": {
+         "probability": 0.4,
+         "count": 2,
+         "songs": 2
+        },
+        "G": {
+         "probability": 0.4,
+         "count": 2,
+         "songs": 2
+        },
+        "F": {
+         "probability": 0.2,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      }
+     }
+    },
+    "Am": {
+     "probability": 0.071,
+     "count": 171,
+     "songs": 71,
+     "next": {
+      "G": {
+       "probability": 0.3333,
+       "count": 46,
+       "songs": 15,
+       "next": {
+        "F": {
+         "probability": 0.725,
+         "count": 29,
+         "songs": 8
+        },
+        "Am": {
+         "probability": 0.2,
+         "count": 8,
+         "songs": 2
+        },
+        "C": {
+         "probability": 0.075,
+         "count": 3,
+         "songs": 3
+        }
+       }
+      },
+      "F": {
+       "probability": 0.2754,
+       "count": 38,
+       "songs": 13,
+       "next": {
+        "G": {
+         "probability": 0.5882,
+         "count": 20,
+         "songs": 6
+        },
+        "C": {
+         "probability": 0.3235,
+         "count": 11,
+         "songs": 2
+        },
+        "Em": {
+         "probability": 0.0882,
+         "count": 3,
+         "songs": 2
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.2101,
+       "count": 29,
+       "songs": 14,
+       "next": {
+        "F": {
+         "probability": 0.8462,
+         "count": 22,
+         "songs": 11
+        },
+        "Dm": {
+         "probability": 0.0769,
+         "count": 2,
+         "songs": 1
+        },
+        "Am": {
+         "probability": 0.0769,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "C": {
+       "probability": 0.1449,
+       "count": 20,
+       "songs": 12,
+       "next": {
+        "F": {
+         "probability": 0.5263,
+         "count": 10,
+         "songs": 5
+        },
+        "G": {
+         "probability": 0.3158,
+         "count": 6,
+         "songs": 3
+        },
+        "Am": {
+         "probability": 0.1053,
+         "count": 2,
+         "songs": 2
+        },
+        "Dm": {
+         "probability": 0.0526,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.0362,
+       "count": 5,
+       "songs": 4,
+       "next": {
+        "G": {
+         "probability": 0.75,
+         "count": 3,
+         "songs": 2
+        },
+        "F": {
+         "probability": 0.25,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      }
+     }
+    },
+    "Dm": {
+     "probability": 0.044,
+     "count": 106,
+     "songs": 43,
+     "next": {
+      "G": {
+       "probability": 0.6774,
+       "count": 63,
+       "songs": 29,
+       "next": {
+        "C": {
+         "probability": 0.5283,
+         "count": 28,
+         "songs": 17
+        },
+        "Dm": {
+         "probability": 0.3585,
+         "count": 19,
+         "songs": 8
+        },
+        "Am": {
+         "probability": 0.0566,
+         "count": 3,
+         "songs": 3
+        },
+        "Bdim": {
+         "probability": 0.0377,
+         "count": 2,
+         "songs": 1
+        },
+        "F": {
+         "probability": 0.0189,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "F": {
+       "probability": 0.1183,
+       "count": 11,
+       "songs": 4,
+       "next": {
+        "C": {
+         "probability": 0.8,
+         "count": 8,
+         "songs": 1
+        },
+        "G": {
+         "probability": 0.2,
+         "count": 2,
+         "songs": 2
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.0753,
+       "count": 7,
+       "songs": 3,
+       "next": {
+        "G": {
+         "probability": 1.0,
+         "count": 5,
+         "songs": 2
+        }
+       }
+      },
+      "C": {
+       "probability": 0.0645,
+       "count": 6,
+       "songs": 4,
+       "next": {
+        "F": {
+         "probability": 0.75,
+         "count": 3,
+         "songs": 2
+        },
+        "Dm": {
+         "probability": 0.25,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.0645,
+       "count": 6,
+       "songs": 3,
+       "next": {
+        "Dm": {
+         "probability": 0.6667,
+         "count": 4,
+         "songs": 1
+        },
+        "F": {
+         "probability": 0.3333,
+         "count": 2,
+         "songs": 2
+        }
+       }
+      }
+     }
+    },
+    "Em": {
+     "probability": 0.0278,
+     "count": 67,
+     "songs": 28,
+     "next": {
+      "Am": {
+       "probability": 0.5,
+       "count": 24,
+       "songs": 13,
+       "next": {
+        "Dm": {
+         "probability": 0.4737,
+         "count": 9,
+         "songs": 5
+        },
+        "G": {
+         "probability": 0.3684,
+         "count": 7,
+         "songs": 2
+        },
+        "F": {
+         "probability": 0.1579,
+         "count": 3,
+         "songs": 1
+        }
+       }
+      },
+      "G": {
+       "probability": 0.25,
+       "count": 12,
+       "songs": 5,
+       "next": {
+        "Em": {
+         "probability": 0.7,
+         "count": 7,
+         "songs": 2
+        },
+        "C": {
+         "probability": 0.2,
+         "count": 2,
+         "songs": 2
+        },
+        "Am": {
+         "probability": 0.1,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "F": {
+       "probability": 0.2083,
+       "count": 10,
+       "songs": 3,
+       "next": {
+        "G": {
+         "probability": 0.8,
+         "count": 8,
+         "songs": 2
+        },
+        "C": {
+         "probability": 0.1,
+         "count": 1,
+         "songs": 1
+        },
+        "Am": {
+         "probability": 0.1,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "C": {
+       "probability": 0.0208,
+       "count": 1,
+       "songs": 1
+      },
+      "Dm": {
+       "probability": 0.0208,
+       "count": 1,
+       "songs": 1
+      }
+     }
+    },
+    "Bdim": {
+     "probability": 0.0008,
+     "count": 2,
+     "songs": 1
+    }
+   }
+  },
+  "Am": {
+   "probability": 0.0793,
+   "count": 1121,
+   "songs": 263,
+   "next": {
+    "F": {
+     "probability": 0.3735,
+     "count": 332,
+     "songs": 105,
+     "next": {
+      "G": {
+       "probability": 0.5753,
+       "count": 172,
+       "songs": 56,
+       "next": {
+        "C": {
+         "probability": 0.7949,
+         "count": 124,
+         "songs": 44
+        },
+        "F": {
+         "probability": 0.0833,
+         "count": 13,
+         "songs": 5
+        },
+        "Am": {
+         "probability": 0.0833,
+         "count": 13,
+         "songs": 6
+        },
+        "Em": {
+         "probability": 0.0385,
+         "count": 6,
+         "songs": 3
+        }
+       }
+      },
+      "C": {
+       "probability": 0.2241,
+       "count": 67,
+       "songs": 29,
+       "next": {
+        "G": {
+         "probability": 0.3396,
+         "count": 18,
+         "songs": 8
+        },
+        "Am": {
+         "probability": 0.3396,
+         "count": 18,
+         "songs": 8
+        },
+        "F": {
+         "probability": 0.1698,
+         "count": 9,
+         "songs": 6
+        },
+        "Dm": {
+         "probability": 0.0755,
+         "count": 4,
+         "songs": 3
+        },
+        "Em": {
+         "probability": 0.0755,
+         "count": 4,
+         "songs": 3
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.0836,
+       "count": 25,
+       "songs": 8,
+       "next": {
+        "Am": {
+         "probability": 0.4286,
+         "count": 9,
+         "songs": 2
+        },
+        "C": {
+         "probability": 0.1905,
+         "count": 4,
+         "songs": 2
+        },
+        "Dm": {
+         "probability": 0.1905,
+         "count": 4,
+         "songs": 3
+        },
+        "F": {
+         "probability": 0.1429,
+         "count": 3,
+         "songs": 1
+        },
+        "G": {
+         "probability": 0.0476,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.0602,
+       "count": 18,
+       "songs": 10,
+       "next": {
+        "C": {
+         "probability": 0.5,
+         "count": 5,
+         "songs": 4
+        },
+        "F": {
+         "probability": 0.2,
+         "count": 2,
+         "songs": 1
+        },
+        "G": {
+         "probability": 0.2,
+         "count": 2,
+         "songs": 2
+        },
+        "Em": {
+         "probability": 0.1,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.0569,
+       "count": 17,
+       "songs": 6,
+       "next": {
+        "F": {
+         "probability": 0.7333,
+         "count": 11,
+         "songs": 4
+        },
+        "C": {
+         "probability": 0.2667,
+         "count": 4,
+         "songs": 1
+        }
+       }
+      }
+     }
+    },
+    "C": {
+     "probability": 0.2171,
+     "count": 193,
+     "songs": 60,
+     "next": {
+      "Am": {
+       "probability": 0.573,
+       "count": 102,
+       "songs": 25,
+       "next": {
+        "C": {
+         "probability": 0.7273,
+         "count": 72,
+         "songs": 20
+        },
+        "F": {
+         "probability": 0.2424,
+         "count": 24,
+         "songs": 13
+        },
+        "Dm": {
+         "probability": 0.0101,
+         "count": 1,
+         "songs": 1
+        },
+        "Em": {
+         "probability": 0.0101,
+         "count": 1,
+         "songs": 1
+        },
+        "G": {
+         "probability": 0.0101,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "F": {
+       "probability": 0.2697,
+       "count": 48,
+       "songs": 22,
+       "next": {
+        "C": {
+         "probability": 0.725,
+         "count": 29,
+         "songs": 11
+        },
+        "Em": {
+         "probability": 0.125,
+         "count": 5,
+         "songs": 2
+        },
+        "G": {
+         "probability": 0.1,
+         "count": 4,
+         "songs": 4
+        },
+        "Dm": {
+         "probability": 0.05,
+         "count": 2,
+         "songs": 2
+        }
+       }
+      },
+      "G": {
+       "probability": 0.1517,
+       "count": 27,
+       "songs": 12,
+       "next": {
+        "C": {
+         "probability": 0.7917,
+         "count": 19,
+         "songs": 6
+        },
+        "F": {
+         "probability": 0.1667,
+         "count": 4,
+         "songs": 3
+        },
+        "Am": {
+         "probability": 0.0417,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.0056,
+       "count": 1,
+       "songs": 1
+      }
+     }
+    },
+    "Dm": {
+     "probability": 0.1485,
+     "count": 132,
+     "songs": 50,
+     "next": {
+      "G": {
+       "probability": 0.5591,
+       "count": 52,
+       "songs": 24,
+       "next": {
+        "C": {
+         "probability": 0.8298,
+         "count": 39,
+         "songs": 17
+        },
+        "F": {
+         "probability": 0.0638,
+         "count": 3,
+         "songs": 3
+        },
+        "Dm": {
+         "probability": 0.0426,
+         "count": 2,
+         "songs": 2
+        },
+        "Em": {
+         "probability": 0.0426,
+         "count": 2,
+         "songs": 1
+        },
+        "Am": {
+         "probability": 0.0213,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "F": {
+       "probability": 0.1505,
+       "count": 14,
+       "songs": 6,
+       "next": {
+        "C": {
+         "probability": 0.5,
+         "count": 5,
+         "songs": 3
+        },
+        "G": {
+         "probability": 0.4,
+         "count": 4,
+         "songs": 3
+        },
+        "Dm": {
+         "probability": 0.1,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "C": {
+       "probability": 0.1183,
+       "count": 11,
+       "songs": 4,
+       "next": {
+        "Am": {
+         "probability": 0.7143,
+         "count": 5,
+         "songs": 1
+        },
+        "Dm": {
+         "probability": 0.2857,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.1075,
+       "count": 10,
+       "songs": 4,
+       "next": {
+        "Am": {
+         "probability": 0.7,
+         "count": 7,
+         "songs": 2
+        },
+        "G": {
+         "probability": 0.2,
+         "count": 2,
+         "songs": 1
+        },
+        "F": {
+         "probability": 0.1,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.0645,
+       "count": 6,
+       "songs": 4,
+       "next": {
+        "Dm": {
+         "probability": 0.6,
+         "count": 3,
+         "songs": 1
+        },
+        "F": {
+         "probability": 0.2,
+         "count": 1,
+         "songs": 1
+        },
+        "G": {
+         "probability": 0.2,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      }
+     }
+    },
+    "G": {
+     "probability": 0.1417,
+     "count": 126,
+     "songs": 44,
+     "next": {
+      "F": {
+       "probability": 0.4957,
+       "count": 57,
+       "songs": 23,
+       "next": {
+        "G": {
+         "probability": 0.6154,
+         "count": 32,
+         "songs": 8
+        },
+        "C": {
+         "probability": 0.25,
+         "count": 13,
+         "songs": 10
+        },
+        "Am": {
+         "probability": 0.0769,
+         "count": 4,
+         "songs": 2
+        },
+        "Em": {
+         "probability": 0.0385,
+         "count": 2,
+         "songs": 1
+        },
+        "Dm": {
+         "probability": 0.0192,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "C": {
+       "probability": 0.2957,
+       "count": 34,
+       "songs": 15,
+       "next": {
+        "F": {
+         "probability": 0.5152,
+         "count": 17,
+         "songs": 6
+        },
+        "G": {
+         "probability": 0.2424,
+         "count": 8,
+         "songs": 6
+        },
+        "Dm": {
+         "probability": 0.1212,
+         "count": 4,
+         "songs": 3
+        },
+        "Am": {
+         "probability": 0.1212,
+         "count": 4,
+         "songs": 3
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.087,
+       "count": 10,
+       "songs": 4,
+       "next": {
+        "G": {
+         "probability": 1.0,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.0696,
+       "count": 8,
+       "songs": 3,
+       "next": {
+        "Em": {
+         "probability": 0.5,
+         "count": 4,
+         "songs": 1
+        },
+        "G": {
+         "probability": 0.25,
+         "count": 2,
+         "songs": 1
+        },
+        "Am": {
+         "probability": 0.25,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.0522,
+       "count": 6,
+       "songs": 4,
+       "next": {
+        "F": {
+         "probability": 0.6,
+         "count": 3,
+         "songs": 2
+        },
+        "Am": {
+         "probability": 0.4,
+         "count": 2,
+         "songs": 2
+        }
+       }
+      }
+     }
+    },
+    "Em": {
+     "probability": 0.1192,
+     "count": 106,
+     "songs": 30,
+     "next": {
+      "F": {
+       "probability": 0.6395,
+       "count": 55,
+       "songs": 19,
+       "next": {
+        "Am": {
+         "probability": 0.3556,
+         "count": 16,
+         "songs": 2
+        },
+        "G": {
+         "probability": 0.2444,
+         "count": 11,
+         "songs": 6
+        },
+        "C": {
+         "probability": 0.2222,
+         "count": 10,
+         "songs": 7
+        },
+        "Dm": {
+         "probability": 0.1778,
+         "count": 8,
+         "songs": 3
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.1628,
+       "count": 14,
+       "songs": 2
+      },
+      "Am": {
+       "probability": 0.1163,
+       "count": 10,
+       "songs": 7,
+       "next": {
+        "Em": {
+         "probability": 0.4444,
+         "count": 4,
+         "songs": 3
+        },
+        "Dm": {
+         "probability": 0.2222,
+         "count": 2,
+         "songs": 1
+        },
+        "F": {
+         "probability": 0.2222,
+         "count": 2,
+         "songs": 1
+        },
+        "C": {
+         "probability": 0.1111,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "C": {
+       "probability": 0.0698,
+       "count": 6,
+       "songs": 3,
+       "next": {
+        "G": {
+         "probability": 0.5,
+         "count": 3,
+         "songs": 1
+        },
+        "Em": {
+         "probability": 0.3333,
+         "count": 2,
+         "songs": 1
+        },
+        "Dm": {
+         "probability": 0.1667,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "G": {
+       "probability": 0.0116,
+       "count": 1,
+       "songs": 1
+      }
+     }
+    }
+   }
+  },
+  "Dm": {
+   "probability": 0.066,
+   "count": 933,
+   "songs": 235,
+   "next": {
+    "G": {
+     "probability": 0.4154,
+     "count": 297,
+     "songs": 108,
+     "next": {
+      "C": {
+       "probability": 0.697,
+       "count": 184,
+       "songs": 79,
+       "next": {
+        "F": {
+         "probability": 0.2986,
+         "count": 43,
+         "songs": 29
+        },
+        "Dm": {
+         "probability": 0.2569,
+         "count": 37,
+         "songs": 16
+        },
+        "Am": {
+         "probability": 0.2153,
+         "count": 31,
+         "songs": 13
+        },
+        "G": {
+         "probability": 0.1597,
+         "count": 23,
+         "songs": 15
+        },
+        "Em": {
+         "probability": 0.0556,
+         "count": 8,
+         "songs": 6
+        },
+        "Bdim": {
+         "probability": 0.0139,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.1894,
+       "count": 50,
+       "songs": 22,
+       "next": {
+        "G": {
+         "probability": 0.9302,
+         "count": 40,
+         "songs": 19
+        },
+        "C": {
+         "probability": 0.0465,
+         "count": 2,
+         "songs": 2
+        },
+        "Em": {
+         "probability": 0.0233,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "F": {
+       "probability": 0.0492,
+       "count": 13,
+       "songs": 10,
+       "next": {
+        "G": {
+         "probability": 0.5,
+         "count": 6,
+         "songs": 5
+        },
+        "C": {
+         "probability": 0.3333,
+         "count": 4,
+         "songs": 3
+        },
+        "Em": {
+         "probability": 0.1667,
+         "count": 2,
+         "songs": 2
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.0341,
+       "count": 9,
+       "songs": 7,
+       "next": {
+        "C": {
+         "probability": 0.4286,
+         "count": 3,
+         "songs": 2
+        },
+        "Dm": {
+         "probability": 0.4286,
+         "count": 3,
+         "songs": 2
+        },
+        "F": {
+         "probability": 0.1429,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.0227,
+       "count": 6,
+       "songs": 5,
+       "next": {
+        "Am": {
+         "probability": 1.0,
+         "count": 5,
+         "songs": 4
+        }
+       }
+      },
+      "Bdim": {
+       "probability": 0.0076,
+       "count": 2,
+       "songs": 1
+      }
+     }
+    },
+    "C": {
+     "probability": 0.2909,
+     "count": 208,
+     "songs": 63,
+     "next": {
+      "Dm": {
+       "probability": 0.5575,
+       "count": 97,
+       "songs": 20,
+       "next": {
+        "C": {
+         "probability": 0.8333,
+         "count": 75,
+         "songs": 14
+        },
+        "Em": {
+         "probability": 0.0889,
+         "count": 8,
+         "songs": 3
+        },
+        "F": {
+         "probability": 0.0444,
+         "count": 4,
+         "songs": 2
+        },
+        "Am": {
+         "probability": 0.0222,
+         "count": 2,
+         "songs": 1
+        },
+        "G": {
+         "probability": 0.0111,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "F": {
+       "probability": 0.2989,
+       "count": 52,
+       "songs": 30,
+       "next": {
+        "C": {
+         "probability": 0.4634,
+         "count": 19,
+         "songs": 12
+        },
+        "G": {
+         "probability": 0.1707,
+         "count": 7,
+         "songs": 5
+        },
+        "Em": {
+         "probability": 0.1463,
+         "count": 6,
+         "songs": 3
+        },
+        "Am": {
+         "probability": 0.122,
+         "count": 5,
+         "songs": 3
+        },
+        "Dm": {
+         "probability": 0.0976,
+         "count": 4,
+         "songs": 3
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.0632,
+       "count": 11,
+       "songs": 5,
+       "next": {
+        "Dm": {
+         "probability": 0.4545,
+         "count": 5,
+         "songs": 1
+        },
+        "F": {
+         "probability": 0.4545,
+         "count": 5,
+         "songs": 3
+        },
+        "Em": {
+         "probability": 0.0909,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.0402,
+       "count": 7,
+       "songs": 5,
+       "next": {
+        "Dm": {
+         "probability": 0.7143,
+         "count": 5,
+         "songs": 3
+        },
+        "C": {
+         "probability": 0.1429,
+         "count": 1,
+         "songs": 1
+        },
+        "Am": {
+         "probability": 0.1429,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "G": {
+       "probability": 0.0402,
+       "count": 7,
+       "songs": 6,
+       "next": {
+        "C": {
+         "probability": 1.0,
+         "count": 6,
+         "songs": 6
+        }
+       }
+      }
+     }
+    },
+    "F": {
+     "probability": 0.172,
+     "count": 123,
+     "songs": 38,
+     "next": {
+      "C": {
+       "probability": 0.598,
+       "count": 61,
+       "songs": 15,
+       "next": {
+        "Dm": {
+         "probability": 0.3393,
+         "count": 19,
+         "songs": 4
+        },
+        "Em": {
+         "probability": 0.2679,
+         "count": 15,
+         "songs": 2
+        },
+        "F": {
+         "probability": 0.1786,
+         "count": 10,
+         "songs": 5
+        },
+        "G": {
+         "probability": 0.1786,
+         "count": 10,
+         "songs": 2
+        },
+        "Am": {
+         "probability": 0.0357,
+         "count": 2,
+         "songs": 2
+        }
+       }
+      },
+      "G": {
+       "probability": 0.3431,
+       "count": 35,
+       "songs": 18,
+       "next": {
+        "C": {
+         "probability": 0.7143,
+         "count": 20,
+         "songs": 10
+        },
+        "F": {
+         "probability": 0.1786,
+         "count": 5,
+         "songs": 4
+        },
+        "Dm": {
+         "probability": 0.0714,
+         "count": 2,
+         "songs": 2
+        },
+        "Am": {
+         "probability": 0.0357,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.0294,
+       "count": 3,
+       "songs": 2
+      },
+      "Em": {
+       "probability": 0.0196,
+       "count": 2,
+       "songs": 1
+      },
+      "Dm": {
+       "probability": 0.0098,
+       "count": 1,
+       "songs": 1
+      }
+     }
+    },
+    "Em": {
+     "probability": 0.0741,
+     "count": 53,
+     "songs": 23,
+     "next": {
+      "Dm": {
+       "probability": 0.3958,
+       "count": 19,
+       "songs": 6,
+       "next": {
+        "C": {
+         "probability": 0.375,
+         "count": 6,
+         "songs": 2
+        },
+        "Am": {
+         "probability": 0.375,
+         "count": 6,
+         "songs": 1
+        },
+        "Em": {
+         "probability": 0.1875,
+         "count": 3,
+         "songs": 1
+        },
+        "G": {
+         "probability": 0.0625,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.2708,
+       "count": 13,
+       "songs": 6,
+       "next": {
+        "Dm": {
+         "probability": 0.6364,
+         "count": 7,
+         "songs": 2
+        },
+        "Em": {
+         "probability": 0.1818,
+         "count": 2,
+         "songs": 1
+        },
+        "F": {
+         "probability": 0.1818,
+         "count": 2,
+         "songs": 2
+        }
+       }
+      },
+      "F": {
+       "probability": 0.25,
+       "count": 12,
+       "songs": 7,
+       "next": {
+        "Em": {
+         "probability": 0.4,
+         "count": 4,
+         "songs": 3
+        },
+        "G": {
+         "probability": 0.4,
+         "count": 4,
+         "songs": 3
+        },
+        "Am": {
+         "probability": 0.2,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "G": {
+       "probability": 0.0833,
+       "count": 4,
+       "songs": 3,
+       "next": {
+        "C": {
+         "probability": 0.5,
+         "count": 2,
+         "songs": 1
+        },
+        "Am": {
+         "probability": 0.5,
+         "count": 2,
+         "songs": 2
+        }
+       }
+      }
+     }
+    },
+    "Am": {
+     "probability": 0.0462,
+     "count": 33,
+     "songs": 14,
+     "next": {
+      "G": {
+       "probability": 0.4615,
+       "count": 12,
+       "songs": 4,
+       "next": {
+        "Dm": {
+         "probability": 0.5,
+         "count": 6,
+         "songs": 2
+        },
+        "C": {
+         "probability": 0.4167,
+         "count": 5,
+         "songs": 3
+        },
+        "Am": {
+         "probability": 0.0833,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.2308,
+       "count": 6,
+       "songs": 3,
+       "next": {
+        "Am": {
+         "probability": 0.6,
+         "count": 3,
+         "songs": 2
+        },
+        "F": {
+         "probability": 0.4,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "F": {
+       "probability": 0.1923,
+       "count": 5,
+       "songs": 3,
+       "next": {
+        "Em": {
+         "probability": 0.6,
+         "count": 3,
+         "songs": 1
+        },
+        "C": {
+         "probability": 0.2,
+         "count": 1,
+         "songs": 1
+        },
+        "G": {
+         "probability": 0.2,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.1154,
+       "count": 3,
+       "songs": 2
+      }
+     }
+    },
+    "Bdim": {
+     "probability": 0.0014,
+     "count": 1,
+     "songs": 1
+    }
+   }
+  },
+  "Em": {
+   "probability": 0.0342,
+   "count": 484,
+   "songs": 135,
+   "next": {
+    "F": {
+     "probability": 0.3367,
+     "count": 134,
+     "songs": 53,
+     "next": {
+      "G": {
+       "probability": 0.3039,
+       "count": 31,
+       "songs": 15,
+       "next": {
+        "C": {
+         "probability": 0.6071,
+         "count": 17,
+         "songs": 8
+        },
+        "F": {
+         "probability": 0.3214,
+         "count": 9,
+         "songs": 5
+        },
+        "Dm": {
+         "probability": 0.0357,
+         "count": 1,
+         "songs": 1
+        },
+        "Am": {
+         "probability": 0.0357,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "C": {
+       "probability": 0.2255,
+       "count": 23,
+       "songs": 12,
+       "next": {
+        "F": {
+         "probability": 0.45,
+         "count": 9,
+         "songs": 5
+        },
+        "Em": {
+         "probability": 0.2,
+         "count": 4,
+         "songs": 2
+        },
+        "Dm": {
+         "probability": 0.15,
+         "count": 3,
+         "songs": 2
+        },
+        "G": {
+         "probability": 0.1,
+         "count": 2,
+         "songs": 2
+        },
+        "Am": {
+         "probability": 0.1,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.2157,
+       "count": 22,
+       "songs": 6,
+       "next": {
+        "Em": {
+         "probability": 0.9,
+         "count": 18,
+         "songs": 3
+        },
+        "F": {
+         "probability": 0.05,
+         "count": 1,
+         "songs": 1
+        },
+        "G": {
+         "probability": 0.05,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.1275,
+       "count": 13,
+       "songs": 6,
+       "next": {
+        "F": {
+         "probability": 0.4545,
+         "count": 5,
+         "songs": 2
+        },
+        "C": {
+         "probability": 0.1818,
+         "count": 2,
+         "songs": 2
+        },
+        "Dm": {
+         "probability": 0.1818,
+         "count": 2,
+         "songs": 2
+        },
+        "Am": {
+         "probability": 0.1818,
+         "count": 2,
+         "songs": 2
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.1176,
+       "count": 12,
+       "songs": 7,
+       "next": {
+        "C": {
+         "probability": 0.6667,
+         "count": 6,
+         "songs": 3
+        },
+        "G": {
+         "probability": 0.2222,
+         "count": 2,
+         "songs": 2
+        },
+        "Em": {
+         "probability": 0.1111,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Bdim": {
+       "probability": 0.0098,
+       "count": 1,
+       "songs": 1
+      }
+     }
+    },
+    "Dm": {
+     "probability": 0.2714,
+     "count": 108,
+     "songs": 35,
+     "next": {
+      "F": {
+       "probability": 0.3171,
+       "count": 26,
+       "songs": 7,
+       "next": {
+        "C": {
+         "probability": 0.75,
+         "count": 18,
+         "songs": 3
+        },
+        "G": {
+         "probability": 0.1667,
+         "count": 4,
+         "songs": 3
+        },
+        "Em": {
+         "probability": 0.0833,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "C": {
+       "probability": 0.3049,
+       "count": 25,
+       "songs": 11,
+       "next": {
+        "Dm": {
+         "probability": 0.381,
+         "count": 8,
+         "songs": 2
+        },
+        "F": {
+         "probability": 0.3333,
+         "count": 7,
+         "songs": 3
+        },
+        "Em": {
+         "probability": 0.1905,
+         "count": 4,
+         "songs": 2
+        },
+        "G": {
+         "probability": 0.0476,
+         "count": 1,
+         "songs": 1
+        },
+        "Am": {
+         "probability": 0.0476,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "G": {
+       "probability": 0.1951,
+       "count": 16,
+       "songs": 9,
+       "next": {
+        "C": {
+         "probability": 0.6875,
+         "count": 11,
+         "songs": 8
+        },
+        "F": {
+         "probability": 0.1875,
+         "count": 3,
+         "songs": 2
+        },
+        "Am": {
+         "probability": 0.125,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.1098,
+       "count": 9,
+       "songs": 2
+      },
+      "Em": {
+       "probability": 0.0732,
+       "count": 6,
+       "songs": 4,
+       "next": {
+        "F": {
+         "probability": 0.6667,
+         "count": 2,
+         "songs": 2
+        },
+        "Am": {
+         "probability": 0.3333,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      }
+     }
+    },
+    "Am": {
+     "probability": 0.2387,
+     "count": 95,
+     "songs": 40,
+     "next": {
+      "Dm": {
+       "probability": 0.3086,
+       "count": 25,
+       "songs": 11,
+       "next": {
+        "Em": {
+         "probability": 0.5714,
+         "count": 8,
+         "songs": 3
+        },
+        "G": {
+         "probability": 0.2857,
+         "count": 4,
+         "songs": 3
+        },
+        "C": {
+         "probability": 0.1429,
+         "count": 2,
+         "songs": 2
+        }
+       }
+      },
+      "F": {
+       "probability": 0.284,
+       "count": 23,
+       "songs": 9,
+       "next": {
+        "Em": {
+         "probability": 0.55,
+         "count": 11,
+         "songs": 3
+        },
+        "C": {
+         "probability": 0.2,
+         "count": 4,
+         "songs": 3
+        },
+        "G": {
+         "probability": 0.15,
+         "count": 3,
+         "songs": 1
+        },
+        "Dm": {
+         "probability": 0.1,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.1481,
+       "count": 12,
+       "songs": 7,
+       "next": {
+        "F": {
+         "probability": 0.5,
+         "count": 6,
+         "songs": 4
+        },
+        "Am": {
+         "probability": 0.25,
+         "count": 3,
+         "songs": 2
+        },
+        "C": {
+         "probability": 0.1667,
+         "count": 2,
+         "songs": 1
+        },
+        "G": {
+         "probability": 0.0833,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "G": {
+       "probability": 0.1358,
+       "count": 11,
+       "songs": 5,
+       "next": {
+        "F": {
+         "probability": 0.6364,
+         "count": 7,
+         "songs": 3
+        },
+        "Dm": {
+         "probability": 0.1818,
+         "count": 2,
+         "songs": 1
+        },
+        "Em": {
+         "probability": 0.0909,
+         "count": 1,
+         "songs": 1
+        },
+        "Am": {
+         "probability": 0.0909,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "C": {
+       "probability": 0.1235,
+       "count": 10,
+       "songs": 5,
+       "next": {
+        "F": {
+         "probability": 0.5556,
+         "count": 5,
+         "songs": 3
+        },
+        "G": {
+         "probability": 0.4444,
+         "count": 4,
+         "songs": 1
+        }
+       }
+      }
+     }
+    },
+    "C": {
+     "probability": 0.0829,
+     "count": 33,
+     "songs": 12,
+     "next": {
+      "Em": {
+       "probability": 0.4828,
+       "count": 14,
+       "songs": 3,
+       "next": {
+        "C": {
+         "probability": 0.8333,
+         "count": 10,
+         "songs": 2
+        },
+        "Am": {
+         "probability": 0.1667,
+         "count": 2,
+         "songs": 1
+        }
+       }
+      },
+      "G": {
+       "probability": 0.2759,
+       "count": 8,
+       "songs": 4,
+       "next": {
+        "C": {
+         "probability": 0.8333,
+         "count": 5,
+         "songs": 2
+        },
+        "Am": {
+         "probability": 0.1667,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Dm": {
+       "probability": 0.1379,
+       "count": 4,
+       "songs": 3,
+       "next": {
+        "F": {
+         "probability": 0.5,
+         "count": 2,
+         "songs": 1
+        },
+        "G": {
+         "probability": 0.25,
+         "count": 1,
+         "songs": 1
+        },
+        "Am": {
+         "probability": 0.25,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Am": {
+       "probability": 0.1034,
+       "count": 3,
+       "songs": 2
+      }
+     }
+    },
+    "G": {
+     "probability": 0.0678,
+     "count": 27,
+     "songs": 15,
+     "next": {
+      "C": {
+       "probability": 0.3636,
+       "count": 8,
+       "songs": 6,
+       "next": {
+        "G": {
+         "probability": 0.5,
+         "count": 2,
+         "songs": 2
+        },
+        "Em": {
+         "probability": 0.25,
+         "count": 1,
+         "songs": 1
+        },
+        "F": {
+         "probability": 0.25,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "Em": {
+       "probability": 0.3636,
+       "count": 8,
+       "songs": 3,
+       "next": {
+        "G": {
+         "probability": 0.8571,
+         "count": 6,
+         "songs": 2
+        },
+        "Dm": {
+         "probability": 0.1429,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      },
+      "F": {
+       "probability": 0.1364,
+       "count": 3,
+       "songs": 2
+      },
+      "Am": {
+       "probability": 0.1364,
+       "count": 3,
+       "songs": 3,
+       "next": {
+        "Em": {
+         "probability": 0.5,
+         "count": 1,
+         "songs": 1
+        },
+        "F": {
+         "probability": 0.5,
+         "count": 1,
+         "songs": 1
+        }
+       }
+      }
+     }
+    },
+    "Bdim": {
+     "probability": 0.0025,
+     "count": 1,
+     "songs": 1
+    }
+   }
+  },
+  "Bdim": {
+   "probability": 0.001,
+   "count": 14,
+   "songs": 10,
+   "next": {
+    "C": {
+     "probability": 0.75,
+     "count": 3,
+     "songs": 2
+    },
+    "Dm": {
+     "probability": 0.25,
+     "count": 1,
+     "songs": 1
+    }
+   }
+  }
+ }
+}
