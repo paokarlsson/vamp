@@ -67,6 +67,19 @@
   .chip.prog{background:rgba(255,201,77,.18);color:var(--hand-r);font-weight:500}
   .chip.two{background:rgba(122,168,255,.18);color:var(--hand-l)}
   .readout .grow{flex:1}
+  .readout button.icon{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:30px;height:26px;padding:0;border-radius:8px;
+    background:rgba(243,236,224,.09);border:none;color:var(--key);
+  }
+  .readout button.icon:hover{background:rgba(243,236,224,.18)}
+
+  /* Helskärm: bara scenen, noterna så höga som skärmen tillåter. */
+  .stage:fullscreen{display:flex;flex-direction:column;border-radius:0;width:100% !important;margin:0 !important}
+  .stage:-webkit-full-screen{display:flex;flex-direction:column;border-radius:0;width:100% !important;margin:0 !important}
+  .stage:fullscreen #lane{flex:1;height:auto;min-height:0}
+  .stage:-webkit-full-screen #lane{flex:1;height:auto;min-height:0}
+  .stage:fullscreen .readout{font-size:14px;padding:10px 16px}
 
   /* ---------- keyboard ---------- */
   .device{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--muted)}
@@ -171,6 +184,8 @@
     <span class="chip" id="c-bpm">—</span>
     <span class="grow"></span>
     <span class="chip" id="c-layers">—</span>
+    <button class="icon" id="btn-fs-play" hidden aria-label="Spela"></button>
+    <button class="icon" id="btn-fs" hidden aria-label="Helskärm" title="Helskärm (F)"></button>
   </div>
 </div>
 
@@ -547,7 +562,7 @@ function slotsFor(mat, bpb){
   const per = totalBeats/mat.chords.length;
   return mat.chords.map((c,i)=>({
     i, start: i*per, beats: per,
-    rh: mat.rh[i], lh: mat.lh[i], bass: mat.bass[i], name: c.label
+    rh: mat.rh[i], lh: mat.lh[i], bass: mat.bass[i], pcs: c.pcs, name: c.label
   }));
 }
 
@@ -1333,12 +1348,58 @@ function tick(t,accent){ if(!ctx)return;
   o.frequency.value = accent ? 1760 : 1320;
   g.gain.setValueAtTime(accent?.3:.18,t); g.gain.exponentialRampToValueAtTime(.0001,t+.05);
   o.connect(g); g.connect(musicGain); o.start(t); o.stop(t+.06); }
-function bassNote(t,midi,dur){ if(!ctx)return;
-  const o=ctx.createOscillator(), g=ctx.createGain(), f=ctx.createBiquadFilter();
-  f.type="lowpass"; f.frequency.value=520; o.type="triangle"; o.frequency.value=mtof(midi-12);
-  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.16,t+.02);
-  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
-  o.connect(g); g.connect(f); f.connect(musicGain); o.start(t); o.stop(t+dur+.2); }
+/* Knäppt bas: filtret öppnar i anslaget och stänger sig, så tonen får en
+   attack och sedan en rund kropp. En sinus en oktav under ger botten. */
+function bassNote(t,midi,dur,vel){ if(!ctx)return;
+  vel = vel === undefined ? 1 : vel;
+  const o=ctx.createOscillator(), sub=ctx.createOscillator(), sg=ctx.createGain();
+  const g=ctx.createGain(), f=ctx.createBiquadFilter();
+  f.type="lowpass"; f.Q.value=2;
+  f.frequency.setValueAtTime(380+900*vel,t); f.frequency.exponentialRampToValueAtTime(360,t+.2);
+  o.type="triangle"; o.frequency.value=mtof(midi-12);
+  sub.type="sine"; sub.frequency.value=mtof(midi-24); sg.gain.value=.35;
+  const end = t+Math.max(.12,dur);
+  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.18*vel,t+.012);
+  g.gain.exponentialRampToValueAtTime(.11*vel,t+.16);
+  g.gain.setValueAtTime(.11*vel,end-.05); g.gain.exponentialRampToValueAtTime(.0001,end);
+  o.connect(g); sub.connect(sg); sg.connect(g); g.connect(f); f.connect(musicGain);
+  o.start(t); sub.start(t); o.stop(end+.05); sub.stop(end+.05); }
+
+/* Basgången. Grundton på ettan, kvint och oktav däremellan, och slaget
+   före ett ackordbyte leder in i nästa grundton med ett halvtonssteg —
+   från det håll basen redan står. Tre lägen: lugn när basen just kommit in,
+   driv med åttondelar när hela kompet är inne, walking i swing. Allt i slag,
+   så samma regler gäller i 3/4, med två ackord per takt och med ett ackord
+   över två takter. */
+function bassPart(slots, bpb, feel){
+  const out = [];
+  const note = (b, midi, dur, vel) => out.push({b, midi, dur, vel: vel || 1});
+  slots.forEach((s, i)=>{
+    const nr = slots[(i+1) % slots.length].bass, r = s.bass;
+    const third = r + (s.pcs[1]-s.pcs[0]+12)%12, fifth = r + (s.pcs[2]-s.pcs[0]+12)%12;
+    const into = from => nr === r ? from : nr + (from <= nr ? -1 : 1);
+    const end = s.start + s.beats;
+    for (let b = s.start; b < end - 1e-6; ){
+      const barEnd = Math.min(end, (Math.floor(b/bpb + 1e-6) + 1)*bpb);
+      const len = barEnd - b, last = barEnd >= end - 1e-6;
+      const lead = from => last ? into(from) : from;   /* ledton bara inför ett byte */
+      if (len >= 4){
+        if (feel === "walk"){ note(b,r,.9); note(b+1,third,.9,.8); note(b+2,fifth,.9,.85); note(b+3,lead(r+12),.9,.8); }
+        else if (feel === "drive"){ note(b,r,1.4); note(b+1.5,r,.4,.6); note(b+2,fifth,.9,.85); note(b+3,r+12,.45,.75); note(b+3.5,lead(fifth),.45,.7); }
+        else { note(b,r,1.8); note(b+2,fifth,.9,.8); note(b+3,lead(r+12),.9,.7); }
+      } else if (len >= 3){
+        if (feel === "walk"){ note(b,r,.9); note(b+1,third,.9,.8); note(b+2,lead(fifth),.9,.8); }
+        else if (feel === "drive"){ note(b,r,.9); note(b+1,fifth,.9,.75); note(b+2,lead(r+12),.9,.75); }
+        else { note(b,r,1.8); note(b+2,lead(fifth),.9,.7); }
+      } else if (len >= 2){
+        note(b,r,.9);
+        if (feel !== "calm" || last) note(b+1,lead(fifth),.9,.75);
+      } else note(b,r,len*.9);
+      b = barEnd;
+    }
+  });
+  return out;
+}
 
 
 /* ==========================================================================
@@ -1408,8 +1469,14 @@ function scheduleLoop(t0){
       const next = Math.min(end, (Math.floor(b/bpb + 1e-6) + 1)*bpb);
       const t = t0 + b*spb, dur = (next-b)*spb;
       pad(t, slot.rh, dur, open);
-      if (L>=3) bassNote(t, slot.bass, dur*.85);
       b = next;
+    }
+  }
+  if (L>=3){
+    const feel = v.swing ? "walk" : L>=5 ? "drive" : "calm";
+    for (const n of bassPart(v.slots, bpb, feel)){
+      const off = (swing && Math.abs(n.b%1-.5)<.01) ? swing : 0;
+      bassNote(t0 + n.b*spb + off, n.midi, n.dur*spb, n.vel);
     }
   }
   for (let bar=0; bar<4; bar++){
@@ -1856,6 +1923,7 @@ let laneSize = {w:340,h:352};
 const MIN_WHITE = 16;
 function layoutStage(){
   const stage = lane.parentElement, col = document.querySelector(".device").offsetWidth;
+  if (fsElement() === stage){ stage.style.width = stage.style.marginLeft = ""; laneSize = resizeCanvas(lane); return; }
   const avail = document.documentElement.clientWidth - 32;
   const w = Math.max(col, Math.min(avail, whites.length*MIN_WHITE));
   stage.style.width = w > col ? w+"px" : "";
@@ -2153,6 +2221,8 @@ function updateTransport(){
   else label = "Fortsätt";
   b.innerHTML = icon + "<span>" + label + "</span>";
   b.disabled = off;
+  const f = el("btn-fs-play");
+  f.innerHTML = icon; f.disabled = off; f.setAttribute("aria-label", label);
   b.title = off ? label : label + " (mellanslag)";
 }
 
@@ -2180,6 +2250,39 @@ function updateDevice(){
 }
 
 el("btn-play").addEventListener("click", togglePlay);
+
+/* Helskärm. Scenen tar hela skärmen, med spela/paus i raden under noterna
+   eftersom resten av sidan inte syns. Safari på iPad vill ha webkit-namnen;
+   iPhone kan inte visa annat än video i helskärm, och där syns ingen knapp. */
+const ICON_FS_IN  = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+const ICON_FS_OUT = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+function fsElement(){ return document.fullscreenElement || document.webkitFullscreenElement || null; }
+function toggleFullscreen(){
+  const stage = lane.parentElement;
+  if (fsElement()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  else {
+    const req = stage.requestFullscreen || stage.webkitRequestFullscreen;
+    const p = req && req.call(stage);
+    if (p && p.catch) p.catch(()=>{});
+  }
+}
+function onFullscreen(){
+  const on = !!fsElement();
+  el("btn-fs").innerHTML = on ? ICON_FS_OUT : ICON_FS_IN;
+  el("btn-fs").setAttribute("aria-label", on ? "Lämna helskärm" : "Helskärm");
+  el("btn-fs").title = on ? "Lämna helskärm (F eller Esc)" : "Helskärm (F)";
+  el("btn-fs-play").hidden = !on;
+  updateTransport();
+  onResize();
+}
+if (document.fullscreenEnabled || document.webkitFullscreenEnabled){
+  el("btn-fs").hidden = false;
+  el("btn-fs").addEventListener("click", toggleFullscreen);
+  el("btn-fs-play").addEventListener("click", togglePlay);
+  document.addEventListener("fullscreenchange", onFullscreen);
+  document.addEventListener("webkitfullscreenchange", onFullscreen);
+  onFullscreen();
+}
 el("btn-midi").addEventListener("click", connectMidi);
 el("btn-measure").addEventListener("click", measureStart);
 
@@ -2244,6 +2347,11 @@ document.addEventListener("keydown", e=>{
   if (e.code !== "Space" || e.repeat) return;
   if (e.target.closest && e.target.closest("button,input,select,textarea,label")) return;
   e.preventDefault(); togglePlay();
+});
+document.addEventListener("keydown", e=>{        /* F är ingen ton, så den är ledig */
+  if (e.code !== "KeyF" || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (el("btn-fs").hidden || (e.target.closest && e.target.closest("input,select,textarea"))) return;
+  e.preventDefault(); toggleFullscreen();
 });
 document.addEventListener("keydown", typeDown);
 document.addEventListener("keyup", typeUp);

@@ -49,6 +49,10 @@ bryter scenen sig ur kolumnen, upp till hela fönsterbredden. Ryms det ändå in
 (88 tangenter på en telefon) blir tangenterna smalare, och delen som varvet
 använder markeras.
 
+**Helskärm** (knappen längst ned till höger i scenen, eller `F`) visar bara
+noterna och klaviaturen, med spela/paus i raden under. Esc eller `F` igen
+lämnar. På iPhone går bara video i helskärm, där syns ingen knapp.
+
 **Skärmen tänd** (bredvid Spela) hindrar skärmen från att slockna medan du
 spelar, via Screen Wake Lock. Webbläsaren släpper låset när fliken döljs; appen
 tar det igen när du kommer tillbaka. Valet sparas, och knappen syns bara i
@@ -153,6 +157,13 @@ Basen röstförs också som en sluten loop, men med **en oktav per grundton**: s
 ackord ligger på samma ton varje gång det kommer i varvet. En kortaste väg ger
 inte det — Canon fick C på både C2 och C3. Registret 36–52 ger högst två lägen
 per grundton, så alla kombinationer prövas.
+
+**Basgången** har grundton på ettan, kvint och oktav däremellan, och slaget
+före ett ackordbyte leder in i nästa grundton med ett halvtonssteg, från det
+håll basen redan står. Tre lägen: lugn när basen just kommit in, driv med
+åttondelar när hela kompet är inne, och walking (grundton, ters, kvint, ledton)
+när varvet går i swing. Basen är knäppt: filtret öppnar i anslaget och stänger
+sig, med en sinus en oktav under som botten.
 
 Paddan och basen följer **ackorden, inte takterna**. Canon har två ackord per
 takt och får två anslag per takt; ett ackord som varar två takter slås an igen
