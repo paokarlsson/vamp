@@ -6,7 +6,7 @@ stannar för att motorn tänker.
 
 Hela prototypen är **en fil, noll beroenden**. Öppna `index.html` i en webbläsare,
 anslut ett MIDI-keyboard och tryck *Spela*. Utan MIDI går det att spela på datorns
-tangentbord, och vill du bara titta finns demot i panelen *Utan keyboard*.
+tangentbord.
 
 ```
 git clone https://github.com/paokarlsson/vamp.git
@@ -57,11 +57,6 @@ lämnar. På iPhone går bara video i helskärm, där syns ingen knapp.
 spelar, via Screen Wake Lock. Webbläsaren släpper låset när fliken döljs; appen
 tar det igen när du kommer tillbaka. Valet sparas, och knappen syns bara i
 webbläsare som stöder det.
-
-Spelaren i demot är **simulerad**. Reglaget sätter hennes sanna nivå; motorn ser
-den aldrig, utan måste hitta den ur utfallet. Hon har dessutom dolda svagheter
-(tvåhandsspel, synkopering, svarta tangenter) som motorn ska upptäcka utan att
-någon berättar om dem.
 
 ### Grundton, skala och spelsätt
 
@@ -130,13 +125,13 @@ Tolv moduler i `index.html`, i den ordning de bygger på varandra:
 | 3 | Bibliotek | 25 progressioner som text, åtta skalor, alla tolv grundtoner. |
 | 4 | Texturer | 18 texturer: grepp → faktiska noter, uttryckt i slag. Tre spelsätt. |
 | 5 | Svårighet | Noter → formvektor (12 mått) → ett tal. |
-| 6 | Spelare | Simulerad hand med dolda styrkor och svagheter. |
+| 6 | Axlar | Vad ett varv belastar, axel för axel. |
 | 7 | Motor | Skattning, nio-axlig profil, val av nästa varv. |
 | 8 | Ljud | Web Audio. Piano, padda, bas, trummor — inga samplingar. |
 | 9 | Varvet | Schemaläggning, beslutsfönster, mjuka landningar. |
 | 10 | MIDI-in | Riktiga anslag, från MIDI eller datorns tangentbord, matchade mot väntade toner. |
 | 11 | Bild | Fallande noter och klaviatur på canvas. |
-| 12 | Gränssnitt | Spela/paus, demo, paneler, logg. |
+| 12 | Gränssnitt | Spela/paus, paneler, logg. |
 
 ### Röstföring är det som gör biblioteket billigt
 
@@ -210,8 +205,7 @@ Motorn kör tre faser:
 * **Zoom** — målnivån följer skattningen tätt medan osäkerheten krymper
   (σ ← 0,91 σ per varv). Ett felfritt varv säger bara att nivån räcker, inte var
   gränsen går: det driver skattningen uppåt men krymper inte σ. Den som spelar
-  felfritt fortsätter alltså uppåt tills gränsen syns. (Demot krymper ändå, för
-  att hinna fram på sina tre minuter.)
+  felfritt fortsätter alltså uppåt tills gränsen syns.
 * **Groove** — motorn bor på nivån. Tre rena varv i rad *och* samlad timing
   (< 60 ms spridning, som datorns tangentbord också klarar) krävs för +0,45 —
   eller mer, om skattningen sprungit ifrån under de rena varven, men högst
@@ -323,7 +317,6 @@ en-axel-i-taget-budget som texturen.
 | | |
 |---|---|
 | **Riktig** | Röstföring, formvektor, skattningsmatematiken, vallogiken, ljudet, bilden. |
-| **Simulerad** (i demot) | Spelaren, anslaget, timingfelen, kaskaden efter en miss. |
 | **Gissad** | Alla vikter i `W`, belastningskurvorna i `loadOf()`, trösklarna i motorn, tidsfönstret och feltonskostnaden i MIDI-matchningen. |
 
 ## Nästa steg
