@@ -77,15 +77,17 @@ går. Då gäller de från nästa varv som inte redan är lagt.
   spelsätt har egna placeringsprov.
 
 **Ackord och rytm är en trappa.** Stegen kommer i ordning, och tre bra varv
-låser upp nästa; två dåliga i rad tar en tillbaka, tyst.
+låser upp nästa. Två varv under 80 % i rad tar en tillbaka, tyst, och ett
+under 60 % räcker.
 
 | Steg | Vänster | Höger |
 |---|---|---|
-| 1 Bas och ackord | Bas, hel not | Blockackord |
-| 2 Öppet grepp | Bas, hel not | Mittentonen upp en oktav: C-E-G blir C-G-E' |
-| 3 Växelvis | Bas på de tunga slagen | De två övre tonerna på de lätta |
-| 4 Växelvis med driv | Kvinten på trean | Föregriper nästa ackord på sista "och" |
-| 5 Delat grepp i en hand | Bas, hel not | Undre tonen på tunga slag, de övre på lätta |
+| 1 Blockackord | — | Blockackord |
+| 2 Bas och ackord | Bas, hel not | Blockackord |
+| 3 Öppet grepp | Bas, hel not | Mittentonen upp en oktav: C-E-G blir C-G-E' |
+| 4 Växelvis | Bas på de tunga slagen | De två övre tonerna på de lätta |
+| 5 Växelvis med driv | Kvinten på trean | Föregriper nästa ackord på sista "och" |
+| 6 Delat grepp i en hand | Bas, hel not | Undre tonen på tunga slag, de övre på lätta |
 
 Ordningen följer den uppmätta svårigheten. Att dela greppet i en hand mäts
 som svårast, eftersom handen måste flytta sig en decima varje slag. Ett nytt
@@ -168,7 +170,7 @@ inte som synkopering. Synkopering börjar först när slaget före är tomt.
 
 `costOf()` viktar ihop formvektorn till ett tal, och tempot multipliceras in med
 exponent 1,25. En variant = progression × tonart × textur × tempo × taktart ×
-swing, vilket ger 432 varianter per progression och tonart — alla med sin egen
+swing, vilket ger 504 varianter per progression och tonart — alla med sin egen
 mätta svårighet.
 
 **Vikterna i `W` är handsatta gissningar.** De ska skattas ur riktig speldata
@@ -189,9 +191,11 @@ Motorn kör tre faser:
   uppenbart är för svårt. En enda miss är inget riktigt misslyckande — provens
   första tre takter har ibland bara tre toner — så det krävs två. Med riktig
   spelare föregås första provet av en takts inräkning, annars når första tonen
-  tangenterna innan den hunnit synas. Startar sedan **ett steg under**
-  skattningen: ett bra första varv avgör om någon stannar kvar, och fel nedåt är
-  billigt.
+  tangenterna innan den hunnit synas. Ett prov räknas som klarat först vid
+  90 % — 82 % är ett prov man kämpat sig igenom, inte ett man äger.
+  Skattningen läggs strax över det senast klarade, och första varvet **ett steg
+  under** den: ett bra första varv avgör om någon stannar kvar, och fel nedåt
+  är billigt.
 * **Zoom** — målnivån följer skattningen tätt medan osäkerheten krymper
   (σ ← 0,91 σ per varv). Ett felfritt varv säger bara att nivån räcker, inte var
   gränsen går: det driver skattningen uppåt men krymper inte σ. Den som spelar
@@ -199,9 +203,17 @@ Motorn kör tre faser:
   att hinna fram på sina tre minuter.)
 * **Groove** — motorn bor på nivån. Tre rena varv i rad *och* samlad timing
   (< 60 ms spridning, som datorns tangentbord också klarar) krävs för +0,45 —
-  eller mer, om skattningen sprungit ifrån under de rena varven. Under 80 %
-  träffar sänks nivån tyst och nästa varv blir en **safe harbour** — ett varv hon
-  redan äger.
+  eller mer, om skattningen sprungit ifrån under de rena varven, men högst
+  +0,8 åt gången. Under 80 % träffar sänks nivån tyst och nästa varv blir en
+  **safe harbour** — ett varv hon redan äger, och som ligger under det nya
+  målet.
+
+**Sänkningen går efter det som spelades.** Ett varv under 80 % säger att
+gränsen ligger under det varvet, så nästa mål läggs under dess nivå, mer ju
+fler missar: 0,3 + 2,5 × (0,8 − träffar). Är två av de tre senaste varven
+dåliga följer skattningen med ned direkt, annars drar den upp målet igen.
+I simuleringen, där spelaren tappar två nivåer mitt i, tog det tidigare
+12–15 varv att hitta tillbaka, och nu tar det ungefär 5.
 
 Var nionde varv smyger motorn in ett **tyst prov** ~1,1 nivåer över målet. Går
 det bra (≥ 85 %) är målet för lågt och höjs; går det dåligt loggas ingenting
@@ -212,6 +224,14 @@ Två skyddsmekanismer värda att känna till:
 * En axel som spelaren visat sig svag på får inte dra ner den *allmänna*
   skattningen — negativa signaler dämpas med upp till 55 % när svag axel belastas.
 * Motorn staplar aldrig två kända svaga axlar i samma varv.
+
+### Ljudet slår aldrig i taket
+
+Kompet ensamt når nästan fullt utslag, och spelarens egna toner läggs ovanpå.
+Därför går allt genom lägre master, kompressor, en hård begränsare och sist en
+mjuk klippning som är rak upp till 0,7. Spelarens toner klingar av som en
+pianoton även om tangenten hålls, och tystnar helt efter tio sekunder, så ett
+tappat note-off lämnar ingen ton kvar som låter för alltid.
 
 ### Beslutsfönstret
 
