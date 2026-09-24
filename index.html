@@ -1649,9 +1649,9 @@ function heardTime(perfMs){
 
 /* Bildens tid går aldrig bakåt, så en tangent som tänts släcks inte i nästa
    bildruta av att klockan rättat sig ett par millisekunder. */
-function viewNow(){
+function viewNow(perfMs){
   syncClock();
-  const t = heardTime(performance.now());
+  const t = heardTime(perfMs === undefined ? performance.now() : perfMs);
   if (ctx.state !== "running") return audioClock.now = t;
   return audioClock.now = (t < audioClock.now && t > audioClock.now-.15) ? audioClock.now : t;
 }
@@ -1964,6 +1964,35 @@ function layoutStage(){
   laneSize = resizeCanvas(lane);
 }
 
+/* Text som rör sig. fillText lägger glyferna på hela pixlar, medan allt
+   annat glider i bråkdelar av en pixel — en siffra eller ett förtecken
+   rycker då fram mot sin not. Texten ritas därför en gång till en egen liten
+   bild, och bilden läggs ut med drawImage, som följer med mellan pixlarna.
+   Typsnitt, färg och justering tas från ritytan, precis som med fillText. */
+const SPRITES = new Map();
+function glideText(text, x, y){
+  const dpr = lane.width / laneSize.w || 1;
+  const id = [lctx.font, lctx.fillStyle, lctx.textAlign, lctx.textBaseline, dpr, text].join("|");
+  let sp = SPRITES.get(id);
+  if (!sp){
+    if (SPRITES.size > 400) SPRITES.clear();
+    const size = parseFloat(/([\d.]+)px/.exec(lctx.font)[1]) || 12;
+    const w = lctx.measureText(text).width;
+    const cv = document.createElement("canvas");
+    const pw = Math.ceil(w + size*2), ph = Math.ceil(size*4);
+    cv.width = Math.ceil(pw*dpr); cv.height = Math.ceil(ph*dpr);
+    const c = cv.getContext("2d");
+    c.scale(dpr, dpr);
+    c.font = lctx.font; c.fillStyle = lctx.fillStyle; c.textAlign = lctx.textAlign; c.textBaseline = lctx.textBaseline;
+    const ox = lctx.textAlign === "center" ? pw/2 : lctx.textAlign === "right" || lctx.textAlign === "end" ? pw - size : size;
+    const oy = size*2.2;
+    c.fillText(text, ox, oy);
+    sp = { cv, ox, oy, pw, ph };
+    SPRITES.set(id, sp);
+  }
+  lctx.drawImage(sp.cv, x - sp.ox, y - sp.oy, sp.pw, sp.ph);
+}
+
 /* Full styrka så länge tangenten är nere, sedan en kort avklingning — kort
    nog att två anslag på samma tangent i rad syns som två. */
 const FADE = .12;
@@ -1974,11 +2003,29 @@ function flashColor(f, now){
   return f.hand==="L" ? `rgba(122,168,255,${a})` : `rgba(255,201,77,${a})`;
 }
 
-function drawLane(){
+/* Bildens klocka. Anslagen mäts mot ljudklockan ovan, men den rättar sig
+   några millisekunder hit och dit mellan bildrutorna, och det syns som
+   hack när noterna glider — tydligast i sidled, där ögat följer dem. Bilden
+   går därför exakt en bildruta framåt per bildruta, räknat i skärmens takt,
+   och glider mot det som hörs med högst en halv millisekund per ruta. Efter
+   paus, en dold flik eller ett stort fel hoppar den direkt. */
+const display = { t:null, ts:0 };
+function displayNow(ts){
+  if (ts === undefined) ts = performance.now();
+  const heard = viewNow(ts);
+  const dt = (ts - display.ts)/1000;
+  display.ts = ts;
+  if (ctx.state !== "running" || display.t === null || dt <= 0 || dt > .25 || Math.abs(heard - display.t - dt) > .05)
+    return display.t = heard;
+  const t = display.t + dt;
+  return display.t = t + Math.max(-.0005, Math.min(.0005, (heard - t)*.05));
+}
+
+function drawLane(ts){
   const {w:W,h:H} = laneSize;
   const kbH = 62, laneH = H-kbH, look = 2.6, pps = laneH/look;
   /* det som hörs, inte det som schemalagts — annars ligger bilden före ljudet */
-  const now = ctx ? viewNow() : 0;
+  const now = ctx ? displayNow(ts) : 0;
 
   /* Tonerna appen spelar själv lyser när de hörs, i båda vyerna. */
   for (const loop of state.loops) for (const ev of loop.events)
@@ -2034,7 +2081,7 @@ function drawLane(){
         lctx.fillStyle = "#16242b";
         lctx.font = `700 ${Math.min(14, ww*.8).toFixed(1)}px "IBM Plex Sans",system-ui,sans-serif`;
         lctx.textAlign = "center"; lctx.textBaseline = "alphabetic";
-        lctx.fillText(ev.finger, x+ww/2, yy+hh-4);
+        glideText(ev.finger, x+ww/2, yy+hh-4);
       }
     }
   }
@@ -2218,7 +2265,7 @@ function drawSheet(W, H, now){
     /* ackordnamnen ovanför, där ackordet börjar */
     for (const slot of loop.v.slots){
       const x = X(loop.t0 + slot.start*loop.spb);
-      if (x > headerW - 60 && x < W) lctx.fillText(slot.name, x + hs*.4, Lo.chordY);
+      if (x > headerW - 60 && x < W) glideText(slot.name, x + hs*.4, Lo.chordY);
     }
   }
 
@@ -2296,7 +2343,7 @@ function drawSheet(W, H, now){
       const n = notes[i]; if (n.acc === null) continue;
       accCol = lastAcc !== null && lastAcc - n.dn < 6 ? accCol+1 : 0; lastAcc = n.dn;
       lctx.fillStyle = n.color;
-      lctx.fillText(ACC_GLYPH[n.acc], x - hs*(2.7 + accCol*1.6) - (notes.some(m=>m.shift) && !up ? 2.3*hs : 0), n.y);
+      glideText(ACC_GLYPH[n.acc], x - hs*(2.7 + accCol*1.6) - (notes.some(m=>m.shift) && !up ? 2.3*hs : 0), n.y);
     }
 
     /* hals, och balk eller flagga */
@@ -2334,10 +2381,10 @@ function drawSheet(W, H, now){
       const step = Math.max(10, hs*1.5), nums = notes.filter(n=>n.ev.finger && !n.ev.ghost);
       if (hand === "R"){
         let y = Math.min(notes[notes.length-1].y, up && tip !== null ? tip : Infinity) - hs*1.1;
-        for (const n of nums){ lctx.fillText(n.ev.finger, x, y); y -= step; }
+        for (const n of nums){ glideText(n.ev.finger, x, y); y -= step; }
       } else {
         let y = Math.max(notes[0].y, !up && tip !== null ? tip : -Infinity) + hs*1.1 + step*.8;
-        for (let i=nums.length-1; i>=0; i--){ lctx.fillText(nums[i].ev.finger, x, y); y += step; }
+        for (let i=nums.length-1; i>=0; i--){ glideText(nums[i].ev.finger, x, y); y += step; }
       }
     }
   }
@@ -2497,8 +2544,10 @@ function updateChips(loop){
   el("c-texture").className = "chip"+(v.shape.independence>0?" two":"");
 }
 
-function frame(){
-  drawLane();
+/* Tiden tas från bildrutans tidsstämpel, inte från när koden råkar köras,
+   så att noterna flyttar sig lika långt varje ruta. */
+function frame(ts){
+  drawLane(ts);
   if (ctx && state.loops.length){
     const now = ctx.currentTime;
     const newest = state.loops[state.loops.length-1];
