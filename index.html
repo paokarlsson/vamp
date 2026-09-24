@@ -1296,6 +1296,17 @@ function ensureAudio(given){
   for (let i=0;i<len;i++) d[i] = Math.random()*2-1;
 }
 const mtof = m => 440*Math.pow(2,(m-69)/12);
+/* En ton som klingat ut kopplas loss ur ljudgrafen. Annars ligger dess
+   noder kvar och räknas i varje buffert tills skräpsamlingen hinner ikapp,
+   och ljudtråden blir tyngre för varje minut — ljudet börjar hacka och
+   egna anslag kommer ryckigt. Kedjan släpps när sista källan tystnat. */
+function freeAfter(srcs, nodes){
+  let left = srcs.length;
+  for (const s of srcs) s.onended = ()=>{
+    s.disconnect();
+    if (--left === 0) for (const n of nodes) n.disconnect();
+  };
+}
 
 function piano(t,midi,dur,gain,hand){
   if (!ctx) return;
@@ -1310,6 +1321,7 @@ function piano(t,midi,dur,gain,hand){
   g.gain.exponentialRampToValueAtTime(gain*.3,t+.25);
   g.gain.exponentialRampToValueAtTime(.0001,t+Math.max(.35,dur));
   o1.start(t); o2.start(t); o1.stop(t+dur+.5); o2.stop(t+dur+.5);
+  freeAfter([o1,o2], [g2,g,f]);
 }
 function pad(t,midis,dur,open){
   if (!ctx) return;
@@ -1324,34 +1336,37 @@ function pad(t,midis,dur,open){
   g.gain.linearRampToValueAtTime(.09,t+.02);
   g.gain.setTargetAtTime(.065,t+.02,.25);
   g.gain.setTargetAtTime(.0001,t+Math.max(.05,dur-.03),.06);
+  const srcs = [], nodes = [g,f];
   midis.forEach((m,i)=>{
     const o=ctx.createOscillator(), og=ctx.createGain();
     o.type = i===0?"triangle":"sawtooth";
     o.frequency.value=mtof(m-12); o.detune.value=(i-1)*6;
     og.gain.value = i===0?.5:.2;
     o.connect(og); og.connect(g); o.start(t); o.stop(t+dur+.4);
+    srcs.push(o); nodes.push(og);
   });
+  freeAfter(srcs, nodes);
 }
 function kick(t,v){ if(!ctx)return;
   const o=ctx.createOscillator(), g=ctx.createGain();
   o.frequency.setValueAtTime(125,t); o.frequency.exponentialRampToValueAtTime(44,t+.11);
   g.gain.setValueAtTime(v*.85,t); g.gain.exponentialRampToValueAtTime(.0001,t+.22);
-  o.connect(g); g.connect(musicGain); o.start(t); o.stop(t+.25); }
+  o.connect(g); g.connect(musicGain); o.start(t); o.stop(t+.25); freeAfter([o],[g]); }
 function noiseHit(t,v,hp,dur){ if(!ctx||!noiseBuf)return;
   const s=ctx.createBufferSource(); s.buffer=noiseBuf;
   const f=ctx.createBiquadFilter(); f.type="highpass"; f.frequency.value=hp;
   const g=ctx.createGain(); g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
-  s.connect(f); f.connect(g); g.connect(musicGain); s.start(t); s.stop(t+dur+.05); }
+  s.connect(f); f.connect(g); g.connect(musicGain); s.start(t); s.stop(t+dur+.05); freeAfter([s],[f,g]); }
 function snare(t,v){ noiseHit(t,v*.5,1400,.16); if(!ctx)return;
   const o=ctx.createOscillator(), g=ctx.createGain();
   o.type="triangle"; o.frequency.setValueAtTime(215,t);
   g.gain.setValueAtTime(v*.3,t); g.gain.exponentialRampToValueAtTime(.0001,t+.1);
-  o.connect(g); g.connect(musicGain); o.start(t); o.stop(t+.12); }
+  o.connect(g); g.connect(musicGain); o.start(t); o.stop(t+.12); freeAfter([o],[g]); }
 function tick(t,accent){ if(!ctx)return;
   const o=ctx.createOscillator(), g=ctx.createGain();
   o.frequency.value = accent ? 1760 : 1320;
   g.gain.setValueAtTime(accent?.3:.18,t); g.gain.exponentialRampToValueAtTime(.0001,t+.05);
-  o.connect(g); g.connect(musicGain); o.start(t); o.stop(t+.06); }
+  o.connect(g); g.connect(musicGain); o.start(t); o.stop(t+.06); freeAfter([o],[g]); }
 /* Knäppt bas: filtret öppnar i anslaget och stänger sig, så tonen får en
    attack och sedan en rund kropp. En sinus en oktav under ger botten. */
 function bassNote(t,midi,dur,vel){ if(!ctx)return;
@@ -1367,7 +1382,7 @@ function bassNote(t,midi,dur,vel){ if(!ctx)return;
   g.gain.exponentialRampToValueAtTime(.11*vel,t+.16);
   g.gain.setValueAtTime(.11*vel,end-.05); g.gain.exponentialRampToValueAtTime(.0001,end);
   o.connect(g); sub.connect(sg); sg.connect(g); g.connect(f); f.connect(musicGain);
-  o.start(t); sub.start(t); o.stop(end+.05); sub.stop(end+.05); }
+  o.start(t); sub.start(t); o.stop(end+.05); sub.stop(end+.05); freeAfter([o,sub],[sg,g,f]); }
 
 /* Basgången. Grundton på ettan, kvint och oktav däremellan, och slaget
    före ett ackordbyte leder in i nästa grundton med ett halvtonssteg —
@@ -1862,6 +1877,7 @@ function liveOn(note, vel){
   g.gain.setTargetAtTime(peak*.15,t+.012,.6);
   g.gain.setTargetAtTime(.0001,t+3,1.2);
   o1.start(t); o2.start(t); o1.stop(t+10); o2.stop(t+10);
+  freeAfter([o1,o2], [g2,g,f]);
   held[note] = {g,o1,o2};
 }
 function liveOff(note){
