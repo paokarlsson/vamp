@@ -101,6 +101,16 @@
   button.transport{display:inline-flex;align-items:center;gap:8px;min-width:118px;justify-content:center}
   button.transport svg{flex:none}
 
+  .picks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 0}
+  .picks label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
+  .picks select{
+    font:inherit;font-size:14px;color:var(--text);background:var(--surface-2);
+    border:1px solid var(--border);border-radius:10px;padding:8px 9px;width:100%;min-width:0;cursor:pointer;
+  }
+  .picks select:hover{border-color:var(--muted)}
+  .picks select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media (max-width:420px){ .picks{grid-template-columns:1fr 1fr} .picks label:last-child{grid-column:1/-1} }
+
   .slider{display:flex;align-items:center;gap:10px;margin:12px 0 0;font-size:13.5px;color:var(--muted)}
   .slider input{flex:1;accent-color:var(--accent)}
   .slider b{color:var(--text);font-variant-numeric:tabular-nums;font-weight:600}
@@ -180,6 +190,12 @@
   <button id="btn-wake" aria-pressed="false" hidden title="Hindrar skärmen från att slockna medan du spelar">Skärmen släcks</button>
   <button id="btn-sound" aria-pressed="true">Ljud på</button>
   <button id="btn-reset">Börja om</button>
+</div>
+
+<div class="picks">
+  <label>Grundton<select id="pick-tonic"></select></label>
+  <label>Skala<select id="pick-scale"></select></label>
+  <label>Spelsätt<select id="pick-style"></select></label>
 </div>
 
 <div class="panel">
@@ -294,6 +310,24 @@ function scaleOf(tonic, mode){
   const t = mode === "minor" ? DEG_MINOR : DEG_MAJOR;
   return t.map(d => (tonic+d)%12);
 }
+
+/* Skalorna. `mode` är vilken tabell de romerska siffrorna läses mot, så
+   dorisk i–IV och mixolydisk I–bVII skrivs som vanligt. `from` betyder att
+   skalan lånar progressionerna från en annan: en pentaton har samma ackord
+   under sig som dur eller moll — skillnaden hörs i tonerna ovanpå, och i
+   att en miss faller inom skalan. `home` är grundtonen utan förtecken, där
+   placeringen börjar när grundtonen är mix. */
+const SCALES = {
+  major:      { label:"Dur",              name:"-dur",             mode:"major", steps:[0,2,4,5,7,9,11], home:0 },
+  minor:      { label:"Moll",             name:"-moll",            mode:"minor", steps:[0,2,3,5,7,8,10], home:9 },
+  harmonic:   { label:"Harmonisk moll",   name:" harmonisk moll",  mode:"minor", steps:[0,2,3,5,7,8,11], home:9 },
+  dorian:     { label:"Dorisk",           name:" dorisk",          mode:"minor", steps:[0,2,3,5,7,9,10], home:2 },
+  mixolydian: { label:"Mixolydisk",       name:" mixolydisk",      mode:"major", steps:[0,2,4,5,7,9,10], home:7 },
+  pentaMajor: { label:"Pentatonisk dur",  name:" pentatonisk dur", mode:"major", steps:[0,2,4,7,9],      home:0, from:"major" },
+  pentaMinor: { label:"Pentatonisk moll", name:" pentatonisk moll",mode:"minor", steps:[0,3,5,7,10],     home:9, from:"minor" },
+  blues:      { label:"Blues",            name:" blues",           mode:"major", steps:[0,3,5,6,7,10],   home:0 }
+};
+const scalePcs = (tonic, scale) => SCALES[scale].steps.map(d => (tonic+d)%12);
 
 const BLACK_PC = [1,3,6,8,10];
 const isBlack = m => BLACK_PC.indexOf(((m%12)+12)%12) >= 0;
@@ -430,23 +464,33 @@ function realize(progression, tonic){
    ========================================================================== */
 
 const LIBRARY = [
-  { id:"axeln",     name:"Axeln",            mood:"ljus",      mode:"major", numerals:["I","V","vi","IV"] },
-  { id:"axeln-vi",  name:"Axeln, vemodig",   mood:"vemodig",   mode:"major", numerals:["vi","IV","I","V"] },
-  { id:"axeln-iv",  name:"Axeln, svävande",  mood:"svävande",  mode:"major", numerals:["IV","I","V","vi"] },
-  { id:"doowop",    name:"Doo-wop",          mood:"nostalgisk",mode:"major", numerals:["I","vi","IV","V"] },
-  { id:"tre",       name:"Tre ackord",       mood:"rak",       mode:"major", numerals:["I","IV","V","IV"] },
-  { id:"iiVI",      name:"ii–V–I",           mood:"jazzig",    mode:"major", numerals:["ii","V","I","I"] },
-  { id:"canon",     name:"Canon",            mood:"högtidlig", mode:"major", numerals:["I","V","vi","iii","IV","I","IV","V"] },
-  { id:"mixo",      name:"Mixolydiskt",      mood:"folkigt",   mode:"major", numerals:["I","bVII","IV","I"] },
-  { id:"japansk",   name:"Japansk",          mood:"längtande", mode:"major", numerals:["IV","V","iii","vi"] },
-  { id:"blues",     name:"Kort blues",       mood:"lurvig",    mode:"major", numerals:["I7","IV7","I7","V7"] },
-  { id:"gospel",    name:"Gospel",           mood:"varm",      mode:"major", numerals:["I","iii","IV","V"] },
-  { id:"mollvamp",  name:"Mollvamp",         mood:"mörk",      mode:"minor", numerals:["i","VII","VI","VII"] },
-  { id:"popmoll",   name:"Pop i moll",       mood:"driven",    mode:"minor", numerals:["i","VI","III","VII"] },
-  { id:"andalus",   name:"Andalusisk",       mood:"dramatisk", mode:"minor", numerals:["i","VII","VI","V"] },
-  { id:"vamp-dur",  name:"Två ackord, ljus", mood:"stillsam",  mode:"major", numerals:["I","IV"] },
-  { id:"vamp-moll", name:"Två ackord, mörk", mood:"stillsam",  mode:"minor", numerals:["i","iv"] }
+  { id:"axeln",     name:"Axeln",            mood:"ljus",      scale:"major",      numerals:["I","V","vi","IV"] },
+  { id:"axeln-vi",  name:"Axeln, vemodig",   mood:"vemodig",   scale:"major",      numerals:["vi","IV","I","V"] },
+  { id:"axeln-iv",  name:"Axeln, svävande",  mood:"svävande",  scale:"major",      numerals:["IV","I","V","vi"] },
+  { id:"doowop",    name:"Doo-wop",          mood:"nostalgisk",scale:"major",      numerals:["I","vi","IV","V"] },
+  { id:"tre",       name:"Tre ackord",       mood:"rak",       scale:"major",      numerals:["I","IV","V","IV"] },
+  { id:"iiVI",      name:"ii–V–I",           mood:"jazzig",    scale:"major",      numerals:["ii","V","I","I"] },
+  { id:"canon",     name:"Canon",            mood:"högtidlig", scale:"major",      numerals:["I","V","vi","iii","IV","I","IV","V"] },
+  { id:"japansk",   name:"Japansk",          mood:"längtande", scale:"major",      numerals:["IV","V","iii","vi"] },
+  { id:"gospel",    name:"Gospel",           mood:"varm",      scale:"major",      numerals:["I","iii","IV","V"] },
+  { id:"vamp-dur",  name:"Två ackord, ljus", mood:"stillsam",  scale:"major",      numerals:["I","IV"] },
+  { id:"mollvamp",  name:"Mollvamp",         mood:"mörk",      scale:"minor",      numerals:["i","VII","VI","VII"] },
+  { id:"popmoll",   name:"Pop i moll",       mood:"driven",    scale:"minor",      numerals:["i","VI","III","VII"] },
+  { id:"moll-iv",   name:"Moll, sökande",    mood:"sökande",   scale:"minor",      numerals:["i","iv","VII","III"] },
+  { id:"vamp-moll", name:"Två ackord, mörk", mood:"stillsam",  scale:"minor",      numerals:["i","iv"] },
+  { id:"andalus",   name:"Andalusisk",       mood:"dramatisk", scale:"harmonic",   numerals:["i","VII","VI","V"] },
+  { id:"dragning",  name:"Moll med dragning",mood:"spänd",     scale:"harmonic",   numerals:["i","iv","V","i"] },
+  { id:"harm-vi",   name:"Moll, sorgsen",    mood:"sorgsen",   scale:"harmonic",   numerals:["i","VI","iv","V"] },
+  { id:"dorisk",    name:"Dorisk vamp",      mood:"svävande",  scale:"dorian",     numerals:["i","IV"] },
+  { id:"dorisk-vii",name:"Dorisk",           mood:"groovig",   scale:"dorian",     numerals:["i","IV","i","VII"] },
+  { id:"dorisk-v",  name:"Dorisk, mjuk",     mood:"eftertänksam",scale:"dorian",   numerals:["i","v","IV","i"] },
+  { id:"mixo",      name:"Mixolydiskt",      mood:"folkigt",   scale:"mixolydian", numerals:["I","bVII","IV","I"] },
+  { id:"mixo-vamp", name:"Mixolydisk vamp",  mood:"öppen",     scale:"mixolydian", numerals:["I","bVII"] },
+  { id:"mixo-v",    name:"Mixolydiskt, mjukt",mood:"solig",    scale:"mixolydian", numerals:["I","v","bVII","IV"] },
+  { id:"blues",     name:"Kort blues",       mood:"lurvig",    scale:"blues",      numerals:["I7","IV7","I7","V7"] },
+  { id:"blues-rak", name:"Blues, rak",       mood:"rak",       scale:"blues",      numerals:["I7","IV7","V7","IV7"] }
 ];
+LIBRARY.forEach(p => { p.mode = SCALES[p.scale].mode; });
 
 /* Varje durtonart har sin parallella molltonart, så ett lägesbyte kan
    landa på samma förtecken. */
@@ -454,7 +498,7 @@ const KEYS = [
   { tonic:0, mode:"major" }, { tonic:7, mode:"major" }, { tonic:5, mode:"major" }, { tonic:2, mode:"major" },
   { tonic:9, mode:"minor" }, { tonic:4, mode:"minor" }, { tonic:2, mode:"minor" }, { tonic:11, mode:"minor" }
 ];
-const keyName = (tonic, mode) => PC_NAMES[tonic] + (mode === "minor" ? "-moll" : "-dur");
+const keyName = (tonic, scale) => PC_NAMES[tonic] + SCALES[scale].name;
 
 const REALIZED = {};
 function realized(progId, tonic){
@@ -483,6 +527,20 @@ function syncoPositions(slot, bpb){
     base.forEach(b=>{ if (off+b < slot.beats) out.push(off+b); });
   return out.length ? out : [0];
 }
+
+/* Öppet grepp: mittentonen upp en oktav. C-E-G blir C-G-E', en decima.
+   Med fyra toner lyfts den näst understa. Hamnar toppen för högt flyttas
+   hela greppet ned en oktav. `low` är den undre tonen, `up` de övre. */
+function openGrip(rh){
+  const v = rh.slice().sort((a,b)=>a-b);
+  const g = [v[0]].concat(v.slice(2), [v[1]+12]);
+  const shift = g[g.length-1] > 86 ? -12 : 0;
+  const o = g.map(m=>m+shift);
+  return { all:o, low:o[0], up:o.slice(1) };
+}
+
+/* Slagen i en ackordplats som är taktens tunga slag: 1 och 3 i 4/4, 1 i 3/4. */
+const heavy = (b, bpb) => { const pos = ((b % bpb) + bpb) % bpb; return bpb >= 4 ? pos % 2 === 0 : pos === 0; };
 
 function slotsFor(mat, bpb){
   const totalBeats = bpb*4;
@@ -541,6 +599,51 @@ const TEXTURES = {
       e.push({b:s.start+k,dur:.85,midi:s.rh[0],hand:"R"});
       e.push({b:s.start+k,dur:.85,midi:s.rh[1]+12,hand:"R"}); } }); return e; } },
 
+  /* ---- Ackord och rytm: en trappa där varje steg ändrar en sak ---- */
+
+  openBlock: { label:"Öppet grepp", gen:(S)=>{
+    const e=[]; S.forEach(s=>{ e.push({b:s.start,dur:s.beats*0.9,midi:s.bass,hand:"L"});
+      openGrip(s.rh).all.forEach(m=>e.push({b:s.start,dur:s.beats*0.9,midi:m,hand:"R"})); }); return e; } },
+
+  /* Händerna turas om: bas på de tunga slagen, två toner på de lätta. */
+  oompah: { label:"Bas och ackord växelvis", gen:(S,bpb)=>{
+    const e=[];
+    S.forEach(s=>{ const g = openGrip(s.rh);
+      for (let k=0;k<s.beats;k++){
+        const b = s.start+k;
+        if (heavy(b,bpb)) e.push({b,dur:.9,midi:s.bass,hand:"L"});
+        else g.up.forEach(m=>e.push({b,dur:.8,midi:m,hand:"R"}));
+      } });
+    return e; } },
+
+  /* Flow: kvinten i basen på trean, och sista "och" i platsen föregriper
+     nästa ackord — högern landar före ettan och vänstern tar den. */
+  oompahFlow: { label:"Växelvis med driv", gen:(S,bpb)=>{
+    const e=[];
+    S.forEach((s,i)=>{ const g = openGrip(s.rh), next = openGrip(S[(i+1)%S.length].rh);
+      for (let k=0;k<s.beats;k++){
+        const b = s.start+k, pos = ((b % bpb) + bpb) % bpb;
+        if (heavy(b,bpb)) e.push({b,dur:.9,midi: pos===0 ? s.bass : s.bass+7,hand:"L"});
+        else g.up.forEach(m=>e.push({b,dur:.45,midi:m,hand:"R"}));
+      }
+      next.up.forEach(m=>e.push({b:s.start+s.beats-0.5,dur:.45,midi:m,hand:"R"}));
+    });
+    return e; } },
+
+  /* Samma växling som ovan, men i en hand: undre tonen på de tunga slagen,
+     de övre på de lätta. Handen spänner aldrig över decimen i ett och samma
+     anslag, men måste flytta sig varje slag — därför sist i trappan. */
+  splitPulse: { label:"Delat grepp i en hand", gen:(S,bpb)=>{
+    const e=[];
+    S.forEach(s=>{ const g = openGrip(s.rh);
+      e.push({b:s.start,dur:s.beats*0.9,midi:s.bass,hand:"L"});
+      for (let k=0;k<s.beats;k++){
+        const b = s.start+k;
+        if (heavy(b,bpb)) e.push({b,dur:.85,midi:g.low,hand:"R"});
+        else g.up.forEach(m=>e.push({b,dur:.85,midi:m,hand:"R"}));
+      } });
+    return e; } },
+
   syncoSingle: { label:"Synkoperad enstämmig", gen:(S,bpb)=>{
     const e=[]; S.forEach(s=>syncoPositions(s,bpb).forEach((o,k)=>
       e.push({b:s.start+o, dur:.6, midi:s.rh[k%s.rh.length], hand:"R"}))); return e; } },
@@ -558,6 +661,19 @@ const TEXTURES = {
     return e; } }
 };
 const TEXTURE_IDS = Object.keys(TEXTURES);
+
+/* Spelsätten. Ett spelsätt är ett urval texturer och sina egna placeringsprov.
+   Ackord och rytm är en trappa: stegen kommer i ordning, och nästa låses upp
+   när det förra sitter. */
+const LADDER = ["bassTriad","openBlock","oompah","oompahFlow","splitPulse"];
+const STYLES = {
+  mix:    { label:"Mix",             textures: TEXTURE_IDS,
+            probes:["rootsWhole","rootsQuarter","triadWhole","bassTriad"] },
+  rhythm: { label:"Ackord och rytm", textures: LADDER, ladder:true,
+            probes: LADDER.slice(0,4) },
+  broken: { label:"Brutna ackord",   textures:["brokenQuarter","bassBroken","brokenEighth","alberti"],
+            probes:["brokenQuarter","bassBroken","brokenEighth","alberti"] }
+};
 
 
 /* ==========================================================================
@@ -773,12 +889,68 @@ function simulate(v){
    Det är enda sättet att bära nio axlar utan att drunkna i brus.
    ========================================================================== */
 
-const PROBES = [
-  {texture:"rootsWhole",   bpm:80},
-  {texture:"rootsQuarter", bpm:80},
-  {texture:"triadWhole",   bpm:80},
-  {texture:"bassTriad",    bpm:80}
-];
+/* Spelarens val: grundton, skala och spelsätt. "mix" betyder att motorn
+   väljer själv. Valen är filter på det motorn väljer bland — anpassningen
+   fungerar som förut, inom det man valt. */
+const prefs = { tonic:"mix", scale:"mix", style:"mix" };
+try { Object.assign(prefs, JSON.parse(localStorage.getItem("vamp.prefs")) || {}); } catch(e){}
+if (prefs.tonic !== "mix") prefs.tonic = Number(prefs.tonic);
+if (prefs.scale !== "mix" && !SCALES[prefs.scale]) prefs.scale = "mix";
+if (!STYLES[prefs.style]) prefs.style = "mix";
+
+const style = () => STYLES[prefs.style];
+const PROBE_BPM = 80;
+
+/* Progressionerna som hör till vald skala. */
+function allowedProgs(){
+  if (prefs.scale === "mix") return LIBRARY;
+  const base = SCALES[prefs.scale].from || prefs.scale;
+  return LIBRARY.filter(p=>p.scale === base);
+}
+/* Skalan ett varv låter i: den valda, annars progressionens egen. */
+const scaleFor = progId => prefs.scale !== "mix" ? prefs.scale : LIBRARY.find(x=>x.id===progId).scale;
+
+/* Texturerna motorn får välja bland just nu. I trappan: steget man står på,
+   och de under det som mjuk landning. */
+function allowedTextures(){
+  const st = style();
+  return st.ladder ? st.textures.slice(0, engine.step+1) : st.textures;
+}
+
+/* Ser till att progression och grundton stämmer med valen. Vid start
+   (`first`) blir det den enklaste progressionen, sedan en slumpad. */
+function fitSelection(first){
+  const progs = allowedProgs();
+  let changed = false;
+  if (!progs.some(p=>p.id===engine.prog)){
+    const short = progs.filter(p=>p.numerals.length <= 4);
+    const pool = short.length ? short : progs;
+    const p = first ? pool[0] : pool[Math.floor(Math.random()*pool.length)];
+    const was = LIBRARY.find(x=>x.id===engine.prog);
+    engine.prog = p.id;
+    if (prefs.tonic === "mix"){
+      if (first) engine.tonic = SCALES[p.scale].home;
+      else if (p.mode !== was.mode) engine.tonic = (engine.tonic + (p.mode==="minor" ? 9 : 3)) % 12;
+    }
+    engine.progIn = 6; changed = true;
+  }
+  if (prefs.tonic !== "mix" && engine.tonic !== prefs.tonic){ engine.tonic = prefs.tonic; changed = true; }
+  return changed;
+}
+
+/* Trappans steg för en målnivå: det högsta steget som går att spela på
+   nivån i något tempo. Används när man byter till trappan mitt i. */
+function ladderStepFor(target){
+  for (let i=LADDER.length-1; i>0; i--)
+    if (variantsOf([LADDER[i]]).some(v=>v.level <= target+0.2)) return i;
+  return 0;
+}
+
+function matchesPrefs(v){
+  return allowedProgs().some(p=>p.id===v.prog) &&
+    (prefs.tonic === "mix" || v.tonic === prefs.tonic) &&
+    allowedTextures().indexOf(v.texture) >= 0;
+}
 
 const engine = {
   phase:"placement", probeIndex:0, probeResults:[],
@@ -788,6 +960,7 @@ const engine = {
   layers:1, energy:.25,
   breathIn:7, probeIn:9, progIn:6,
   prog:"axeln", tonic:0,
+  step:0, stepGood:0, stepBad:0,          /* trappan i Ackord och rytm */
   safeHarbour:null, needsHarbour:false, preview:false,
   fast:false,
   /* per axel: summerad belastning och summerade fel, plus skattad avvikelse */
@@ -796,33 +969,50 @@ const engine = {
 AXES.forEach(a=>{ engine.axis[a] = {load:0, miss:0, n:0, delta:0}; });
 
 function probeVariation(i){
-  const p = PROBES[i];
-  return buildVariation({prog:"axeln", tonic:0, texture:p.texture, bpm:p.bpm, meter:4, swing:false});
+  const probes = style().probes;
+  return buildVariation({prog:engine.prog, tonic:engine.tonic, texture:probes[Math.min(i, probes.length-1)],
+                         bpm:PROBE_BPM, meter:4, swing:false});
 }
 
 /* Hur säkra vi är på en axel: 0 = ingen aning, 1 = gott om data. */
 function axisConfidence(a){ return Math.min(1, engine.axis[a].load/6); }
 function axisWeak(a){ return axisConfidence(a) > 0.4 && engine.axis[a].delta < -0.45; }
 
-/* Alla varianter nära en målnivå. Byggs på begäran och cachas. */
+/* Alla varianter av några texturer i nuvarande progression och tonart.
+   Byggs på begäran och cachas. */
 const VAR_CACHE = {};
-function candidates(target, tol){
+function variantsOf(textures){
   const bpms = [64,72,80,88,96,104];
   const out = [];
-  for (const texture of TEXTURE_IDS)
+  for (const texture of textures)
     for (const bpm of bpms)
       for (const meter of [4,3])
         for (const swing of [false,true]){
           const k = [engine.prog,engine.tonic,texture,bpm,meter,swing?1:0].join("|");
           if (!VAR_CACHE[k]) VAR_CACHE[k] = buildVariation({prog:engine.prog, tonic:engine.tonic, texture, bpm, meter, swing});
-          const v = VAR_CACHE[k];
-          if (Math.abs(v.level-target) <= tol) out.push(v);
+          out.push(VAR_CACHE[k]);
         }
   return out;
 }
 
+/* Varianterna nära en målnivå, bland det spelaren valt. I trappan gäller
+   steget man står på; stegen under finns kvar för mjuka landningar. */
+function candidates(target, tol){
+  const tex = style().ladder ? [LADDER[engine.step]] : allowedTextures();
+  return variantsOf(tex).filter(v=>Math.abs(v.level-target) <= tol);
+}
+
+/* Ryms ingenting nära målet i det man valt blir det det närmaste som finns,
+   hellre än något utanför valet. Tempot får ta upp skillnaden. */
+function nearest(target){
+  const tex = style().ladder ? [LADDER[engine.step]] : allowedTextures();
+  const all = variantsOf(tex), gap = v => Math.abs(v.level-target);
+  const best = Math.min.apply(null, all.map(gap));
+  return all.filter(v=>gap(v) <= best+0.3);
+}
+
 function chooseVariation(){
-  if (engine.phase === "placement"){ engine.preview = false; return probeVariation(engine.probeIndex); }
+  if (engine.phase === "placement"){ fitSelection(true); engine.preview = false; return probeVariation(engine.probeIndex); }
 
   /* Progressionen roterar på sin egen, långsammare klocka. Musikalisk
      variation är nästan gratis motoriskt och ska inte konkurrera om
@@ -830,23 +1020,26 @@ function chooseVariation(){
   /* Mjuk landning först: den spelar ett varv hon redan äger, i dess egen
      progression. Ett progressionsbyte får vänta till varvet efter. */
   const probe = engine.phase === "groove" && engine.probeIn <= 0 && engine.cleanRun >= 2;
-  if (!probe && engine.needsHarbour && engine.safeHarbour){
+  if (!probe && engine.needsHarbour && engine.safeHarbour && matchesPrefs(engine.safeHarbour)){
     engine.needsHarbour = false; engine.preview = false;
     return Object.assign({}, engine.safeHarbour, {intent:"harbour"});
   }
 
   /* Loggas när varvet börjar låta, i scheduleLoop/frame — inte här. */
-  if (engine.progIn <= 0){
-    const pool = LIBRARY.filter(p=>p.id !== engine.prog &&
+  if (!fitSelection(false) && engine.progIn <= 0){
+    const pool = allowedProgs().filter(p=>p.id !== engine.prog &&
       (engine.est > 5.5 || p.numerals.length <= 4));
-    const p = pool[Math.floor(Math.random()*pool.length)];
-    const was = LIBRARY.find(x=>x.id===engine.prog).mode;
-    engine.prog = p.id;
-    if (engine.est > 6.5 && Math.random() < 0.3){
-      const keys = KEYS.filter(k=>k.mode===p.mode);
-      engine.tonic = keys[Math.floor(Math.random()*keys.length)].tonic;
-    } else if (p.mode !== was)              /* parallell tonart: samma förtecken */
-      engine.tonic = (engine.tonic + (p.mode==="minor" ? 9 : 3)) % 12;
+    if (pool.length){
+      const p = pool[Math.floor(Math.random()*pool.length)];
+      const was = LIBRARY.find(x=>x.id===engine.prog).mode;
+      engine.prog = p.id;
+      if (prefs.tonic !== "mix") engine.tonic = prefs.tonic;
+      else if (engine.est > 6.5 && Math.random() < 0.3){
+        const keys = KEYS.filter(k=>k.mode===p.mode);
+        engine.tonic = keys[Math.floor(Math.random()*keys.length)].tonic;
+      } else if (p.mode !== was)            /* parallell tonart: samma förtecken */
+        engine.tonic = (engine.tonic + (p.mode==="minor" ? 9 : 3)) % 12;
+    }
     engine.progIn = 6;
   }
 
@@ -856,7 +1049,7 @@ function chooseVariation(){
 
   let pool = candidates(target, intent==="probe" ? 0.5 : 0.45);
   if (!pool.length) pool = candidates(target, 1.0);
-  if (!pool.length) pool = [probeVariation(2)];
+  if (!pool.length) pool = nearest(target);
   if (engine.texRun >= 3 && prev){
     const other = pool.filter(v=>v.texture !== prev.texture);
     if (other.length) pool = other;
@@ -891,6 +1084,27 @@ function chooseVariation(){
   return pick;
 }
 
+/* Trappan: tre bra varv på steget man står på låser upp nästa. Två dåliga
+   i rad på ett nytt steg tar en tillbaka — tyst, som alla sänkningar. Nya
+   steget kommer i det tempo målnivån räcker till, så det börjar lugnt. */
+function climbLadder(v, acc){
+  if (v.texture !== LADDER[engine.step]) return;
+  if (acc >= 0.9){
+    engine.stepBad = 0;
+    if (++engine.stepGood >= 3 && engine.step < LADDER.length-1){
+      engine.step++; engine.stepGood = 0;
+      log(`Nästa steg i trappan: ${TEXTURES[LADDER[engine.step]].label}.`, "up");
+      caption("Det förra mönstret sitter. Nästa steg ändrar en sak, och börjar i ett tempo där det går att hinna med.");
+    }
+  } else {
+    engine.stepGood = 0;
+    if (acc < 0.75 && ++engine.stepBad >= 2 && engine.step > 0){
+      engine.step--; engine.stepBad = 0;
+      log(`Tillbaka ett steg: ${TEXTURES[LADDER[engine.step]].label}.`, "down");
+    }
+  }
+}
+
 function updateEngine(st){
   const v = engine.current, acc = st.acc;
 
@@ -905,24 +1119,33 @@ function updateEngine(st){
   engine.energy = Math.max(.15, Math.min(1, .25 + engine.layers*.15 + (acc-.8)));
 
   if (engine.phase === "placement"){
-    engine.probeResults.push({level:v.level, acc});
+    engine.probeResults.push({level:v.level, acc, texture:v.texture});
     log(`Prov ${engine.probeIndex+1}: ${TEXTURES[v.texture].label} — ${Math.round(acc*100)} %`);
     /* Provens första tre takter har ibland bara tre toner. En enda miss är
        inget riktigt misslyckande. */
     const failed = acc < 0.72 && st.missed >= 2;
     engine.probeIndex++;
-    if (failed || engine.probeIndex >= PROBES.length){
+    if (failed || engine.probeIndex >= style().probes.length){
       let passed = 0.8, ceiling = 99;
       for (const r of engine.probeResults) if (r.acc >= 0.82) passed = r.level;
       for (const r of engine.probeResults) if (r.acc < 0.72){ ceiling = r.level-0.4; break; }
       engine.est = Math.max(1.2, Math.min(passed+1.0, ceiling));
       engine.target = Math.max(1, engine.est-1.0);
       engine.phase = "zoom"; engine.sigma = 1.15;
+      /* trappan börjar på det högsta steget som gick bra i proven */
+      engine.step = 0;
+      for (const r of engine.probeResults){
+        const i = LADDER.indexOf(r.texture);
+        if (r.acc >= 0.82 && i > engine.step) engine.step = i;
+      }
+      engine.stepGood = 0; engine.stepBad = 0;
       log(`Placering klar. Skattning ${engine.est.toFixed(1)} — startar på ${engine.target.toFixed(1)}.`, "phase");
       caption("Start ett steg under skattningen. Ett bra första varv avgör om någon stannar, och fel nedåt är billigt.");
     }
     return;
   }
+
+  if (style().ladder) climbLadder(v, acc);
 
   /* allmän nivå */
   const expected = 1/(1+Math.exp(-((engine.est+1.7)-v.level)/0.75));
@@ -1116,8 +1339,10 @@ function scheduleLoop(t0){
   if (breath) engine.breathIn = 8;
   const preview = engine.preview;
 
+  const scale = scaleFor(v.prog), scaleTones = scalePcs(v.tonic, scale);
   const loop = {
-    v, t0, t1, spb, bpb, breath, preview, layers: engine.layers,
+    v, t0, t1, spb, bpb, breath, preview, layers: engine.layers, scale,
+    step: style().ladder ? LADDER.indexOf(v.texture) : -1,
     commitAt: Math.max(t0+loopDur*.5, t1 - Math.max(2.9, barDur)),
     committed:false, index: ++state.loopIndex, events:[],
     real, win: Math.min(.2, spb*.45), extras:[]
@@ -1135,7 +1360,7 @@ function scheduleLoop(t0){
     if (real) continue;                    /* de tonerna spelar hon själv */
     if (ev.hit) piano(ev.tPlay, ev.midi, ev.dur*spb, ev.hand==="L"?.2:.26, ev.hand);
     /* missen faller inom skalan och passerar som en dissonans, inte som tystnad */
-    else piano(ev.tPlay, nearestScaleTone(ev.midi, v.mat.scale), ev.dur*spb*.6, .09, ev.hand);
+    else piano(ev.tPlay, nearestScaleTone(ev.midi, scaleTones), ev.dur*spb*.6, .09, ev.hand);
   }
 
   /* Paddan och basen följer ackorden, inte takterna: Canon har två ackord
@@ -1166,7 +1391,7 @@ function scheduleLoop(t0){
   }
 
   const before = state.loops[state.loops.length-1];
-  loop.newProg = !!before && (before.v.prog !== v.prog || before.v.tonic !== v.tonic);
+  loop.newProg = !!before && (before.v.prog !== v.prog || before.v.tonic !== v.tonic || before.scale !== scale);
   logLoop(loop);
   state.loops.push(loop);
   return loop;
@@ -1176,7 +1401,7 @@ function scheduleLoop(t0){
 function announceLoop(loop){
   if (!loop.newProg) return;
   const p = LIBRARY.find(x=>x.id===loop.v.prog);
-  log(`Ny progression: ${p.name} i ${keyName(loop.v.tonic, p.mode)} (${p.numerals.join(" ")}) — ${p.mood}.`, "");
+  log(`Ny progression: ${p.name} i ${keyName(loop.v.tonic, loop.scale)} (${p.numerals.join(" ")}) — ${p.mood}.`, "");
   caption("Progressionen byts på egen klocka. Nya ackord är stor musikalisk variation och nästan ingen motorisk kostnad.");
 }
 
@@ -1760,8 +1985,9 @@ function updatePanels(acc, sd, rec, v){
 function updateChips(loop){
   const v = loop.v;
   const p = LIBRARY.find(x=>x.id===v.prog);
-  el("c-prog").textContent = p.name+" i "+keyName(v.tonic, p.mode);
-  el("c-texture").textContent = TEXTURES[v.texture].label;
+  el("c-prog").textContent = p.name+" i "+keyName(v.tonic, loop.scale);
+  el("c-texture").textContent = TEXTURES[v.texture].label +
+    (loop.step >= 0 ? ` · steg ${loop.step+1}/${LADDER.length}` : "");
   el("c-bpm").textContent = v.bpm+" bpm"+(v.meter===3?" · 3/4":"")+(v.swing?" · swing":"");
   const names = ["","padda","padda + hi-hat","padda + bas","+ bastrumma","fullt komp"];
   el("c-layers").textContent = loop.breath ? "andrum" : names[loop.layers];
@@ -1803,13 +2029,14 @@ function begin(mode){
     captionUntil = ctx.currentTime+10;
   }
   updateTransport();
-  log("Placering: fyra korta prov i C, samma padda, 80 bpm.","phase");
+  fitSelection(true);
+  log(`Placering: fyra korta prov i ${keyName(engine.tonic, scaleFor(engine.prog))}, samma padda, ${PROBE_BPM} bpm.`,"phase");
   if (mode==="demo") caption("Fyra prov i stigande svårighet. Motorn stannar vid första riktiga misslyckandet — ingen ska plöja igenom något som uppenbart är för svårt.");
   /* En takt inräkning när någon spelar själv. Utan den når första tonen
      tangenterna innan den hunnit synas, och första provet börjar med en miss. */
   let t0 = ctx.currentTime+.3;
   if (mode==="real"){
-    const spb = 60/PROBES[0].bpm;
+    const spb = 60/PROBE_BPM;
     for (let k=0;k<4;k++) tick(t0+k*spb, k===0);
     t0 += 4*spb;
   }
@@ -1891,6 +2118,30 @@ if ("wakeLock" in navigator){
   document.addEventListener("visibilitychange", applyWake);
 }
 el("echo").addEventListener("change", e=>{ midi.echo = e.target.checked; });
+
+/* Grundton, skala och spelsätt. Ändras de medan musiken går gäller de
+   från nästa varv som inte redan är lagt — musiken stannar aldrig. */
+function fillPick(id, items, value){
+  const sel = el(id);
+  sel.innerHTML = items.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+  sel.value = String(value);
+}
+fillPick("pick-tonic", [["mix","Mix"]].concat(PC_NAMES.map((n,i)=>[i,n])), prefs.tonic);
+fillPick("pick-scale", [["mix","Mix"]].concat(Object.keys(SCALES).map(k=>[k,SCALES[k].label])), prefs.scale);
+fillPick("pick-style", Object.keys(STYLES).map(k=>[k,STYLES[k].label]), prefs.style);
+function setPref(key, value){
+  const wasLadder = !!style().ladder;
+  prefs[key] = value;
+  try { localStorage.setItem("vamp.prefs", JSON.stringify(prefs)); } catch(e){}
+  if (!state.started) return;
+  if (key === "style" && style().ladder && !wasLadder && engine.phase !== "placement"){
+    engine.step = ladderStepFor(engine.target); engine.stepGood = 0; engine.stepBad = 0;
+  }
+  log(`Från nästa varv: ${el("pick-tonic").selectedOptions[0].text} · ${el("pick-scale").selectedOptions[0].text} · ${style().label}.`);
+}
+el("pick-tonic").addEventListener("change", e=>setPref("tonic", e.target.value === "mix" ? "mix" : Number(e.target.value)));
+el("pick-scale").addEventListener("change", e=>setPref("scale", e.target.value));
+el("pick-style").addEventListener("change", e=>setPref("style", e.target.value));
 document.addEventListener("keydown", e=>{
   if (e.code !== "Space" || e.repeat) return;
   if (e.target.closest && e.target.closest("button,input,select,textarea,label")) return;
