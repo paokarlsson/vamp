@@ -123,6 +123,26 @@ finns för att andra handen annars kommer in med ett helt ackord på en gång,
 det största hoppet i trappan: där får den i stället en ton i varje hand. Ett nytt
 steg kommer i det tempo målnivån räcker till, så det börjar lugnt.
 
+**Brutna ackord är också en trappa**, med samma regler. Proven går på 64 bpm,
+och man kastas aldrig in i åttondelar eller Alberti-bas: de kommer först när
+stegen under sitter.
+
+| Steg | Vänster | Höger |
+|---|---|---|
+| 1 Brutet ackord uppåt | — | Tonerna en i taget, bara uppåt; den översta hålls ut |
+| 2 Brutna ackord | — | Upp och ned i fjärdedelar: 1-3-5-3 |
+| 3 Bas i takt med brutet ackord | Basen på varje ton högern tar | Som steg 1 |
+| 4 Bas och brutna ackord | Bas, hel not | Som steg 2 |
+| 5 Brutna ackord, åttondelar | — | 1-3-5-3 i åttondelar |
+| 6 Alberti-bas | Alberti i åttondelar | Blockackord |
+
+Steg 3 har samma roll som bas och grundton ovan: andra handen kommer in utan
+egen rytm.
+
+**Varje ingång är lätt.** Byter man till en trappa mitt i börjar man på
+första steget, i provtempot, och nivån får visa sig igen därifrån. Det man
+klarade i ett annat spelsätt flyttar inte med.
+
 ---
 
 ## Idén

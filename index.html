@@ -648,6 +648,15 @@ const TEXTURES = {
   triadQuarter: { label:"Blockackord i fjärdedelar", gen:(S)=>{
     const e=[]; S.forEach(s=>{ for(let k=0;k<s.beats;k++) s.rh.forEach(m=>e.push({b:s.start+k,dur:.8,midi:m,hand:"R"})); }); return e; } },
 
+  /* Första steget i brutna ackord: tonerna en i taget, bara uppåt, och den
+     översta hålls ut till nästa ackord. Ingen vändning, inget på fyran. */
+  brokenUp: { label:"Brutet ackord uppåt", gen:(S,bpb)=>{
+    const e=[];
+    S.forEach(s=>{ for(let k=0;k<s.beats;k++){ const pos = k % bpb;
+      if (pos > 2) continue;
+      const hold = pos === 2 ? Math.min(bpb-2, s.beats-k) : 1;
+      e.push({b:s.start+k,dur:hold-.15,midi:s.rh[pos%s.rh.length],hand:"R"}); } }); return e; } },
+
   brokenQuarter: { label:"Brutna ackord", gen:(S)=>{
     const p=[0,1,2,1]; const e=[];
     S.forEach(s=>{ for(let k=0;k<s.beats;k++) e.push({b:s.start+k,dur:.85,midi:s.rh[p[k%4]%s.rh.length],hand:"R"}); }); return e; } },
@@ -665,6 +674,13 @@ const TEXTURES = {
   bassTriad: { label:"Bas och ackord", gen:(S)=>{
     const e=[]; S.forEach(s=>{ e.push({b:s.start,dur:s.beats*0.9,midi:s.bass,hand:"L"});
                                s.rh.forEach(m=>e.push({b:s.start,dur:s.beats*0.9,midi:m,hand:"R"})); }); return e; } },
+
+  /* Andra handen in utan egen rytm: basen på varje ton högern tar. Samma
+     roll som bas och grundton i ackordtrappan. */
+  bassPulse: { label:"Bas i takt med brutet ackord", gen:(S,bpb)=>{
+    const e=[];
+    S.forEach(s=>TEXTURES.brokenUp.gen([s],bpb).forEach(x=>e.push(x, Object.assign({}, x, {midi:s.bass, hand:"L"}))));
+    return e; } },
 
   bassBroken: { label:"Bas och brutna ackord", gen:(S)=>{
     const p=[0,1,2,1]; const e=[];
@@ -727,7 +743,7 @@ const TEXTURES = {
 const TEXTURE_IDS = Object.keys(TEXTURES);
 
 /* Spelsätten. Ett spelsätt är ett urval texturer och sina egna placeringsprov.
-   Ackord och rytm och Nybörjare är trappor: stegen kommer i ordning, och
+   Nybörjare, Ackord och rytm och Brutna ackord är trappor: stegen kommer i ordning, och
    nästa låses upp när det förra sitter.
 
    Ett spelsätt kan också begränsa resten: `progs` (egna progressioner, och då
@@ -750,8 +766,10 @@ const STYLES = {
             bpms:[56,64,72,80], meters:[4], swing:false, probeBpm:64, calm:true, fingers:true },
   rhythm: { label:"Ackord och rytm", textures: LADDER, ladder:true,
             probes:["triadWhole","bassTriad","oompah","oompahFlow"] },
-  broken: { label:"Brutna ackord",   textures:["brokenQuarter","bassBroken","brokenEighth","alberti"],
-            probes:["brokenQuarter","bassBroken","brokenEighth","alberti"] }
+  /* Också en trappa, så att man aldrig kastas in i Alberti eller åttondelar:
+     de kommer först när stegen under sitter. Proven går i lugnt tempo. */
+  broken: { label:"Brutna ackord",   textures:["brokenUp","brokenQuarter","bassPulse","bassBroken","brokenEighth","alberti"], ladder:true,
+            probes:["brokenUp","brokenQuarter","bassPulse","bassBroken"], probeBpm:64 }
 };
 
 
@@ -980,15 +998,6 @@ function fitSelection(first){
   const want = wantedTonic(engine.prog);
   if (want !== "mix" && engine.tonic !== want){ engine.tonic = want; changed = true; }
   return changed;
-}
-
-/* Trappans steg för en målnivå: det högsta steget som går att spela på
-   nivån i något tempo. Används när man byter till trappan mitt i. */
-function ladderStepFor(target){
-  const L = ladder();
-  for (let i=L.length-1; i>0; i--)
-    if (variantsOf([L[i]]).some(v=>v.level <= target+0.2)) return i;
-  return 0;
 }
 
 function matchesPrefs(v){
@@ -2352,9 +2361,14 @@ function setPref(key, value){
   try { localStorage.setItem("vamp.prefs", JSON.stringify(prefs)); } catch(e){}
   syncPicks();
   if (!state.started) return;
-  /* ny trappa: börja på det steg målnivån räcker till */
+  /* Ny trappa: börja längst ned, i provtempot, och klättra därifrån. Nivån
+     från förut säger inget om det nya spelsättet, så den får visa sig igen. */
   if (key === "style" && ladder() && ladder() !== wasLadder && engine.phase !== "placement"){
-    engine.step = ladderStepFor(engine.target); engine.stepGood = 0; engine.stepBad = 0;
+    engine.step = 0; engine.stepGood = 0; engine.stepBad = 0;
+    fitSelection(false);
+    engine.target = Math.max(1, Math.min(engine.target, probeVariation(0).level));
+    engine.est = Math.min(engine.est, engine.target + 0.4);
+    engine.cleanRun = 0; engine.loopsAtLevel = 0; engine.safeHarbour = null;
   }
   log(`Från nästa varv: ` + (fixedKeys() ? style().label + ", vita tangenter." :
     `${el("pick-tonic").selectedOptions[0].text} · ${el("pick-scale").selectedOptions[0].text} · ${style().label}.`));
