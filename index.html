@@ -534,6 +534,16 @@ function openGrip(rh){
   return { all:o, low:o[0], up:o.slice(1) };
 }
 
+/* Ackordets grundton i höger hands läge: den som ligger närmast greppets
+   undre ton. Greppets undre ton är efter röstföringen oftast ters eller
+   kvint, inte grundtonen. */
+function rootNear(s){
+  const lo = s.rh[0];
+  let m = lo - (((lo - s.pcs[0]) % 12) + 12) % 12;
+  if (lo - m > 6) m += 12;
+  return m;
+}
+
 /* Slagen i en ackordplats som är taktens tunga slag: 1 och 3 i 4/4, 1 i 3/4. */
 const heavy = (b, bpb) => { const pos = ((b % bpb) + bpb) % bpb; return bpb >= 4 ? pos % 2 === 0 : pos === 0; };
 
@@ -547,14 +557,24 @@ function slotsFor(mat, bpb){
 }
 
 const TEXTURES = {
-  rootsWhole: { label:"Enstaka toner", gen:(S)=>S.map(s=>({b:s.start,dur:s.beats*0.9,midi:s.rh[0],hand:"R"})) },
+  rootsWhole: { label:"Grundton", gen:(S)=>S.map(s=>({b:s.start,dur:s.beats*0.9,midi:rootNear(s),hand:"R"})) },
+
+  /* Grundton och kvint, ett powerchord: öppet, varken dur eller moll. */
+  rootFifth: { label:"Grundton och kvint", gen:(S)=>{
+    const e=[]; S.forEach(s=>{ const r=rootNear(s);
+      e.push({b:s.start,dur:s.beats*0.9,midi:r,hand:"R"}, {b:s.start,dur:s.beats*0.9,midi:r+7,hand:"R"}); }); return e; } },
+
+  /* Vänster hand ensam: basen och oktaven ovanför. */
+  octaveBass: { label:"Oktavbas", gen:(S)=>{
+    const e=[]; S.forEach(s=>e.push({b:s.start,dur:s.beats*0.9,midi:s.bass,hand:"L"},
+                                    {b:s.start,dur:s.beats*0.9,midi:s.bass+12,hand:"L"})); return e; } },
 
   twoNote: { label:"Två toner", gen:(S)=>{
     const e=[]; S.forEach(s=>{ e.push({b:s.start,dur:s.beats*0.9,midi:s.rh[0],hand:"R"});
                                e.push({b:s.start,dur:s.beats*0.9,midi:s.rh[1],hand:"R"}); }); return e; } },
 
-  rootsQuarter: { label:"Enstaka toner i fjärdedelar", gen:(S)=>{
-    const e=[]; S.forEach(s=>{ for(let k=0;k<s.beats;k++) e.push({b:s.start+k,dur:.85,midi:s.rh[0],hand:"R"}); }); return e; } },
+  rootsQuarter: { label:"Grundton i fjärdedelar", gen:(S)=>{
+    const e=[]; S.forEach(s=>{ const r=rootNear(s); for(let k=0;k<s.beats;k++) e.push({b:s.start+k,dur:.85,midi:r,hand:"R"}); }); return e; } },
 
   triadWhole: { label:"Blockackord", gen:(S)=>{
     const e=[]; S.forEach(s=>s.rh.forEach(m=>e.push({b:s.start,dur:s.beats*0.9,midi:m,hand:"R"}))); return e; } },
@@ -569,6 +589,12 @@ const TEXTURES = {
   brokenEighth: { label:"Brutna ackord, åttondelar", gen:(S)=>{
     const p=[0,1,2,1]; const e=[];
     S.forEach(s=>{ for(let k=0;k<s.beats*2;k++) e.push({b:s.start+k*0.5,dur:.45,midi:s.rh[p[k%4]%s.rh.length],hand:"R"}); }); return e; } },
+
+  /* Andra handen kommer in med minsta möjliga: en ton i varje hand, samma
+     rytm. Mellansteget mellan blockackord och bas och ackord i trappan. */
+  bassRoot: { label:"Bas och grundton", gen:(S)=>{
+    const e=[]; S.forEach(s=>e.push({b:s.start,dur:s.beats*0.9,midi:s.bass,hand:"L"},
+                                    {b:s.start,dur:s.beats*0.9,midi:rootNear(s),hand:"R"})); return e; } },
 
   bassTriad: { label:"Bas och ackord", gen:(S)=>{
     const e=[]; S.forEach(s=>{ e.push({b:s.start,dur:s.beats*0.9,midi:s.bass,hand:"L"});
@@ -660,12 +686,12 @@ const TEXTURE_IDS = Object.keys(TEXTURES);
 /* Spelsätten. Ett spelsätt är ett urval texturer och sina egna placeringsprov.
    Ackord och rytm är en trappa: stegen kommer i ordning, och nästa låses upp
    när det förra sitter. */
-const LADDER = ["triadWhole","bassTriad","openBlock","oompah","oompahFlow","splitPulse"];
+const LADDER = ["triadWhole","bassRoot","bassTriad","openBlock","oompah","oompahFlow","splitPulse"];
 const STYLES = {
   mix:    { label:"Mix",             textures: TEXTURE_IDS,
             probes:["rootsWhole","rootsQuarter","triadWhole","bassTriad"] },
   rhythm: { label:"Ackord och rytm", textures: LADDER, ladder:true,
-            probes: LADDER.slice(0,4) },
+            probes:["triadWhole","bassTriad","openBlock","oompah"] },
   broken: { label:"Brutna ackord",   textures:["brokenQuarter","bassBroken","brokenEighth","alberti"],
             probes:["brokenQuarter","bassBroken","brokenEighth","alberti"] }
 };

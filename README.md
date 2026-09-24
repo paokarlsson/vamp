@@ -82,14 +82,17 @@ under 60 % räcker.
 | Steg | Vänster | Höger |
 |---|---|---|
 | 1 Blockackord | — | Blockackord |
-| 2 Bas och ackord | Bas, hel not | Blockackord |
-| 3 Öppet grepp | Bas, hel not | Mittentonen upp en oktav: C-E-G blir C-G-E' |
-| 4 Växelvis | Bas på de tunga slagen | De två övre tonerna på de lätta |
-| 5 Växelvis med driv | Kvinten på trean | Föregriper nästa ackord på sista "och" |
-| 6 Delat grepp i en hand | Bas, hel not | Undre tonen på tunga slag, de övre på lätta |
+| 2 Bas och grundton | Bas, hel not | Grundtonen, hel not |
+| 3 Bas och ackord | Bas, hel not | Blockackord |
+| 4 Öppet grepp | Bas, hel not | Mittentonen upp en oktav: C-E-G blir C-G-E' |
+| 5 Växelvis | Bas på de tunga slagen | De två övre tonerna på de lätta |
+| 6 Växelvis med driv | Kvinten på trean | Föregriper nästa ackord på sista "och" |
+| 7 Delat grepp i en hand | Bas, hel not | Undre tonen på tunga slag, de övre på lätta |
 
 Ordningen följer den uppmätta svårigheten. Att dela greppet i en hand mäts
-som svårast, eftersom handen måste flytta sig en decima varje slag. Ett nytt
+som svårast, eftersom handen måste flytta sig en decima varje slag. Steg 2
+finns för att andra handen annars kommer in med ett helt ackord på en gång,
+det största hoppet i trappan: där får den i stället en ton i varje hand. Ett nytt
 steg kommer i det tempo målnivån räcker till, så det börjar lugnt.
 
 ---
@@ -123,7 +126,7 @@ Tolv moduler i `index.html`, i den ordning de bygger på varandra:
 | 1 | Teori | Romerska siffror → tonhöjdsklasser. `bVII`, `vi`, `V7`, `iio`. |
 | 2 | Röstföring | Ackord → grepp, via billigaste vägen genom hela progressionen. |
 | 3 | Bibliotek | 25 progressioner som text, åtta skalor, alla tolv grundtoner. |
-| 4 | Texturer | 18 texturer: grepp → faktiska noter, uttryckt i slag. Tre spelsätt. |
+| 4 | Texturer | 21 texturer: grepp → faktiska noter, uttryckt i slag. Tre spelsätt. |
 | 5 | Svårighet | Noter → formvektor (12 mått) → ett tal. |
 | 6 | Axlar | Vad ett varv belastar, axel för axel. |
 | 7 | Motor | Skattning, nio-axlig profil, val av nästa varv. |
@@ -176,7 +179,7 @@ inte som synkopering. Synkopering börjar först när slaget före är tomt.
 
 `costOf()` viktar ihop formvektorn till ett tal, och tempot multipliceras in med
 exponent 1,25. En variant = progression × tonart × textur × tempo × taktart ×
-swing, vilket ger 504 varianter per progression och tonart — alla med sin egen
+swing, vilket ger 588 varianter per progression och tonart — alla med sin egen
 mätta svårighet.
 
 **Vikterna i `W` är handsatta gissningar.** De ska skattas ur riktig speldata
