@@ -58,6 +58,28 @@ spelar, via Screen Wake Lock. Webbläsaren släpper låset när fliken döljs; a
 tar det igen när du kommer tillbaka. Valet sparas, och knappen syns bara i
 webbläsare som stöder det.
 
+**Notblad** (knappen bredvid Spela, eller ikonen i scenen i helskärm) byter
+de fallande noterna mot ett notsystem med G- och F-klav, där noterna kommer
+från höger och ska spelas när de når den lodräta linjen. Det är samma varv,
+samma klocka och samma bedömning, bara bilden som byts, och det går att byta
+mitt i ett varv. Valet sparas.
+
+* Höger hand står i G-klaven och vänster i F-klaven, i den oktav tonerna är
+  skrivna. Matchningen bryr sig fortfarande inte om oktaven.
+* Förtecknen står efter klaven och följer varvets tonart och skala: A-moll och
+  D-dorisk skrivs utan förtecken, F-mixolydisk med två b. En ton som avviker
+  får eget tecken vid noten, så harmonisk moll får sitt Giss och bluesen sina
+  Ess och B.
+* Notvärdet läses ur tonens längd: helnot, halvnot, fjärdedel, åttondel,
+  punkterat där det passar. Åttondelar på slaget och dess "och" delar balk.
+  En tunn stapel bakom varje not visar hur länge den ska hållas.
+* Träffade noter blir gröna och missade röda. Det du spelar syns som en not
+  vid linjen, i handens färg eller rött om den inte hörde dit.
+* Ackordnamnen står ovanför systemet, taktstrecken där takterna börjar, och
+  fingersättningen (i Nybörjare) står som i tryckta noter: höger hand ovanför,
+  vänster under.
+* Datortangenternas bokstäver syns bara på klaviaturen i pianorullen.
+
 ### Grundton, skala och spelsätt
 
 Tre val under Spela-knappen. *Mix* betyder att motorn väljer själv, som förut.
