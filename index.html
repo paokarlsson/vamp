@@ -1316,10 +1316,14 @@ function pad(t,midis,dur,open){
   const g=ctx.createGain(), f=ctx.createBiquadFilter();
   f.type="lowpass"; f.frequency.setValueAtTime(400+open*1900,t); f.Q.value=.7;
   g.connect(f); f.connect(musicGain);
-  g.gain.setValueAtTime(.0001,t);
-  g.gain.exponentialRampToValueAtTime(.08,t+Math.min(.5,dur*.4));  /* två ackord per takt blir korta */
-  g.gain.setValueAtTime(.08,t+dur*.7);
-  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  /* Anslaget måste höras på slaget. En exponentiell svällning ligger nära
+     noll större delen av tiden och hördes först 350 ms efter ettan. Nu:
+     rak attack på 20 ms, sedan sjunker den mjukt till en jämn nivå, och
+     klingar ut en liten bit in i nästa ackord så att inget glapp uppstår. */
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(.09,t+.02);
+  g.gain.setTargetAtTime(.065,t+.02,.25);
+  g.gain.setTargetAtTime(.0001,t+Math.max(.05,dur-.03),.06);
   midis.forEach((m,i)=>{
     const o=ctx.createOscillator(), og=ctx.createGain();
     o.type = i===0?"triangle":"sawtooth";

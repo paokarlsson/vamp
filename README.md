@@ -236,6 +236,14 @@ Två skyddsmekanismer värda att känna till:
   skattningen — negativa signaler dämpas med upp till 55 % när svag axel belastas.
 * Motorn staplar aldrig två kända svaga axlar i samma varv.
 
+### Paddan slås an på slaget
+
+Paddan svällde förut upp exponentiellt under en halv sekund. En sådan kurva
+ligger nära noll större delen av tiden, så paddan hördes först 350 ms efter
+ettan och lät som att den kom in för sent. Nu har den en rak attack på 20 ms,
+sjunker sedan mjukt till en jämn nivå och klingar ut en liten bit in i nästa
+ackord, så att inget glapp uppstår.
+
 ### Ljudet slår aldrig i taket
 
 Kompet ensamt når nästan fullt utslag, och spelarens egna toner läggs ovanpå.
