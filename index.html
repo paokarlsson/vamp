@@ -6,7 +6,7 @@
 <title>Vamp</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Music&display=swap" rel="stylesheet">
 <style>
   :root{
     /* scenen är alltid mörk — den är instrumentet, inte gränssnittet */
@@ -181,6 +181,7 @@
     <span class="grow"></span>
     <span class="chip" id="c-layers">—</span>
     <button class="icon" id="btn-fs-play" hidden aria-label="Spela"></button>
+    <button class="icon" id="btn-fs-view" hidden></button>
     <button class="icon" id="btn-fs" hidden aria-label="Helskärm" title="Helskärm (F)"></button>
   </div>
 </div>
@@ -199,6 +200,7 @@
 <div class="controls">
   <button class="primary transport" id="btn-play" disabled></button>
   <button id="btn-wake" aria-pressed="false" hidden title="Hindrar skärmen från att slockna medan du spelar">Skärmen släcks</button>
+  <button id="btn-view" aria-pressed="false" title="Växla mellan fallande noter och ett notblad">Notblad</button>
   <button id="btn-sound" aria-pressed="true">Ljud på</button>
   <button id="btn-reset">Börja om</button>
 </div>
@@ -260,7 +262,7 @@
      8  LJUD           Web Audio, inga samplingar
      9  VARVET         schemaläggning, beslutsfönster
     10  MIDI-IN        riktiga anslag (MIDI eller tangentbord) mot väntade toner
-    11  BILD           fallande noter, klaviatur
+    11  BILD           fallande noter och klaviatur, eller notblad
     12  GRÄNSSNITT     spela/paus, paneler
 
    Vad som är mätt och vad som är gissat: allt i modul 5 är gissat och ska
@@ -1798,7 +1800,7 @@ function noteOn(note, vel, perfMs, echo, src){
   const ev = state.running ? matchPress(note, tp) : null;
   const shown = fold(ev ? ev.midi : note);
   unlight(note);
-  flashes.push(lit[note] = { midi:shown, end:Infinity, ghost:false,
+  flashes.push(lit[note] = { midi:shown, raw: ev ? ev.midi : note, end:Infinity, ghost:false,
     hit: !!ev || !state.started,          /* före start: bara visa var handen är */
     hand: ev ? ev.hand : (note < 60 ? "L" : "R") });
 }
@@ -1956,7 +1958,7 @@ function layoutStage(){
   const stage = lane.parentElement, col = document.querySelector(".device").offsetWidth;
   if (fsElement() === stage){ stage.style.width = stage.style.marginLeft = ""; laneSize = resizeCanvas(lane); return; }
   const avail = document.documentElement.clientWidth - 32;
-  const w = Math.max(col, Math.min(avail, whites.length*MIN_WHITE));
+  const w = view.sheet ? col : Math.max(col, Math.min(avail, whites.length*MIN_WHITE));
   stage.style.width = w > col ? w+"px" : "";
   stage.style.marginLeft = w > col ? (col-w)/2+"px" : "";
   laneSize = resizeCanvas(lane);
@@ -1978,7 +1980,17 @@ function drawLane(){
   /* det som hörs, inte det som schemalagts — annars ligger bilden före ljudet */
   const now = ctx ? viewNow() : 0;
 
+  /* Tonerna appen spelar själv lyser när de hörs, i båda vyerna. */
+  for (const loop of state.loops) for (const ev of loop.events)
+    if (ev.ghost && !ev.flashed && now >= ev.tPlay){
+      ev.flashed = true;
+      flashes.push({midi:fold(ev.midi), raw:ev.midi, end:ev.tPlay + ev.dur*loop.spb, hit:ev.hit, ghost:ev.ghost, hand:ev.hand});
+    }
+  for (let i=0;i<flashes.length;i++)
+    if (now-flashes[i].end > FADE){ flashes.splice(i,1); i--; }
+
   lctx.clearRect(0,0,W,H);
+  if (view.sheet){ drawSheet(W, H, now); drawPaused(W, H); return; }
   lctx.fillStyle = "#16242b"; lctx.fillRect(0,0,W,H);
 
   /* Smala tangenter: markera delen som varvet använder, så att man hittar rätt. */
@@ -1999,10 +2011,6 @@ function drawLane(){
 
   const fingers = !!style().fingers;
   for (const loop of state.loops) for (const ev of loop.events){
-    if (ev.ghost && !ev.flashed && now >= ev.tPlay){
-      ev.flashed = true;
-      flashes.push({midi:fold(ev.midi), end:ev.tPlay + ev.dur*loop.spb, hit:ev.hit, ghost:ev.ghost, hand:ev.hand});
-    }
     const y = laneH-(ev.t-now)*pps, h = Math.max(7, ev.dur*loop.spb*pps);
     if (y < 0 || y-h >= laneH) continue;
     const r = keyRect(fold(ev.midi),W);
@@ -2037,8 +2045,6 @@ function drawLane(){
 
   /* Klaviaturen ritas i lager så att en vit tangent som lyser aldrig
      målar över sina svarta grannar. Bara den tryckta tangenten lyser. */
-  for (let i=0;i<flashes.length;i++)
-    if (now-flashes[i].end > FADE){ flashes.splice(i,1); i--; }
   const ww = W/whites.length;
   lctx.fillStyle = "#f3ece0";
   for (let i=0;i<whites.length;i++) lctx.fillRect(i*ww+.5, laneH+2, ww-1, kbH-4);
@@ -2057,17 +2063,334 @@ function drawLane(){
     lctx.fillStyle = flashColor(f,now); lctx.fillRect(r.x, laneH+2, r.w, kbH*.6);
   }
   drawTypeLabels(W, true, "rgba(243,236,224,.65)", laneH+kbH*.6-4);
-
-  if (state.started && ctx && ctx.state !== "running"){
-    lctx.fillStyle = "rgba(22,36,43,.6)"; lctx.fillRect(0,0,W,laneH);
-    lctx.fillStyle = "#f3ece0"; lctx.textAlign = "center";
-    lctx.font = '600 16px "IBM Plex Sans",system-ui,sans-serif';
-    lctx.fillText("Pausad", W/2, laneH/2-4);
-    lctx.font = '400 12.5px "IBM Plex Sans",system-ui,sans-serif';
-    lctx.fillText("Mellanslag eller Fortsätt", W/2, laneH/2+16);
-    lctx.textAlign = "start";
-  }
+  drawPaused(W, laneH);
 }
+
+function drawPaused(W, h){
+  if (!(state.started && ctx && ctx.state !== "running")) return;
+  lctx.fillStyle = "rgba(22,36,43,.6)"; lctx.fillRect(0,0,W,h);
+  lctx.fillStyle = "#f3ece0"; lctx.textAlign = "center";
+  lctx.font = '600 16px "IBM Plex Sans",system-ui,sans-serif';
+  lctx.fillText("Pausad", W/2, h/2-4);
+  lctx.font = '400 12.5px "IBM Plex Sans",system-ui,sans-serif';
+  lctx.fillText("Mellanslag eller Fortsätt", W/2, h/2+16);
+  lctx.textAlign = "start";
+}
+
+/* --------------------------------------------------------------------------
+   Notbladet: samma varv, samma klocka och samma matchning, men noterna
+   kommer från höger på ett system med G- och F-klav och ska spelas när de
+   når linjen. Höger hand står i G-klaven och vänster i F-klaven, i den
+   oktav de är skrivna — matchningen bryr sig fortfarande inte om oktaven.
+
+   Tonerna stavas efter varvets tonart: förtecknen står efter klaven, och en
+   ton som avviker från dem får sitt eget tecken vid noten. Notvärdet läses ur
+   tonens längd, och en tunn stapel bakom huvudet visar hur länge den hålls.
+   -------------------------------------------------------------------------- */
+
+const view = { sheet:false, pps:0 };
+try { view.sheet = localStorage.getItem("vamp.view") === "sheet"; } catch(e){}
+
+/* Durtonarten vars förtecken skalan skrivs med, räknat från grundtonen:
+   A-moll och D-dorisk skrivs båda utan förtecken. */
+const SIG_SHIFT = { major:0, minor:3, harmonic:3, dorian:10, mixolydian:5, pentaMajor:0, pentaMinor:3, blues:0 };
+const FIFTHS = [0,-5,2,-3,4,-1,-6,1,-4,3,-2,5];   /* durtonartens grundton → ♯ (+) eller ♭ (−) */
+const SHARP_ORDER = [3,0,4,1,5,2,6];               /* F C G D A E B */
+const FLAT_ORDER  = [6,2,5,1,4,0,3];               /* B E A D G C F */
+const MUSIC_FONT = '"Noto Music","Segoe UI Symbol","Apple Symbols",serif';
+const ACC_GLYPH = { "-2":"\u{1D12B}", "-1":"♭", "0":"♮", "1":"♯", "2":"\u{1D12A}" };
+
+const KEYS_SPELLED = {};
+function keyOf(tonic, scale){
+  const id = tonic+"|"+scale;
+  if (KEYS_SPELLED[id]) return KEYS_SPELLED[id];
+  const sc = SCALES[scale] || SCALES.major;
+  const k = FIFTHS[(tonic + (SIG_SHIFT[scale]||0)) % 12];
+  const alter = [0,0,0,0,0,0,0], spell = {};
+  for (let i=0; i<Math.abs(k); i++) alter[(k>0 ? SHARP_ORDER : FLAT_ORDER)[i]] = Math.sign(k);
+  for (let l=0; l<7; l++) spell[(WHITE_PC[l]+alter[l]+12)%12] = [l, alter[l]];
+  /* Sjutonsskalor stavas med en bokstav per steg, så att harmonisk moll
+     får sitt Giss och inte ett Ass. */
+  if (sc.steps.length === 7){
+    const t = spell[tonic][0];
+    sc.steps.forEach((st,i)=>{
+      const l = (t+i)%7, pc = (tonic+st)%12;
+      spell[pc] = [l, ((pc - WHITE_PC[l] + 18) % 12) - 6];
+    });
+  }
+  /* Resten: vita tangenter heter som de heter, svarta får korsförtecken i
+     korstonarter och b annars — bluesens små ters och septima blir Ess och B. */
+  for (let pc=0; pc<12; pc++) if (!spell[pc]){
+    const w = WHITE_PC.indexOf(pc);
+    spell[pc] = w >= 0 ? [w, 0] : k > 0 ? [WHITE_PC.indexOf(pc-1), 1] : [WHITE_PC.indexOf((pc+1)%12), -1];
+  }
+  return KEYS_SPELLED[id] = { k, alter, spell };
+}
+/* Diatoniskt steg (C4 = 35) och förtecknet som ska stå vid noten, om något. */
+function staffPos(midi, key){
+  const [l, a] = key.spell[((midi%12)+12)%12];
+  return { dn: Math.floor((midi - a)/12)*7 + l, acc: a === key.alter[l] ? null : a };
+}
+/* Notvärdet i slag. Texturerna kortar tonerna lite för artikulationens
+   skull, därför delningen med 0.9. */
+function noteValue(d){ const n = d/.9; return n >= 3.5 ? 4 : n >= 2.6 ? 3 : n >= 1.8 ? 2 : n >= 1.3 ? 1.5 : n >= .8 ? 1 : .5; }
+
+const SHEET = { paper:"#f3ece0", ink:"#16242b", hit:"#2e8b7a", miss:"#c94866", ghost:"rgba(22,36,43,.28)",
+                R:"#d9a21b", L:"#4a7fe0" };
+const STAVES = { R:{mid:41}, L:{mid:29} };     /* mittlinjen: H4 i G-klaven, D3 i F-klaven */
+
+function sheetLayout(W, H){
+  const hs = Math.max(4, Math.min(13, H/40));  /* halvt linjeavstånd */
+  const off = (H - 40*hs)/2;
+  const L = { hs, trebleMid: off + 12.4*hs, bassMid: off + 30.4*hs, chordY: off + 2.4*hs, x0: 10 };
+  L.y = (dn, hand) => (hand === "L" ? L.bassMid - (dn - 29)*hs : L.trebleMid - (dn - 41)*hs);
+  L.top = L.trebleMid - 4*hs; L.bottom = L.bassMid + 4*hs;
+  return L;
+}
+
+function sheetHead(x, y, hs, value, color){
+  lctx.fillStyle = color;
+  lctx.save(); lctx.translate(x, y);
+  lctx.beginPath();
+  if (value >= 4) lctx.ellipse(0, 0, hs*1.4, hs*.88, 0, 0, Math.PI*2);
+  else lctx.ellipse(0, 0, hs*1.18, hs*.8, -.35, 0, Math.PI*2);
+  lctx.fill();
+  if (value >= 2){                              /* halv- och helnot är ihåliga */
+    lctx.fillStyle = SHEET.paper; lctx.beginPath();
+    if (value >= 4) lctx.ellipse(0, 0, hs*.62, hs*.46, 1.1, 0, Math.PI*2);
+    else lctx.ellipse(0, 0, hs*.9, hs*.36, -.55, 0, Math.PI*2);
+    lctx.fill();
+  }
+  lctx.restore();
+}
+
+function ledgers(x, dn, hand, Ly, hs, color){
+  const mid = STAVES[hand].mid;
+  lctx.strokeStyle = color; lctx.lineWidth = Math.max(1, hs*.14);
+  lctx.beginPath();
+  for (let d = mid+6; d <= dn; d += 2){ const y = Ly(d, hand); lctx.moveTo(x-hs*1.8, y); lctx.lineTo(x+hs*1.8, y); }
+  for (let d = mid-6; d >= dn; d -= 2){ const y = Ly(d, hand); lctx.moveTo(x-hs*1.8, y); lctx.lineTo(x+hs*1.8, y); }
+  lctx.stroke();
+}
+
+function drawSheet(W, H, now){
+  const Lo = sheetLayout(W, H), hs = Lo.hs;
+  const cur = state.loops.find(l=>now >= l.t0 && now < l.t1) || state.loops[0];
+  const key = cur ? keyOf(cur.v.tonic, cur.scale) : keyOf(engine.tonic, scaleFor(engine.prog));
+  const headerW = Lo.x0 + 6.4*hs + Math.abs(key.k)*1.25*hs + 1.2*hs;
+  const playX = headerW + Math.max(3*hs, W*.1);
+  /* Helst en takt och lite till framåt, minst lika långt som pianorullen,
+     men aldrig så tätt att en åttondel inte får plats med sitt huvud.
+     Skalan glider vid tempobyte, den hoppar inte. */
+  const spb = cur ? cur.spb : 60/probeBpm(), bpb = cur ? cur.bpb : 4;
+  const target = Math.max((W - playX)/Math.max(2.6, 1.2*bpb*spb), 5.6*hs/spb);
+  view.pps = view.pps ? view.pps + (target - view.pps)*.04 : target;
+  const pps = view.pps, X = t => playX + (t - now)*pps;
+
+  lctx.fillStyle = SHEET.paper; lctx.fillRect(0, 0, W, H);
+
+  /* notlinjer och systemets vänsterkant */
+  lctx.strokeStyle = "rgba(22,36,43,.55)"; lctx.lineWidth = 1;
+  lctx.beginPath();
+  for (const hand of ["R","L"]) for (let d=-4; d<=4; d+=2){
+    const y = Lo.y(STAVES[hand].mid + d, hand); lctx.moveTo(Lo.x0, y); lctx.lineTo(W, y);
+  }
+  lctx.stroke();
+  lctx.fillStyle = SHEET.ink; lctx.fillRect(Lo.x0-1, Lo.top, 2, Lo.bottom-Lo.top);
+
+  /* spelmarkören */
+  lctx.fillStyle = "rgba(31,111,106,.10)";
+  lctx.fillRect(playX - hs*1.6, Lo.top - 5*hs, hs*3.2, Lo.bottom - Lo.top + 10*hs);
+
+  /* Allt som rör sig ritas bakom klaven: det glider in under den och ut. */
+  lctx.save();
+  lctx.beginPath(); lctx.rect(headerW, 0, W - headerW, H); lctx.clip();
+
+  lctx.strokeStyle = "rgba(22,36,43,.7)"; lctx.lineWidth = Math.max(1, hs*.14);
+  lctx.fillStyle = "rgba(22,36,43,.62)";
+  lctx.font = `600 ${Math.max(11, hs*1.45).toFixed(1)}px "IBM Plex Sans",system-ui,sans-serif`;
+  lctx.textAlign = "left"; lctx.textBaseline = "alphabetic";
+  for (const loop of state.loops){
+    const barDur = loop.bpb*loop.spb;
+    lctx.beginPath();
+    for (let bar=0; bar<=4; bar++){ const x = X(loop.t0 + bar*barDur); lctx.moveTo(x, Lo.top); lctx.lineTo(x, Lo.bottom); }
+    lctx.stroke();
+    /* ackordnamnen ovanför, där ackordet börjar */
+    for (const slot of loop.v.slots){
+      const x = X(loop.t0 + slot.start*loop.spb);
+      if (x > headerW - 60 && x < W) lctx.fillText(slot.name, x + hs*.4, Lo.chordY);
+    }
+  }
+
+  /* Anslag: toner i samma hand på samma slag är ett ackord med en hals. */
+  const fingers = !!style().fingers, groups = [];
+  for (const loop of state.loops){
+    const lk = keyOf(loop.v.tonic, loop.scale), byOnset = {};
+    for (const ev of loop.events){
+      const id = ev.hand + ev.b.toFixed(3);
+      if (!byOnset[id]){ byOnset[id] = { loop, hand:ev.hand, b:ev.b, t:ev.t, dur:ev.dur, notes:[] }; groups.push(byOnset[id]); }
+      const p = staffPos(ev.midi, lk);
+      const missed = !ev.hit && now > ev.t + loop.win;
+      byOnset[id].notes.push({ ev, dn:p.dn, acc:p.acc,
+        color: ev.ghost ? SHEET.ghost : ev.hit ? SHEET.hit : missed ? SHEET.miss : SHEET.ink });
+    }
+    /* Åttondelar parvis under en balk, som i tryckta noter: slaget och dess
+       "och". Halsarna pekar åt samma håll, bort från mitten av båda. */
+    for (const id in byOnset){
+      const g = byOnset[id], h = byOnset[g.hand + (g.b+.5).toFixed(3)];
+      g.value = noteValue(g.dur);
+      if (g.value === .5 && Math.abs(g.b % 1) < 1e-6 && h && noteValue(h.dur) === .5){ g.beamTo = h; h.beamFrom = g; }
+    }
+  }
+  for (const g of groups){
+    g.notes.sort((a,b)=>a.dn-b.dn);
+    g.lo = g.notes[0].dn; g.hi = g.notes[g.notes.length-1].dn;
+  }
+  for (const g of groups){
+    if (g.beamFrom) continue;
+    const pair = g.beamTo ? [g, g.beamTo] : [g], mid = STAVES[g.hand].mid;
+    const all = pair.reduce((a,x)=>a.concat(x.notes), []);
+    const up = all.reduce((a,n)=>a+n.dn, 0)/all.length < mid;
+    let tip = up ? Infinity : -Infinity;
+    for (const x of pair){
+      x.up = up;
+      const t = up ? Math.min(Lo.y(x.hi, g.hand) - 7*hs, Lo.y(mid, g.hand)) : Math.max(Lo.y(x.lo, g.hand) + 7*hs, Lo.y(mid, g.hand));
+      tip = up ? Math.min(tip, t) : Math.max(tip, t);
+    }
+    for (const x of pair) x.tip = tip;
+  }
+
+  /* Hur länge tonen hålls: en tunn stapel bakom huvudet. */
+  for (const g of groups){
+    const x = X(g.t), x2 = X(g.t + g.dur*g.loop.spb);
+    if (x2 < headerW || x > W) continue;
+    for (const n of g.notes){
+      lctx.fillStyle = n.ev.ghost ? "rgba(22,36,43,.07)" : n.ev.hit ? "rgba(46,139,122,.22)"
+        : n.color === SHEET.miss ? "rgba(201,72,102,.18)" : n.ev.hand === "L" ? "rgba(74,127,224,.2)" : "rgba(217,162,27,.26)";
+      lctx.fillRect(x, Lo.y(n.dn, g.hand) - hs*.42, x2 - x, hs*.84);
+    }
+  }
+
+  for (const g of groups){
+    const x = X(g.t);
+    if (x < headerW - 4*hs || x > W + 4*hs) continue;
+    const hand = g.hand, mid = STAVES[hand].mid, notes = g.notes;
+    const value = g.value, lo = g.lo, hi = g.hi, up = g.up;
+    /* sekunder i samma grepp: varannan not på andra sidan halsen */
+    let prev = null;
+    for (const n of notes){
+      n.x = x + (prev && !prev.shift && n.dn - prev.dn === 1 ? (up ? 2.3*hs : -2.3*hs) : 0);
+      n.shift = n.x !== x; prev = n;
+      n.y = Lo.y(n.dn, hand);
+    }
+    const inkColor = notes.find(n=>n.color === SHEET.miss) ? SHEET.miss
+      : notes.every(n=>n.color === SHEET.hit) ? SHEET.hit : notes[0].color;
+    for (const n of notes) ledgers(n.x, n.dn, hand, Lo.y, hs, n.color);
+    for (const n of notes) sheetHead(n.x, n.y, hs, value, n.color);
+
+    /* förtecken, i trappa åt vänster när de ligger tätt */
+    let accCol = 0, lastAcc = null;
+    lctx.font = `${(hs*2.6).toFixed(1)}px ${MUSIC_FONT}`;
+    lctx.textAlign = "center"; lctx.textBaseline = "middle";
+    for (let i=notes.length-1; i>=0; i--){
+      const n = notes[i]; if (n.acc === null) continue;
+      accCol = lastAcc !== null && lastAcc - n.dn < 6 ? accCol+1 : 0; lastAcc = n.dn;
+      lctx.fillStyle = n.color;
+      lctx.fillText(ACC_GLYPH[n.acc], x - hs*(2.7 + accCol*1.6) - (notes.some(m=>m.shift) && !up ? 2.3*hs : 0), n.y);
+    }
+
+    /* hals, och balk eller flagga */
+    let tip = null;
+    if (value < 4){
+      const sx = up ? x + hs*1.08 : x - hs*1.08;
+      const y0 = Lo.y(up ? lo : hi, hand);
+      tip = g.tip;
+      lctx.strokeStyle = inkColor; lctx.lineWidth = Math.max(1.2, hs*.16);
+      lctx.beginPath(); lctx.moveTo(sx, y0); lctx.lineTo(sx, tip); lctx.stroke();
+      if (g.beamTo){
+        const x2 = X(g.beamTo.t) + (up ? hs*1.08 : -hs*1.08), th = hs*.9;
+        lctx.fillStyle = inkColor;
+        lctx.fillRect(sx - hs*.08, up ? tip : tip - th, x2 - sx + hs*.16, th);
+      } else if (value === .5 && !g.beamFrom){
+        const s = up ? 1 : -1;
+        lctx.fillStyle = inkColor; lctx.beginPath();
+        lctx.moveTo(sx, tip);
+        lctx.bezierCurveTo(sx + hs*.3, tip + s*hs*2.2, sx + hs*2.6, tip + s*hs*2.8, sx + hs*1.5, tip + s*hs*5.6);
+        lctx.bezierCurveTo(sx + hs*2, tip + s*hs*3.4, sx + hs*.6, tip + s*hs*2.8, sx, tip + s*hs*2);
+        lctx.closePath(); lctx.fill();
+      }
+    }
+    /* punkterad: punkten i mellanrummet till höger */
+    if (value === 1.5 || value === 3) for (const n of notes){
+      lctx.fillStyle = n.color; lctx.beginPath();
+      lctx.arc(x + hs*2.1 + (n.shift && up ? 2.3*hs : 0), n.y - ((n.dn - mid) % 2 === 0 ? hs : 0), hs*.3, 0, Math.PI*2);
+      lctx.fill();
+    }
+    /* Fingersättning som i tryckta noter: höger hand ovanför, vänster under,
+       översta siffran för översta tonen. */
+    if (fingers && notes.some(n=>n.ev.finger && !n.ev.ghost)){
+      lctx.font = `700 ${Math.max(10, hs*1.5).toFixed(1)}px "IBM Plex Sans",system-ui,sans-serif`;
+      lctx.textAlign = "center"; lctx.textBaseline = "alphabetic"; lctx.fillStyle = SHEET.ink;
+      const step = Math.max(10, hs*1.5), nums = notes.filter(n=>n.ev.finger && !n.ev.ghost);
+      if (hand === "R"){
+        let y = Math.min(notes[notes.length-1].y, up && tip !== null ? tip : Infinity) - hs*1.1;
+        for (const n of nums){ lctx.fillText(n.ev.finger, x, y); y -= step; }
+      } else {
+        let y = Math.max(notes[0].y, !up && tip !== null ? tip : -Infinity) + hs*1.1 + step*.8;
+        for (let i=nums.length-1; i>=0; i--){ lctx.fillText(nums[i].ev.finger, x, y); y += step; }
+      }
+    }
+  }
+  lctx.restore();
+
+  /* Det du spelar just nu, vid markören: rätt ton i handens färg, fel i rött. */
+  for (const f of flashes){
+    const a = now < f.end ? 1 : Math.max(0, 1 - (now - f.end)/FADE);
+    if (a <= 0) continue;
+    const hand = f.hand === "L" ? "L" : "R", p = staffPos(f.raw !== undefined ? f.raw : f.midi, key);
+    lctx.globalAlpha = a*(f.ghost ? .5 : .9);
+    const color = f.ghost ? SHEET.ghost : !f.hit ? SHEET.miss : SHEET[hand];
+    ledgers(playX, p.dn, hand, Lo.y, hs, color);
+    sheetHead(playX, Lo.y(p.dn, hand), hs, 1, color);
+    lctx.globalAlpha = 1;
+  }
+  lctx.strokeStyle = "rgba(31,111,106,.8)"; lctx.lineWidth = 2;
+  lctx.beginPath(); lctx.moveTo(playX, Lo.top - 5*hs); lctx.lineTo(playX, Lo.bottom + 5*hs); lctx.stroke();
+
+  /* klavarna och förtecknen */
+  lctx.fillStyle = SHEET.ink; lctx.textAlign = "left"; lctx.textBaseline = "alphabetic";
+  /* Glyferna i Noto Music har inte sin baslinje på klavens linje, så de
+     flyttas dit: G-klavens snirkel runt G4, F-klavens punkter kring F3. */
+  lctx.font = `${(hs*11.5).toFixed(1)}px ${MUSIC_FONT}`;
+  lctx.fillText("\u{1D11E}", Lo.x0 + hs*.6, Lo.y(39, "R") + hs*2.9);
+  lctx.fillText("\u{1D122}", Lo.x0 + hs*.6, Lo.y(31, "L") + hs*7.9);
+  if (key.k){
+    const sharp = key.k > 0;
+    /* var förtecknen står i G-klaven, som diatoniska steg; F-klaven två oktaver ned */
+    const TREBLE = sharp ? [45,42,46,43,40,44,41] : [41,44,40,43,39,42,38];
+    lctx.font = `${(hs*2.6).toFixed(1)}px ${MUSIC_FONT}`;
+    lctx.textAlign = "center"; lctx.textBaseline = "middle";
+    for (let i=0; i<Math.abs(key.k); i++){
+      const x = Lo.x0 + 7*hs + i*1.25*hs, g = ACC_GLYPH[sharp ? 1 : -1];
+      lctx.fillText(g, x, Lo.y(TREBLE[i], "R"));
+      lctx.fillText(g, x, Lo.y(TREBLE[i]-14, "L"));
+    }
+  }
+  lctx.textAlign = "start"; lctx.textBaseline = "alphabetic";
+}
+
+function setView(sheet){
+  view.sheet = sheet; view.pps = 0;
+  try { localStorage.setItem("vamp.view", sheet ? "sheet" : "roll"); } catch(e){}
+  el("btn-view").textContent = sheet ? "Notblad" : "Pianorulle";
+  el("btn-view").setAttribute("aria-pressed", sheet ? "true" : "false");
+  const f = el("btn-fs-view");
+  f.innerHTML = sheet ? ICON_ROLL : ICON_SHEET;
+  f.setAttribute("aria-label", sheet ? "Visa pianorulle" : "Visa notblad");
+  f.title = f.getAttribute("aria-label");
+  layoutStage();
+}
+
 
 const chart = document.getElementById("chart");
 const cctx = chart.getContext("2d");
@@ -2197,7 +2520,9 @@ function begin(){
   state.started = true;
   state.running = true;
   state.startedAt = ctx.currentTime;
-  el("caption").textContent = midi.inputs.length
+  el("caption").textContent = view.sheet
+    ? "Spela noterna när de når linjen. Oktaven spelar ingen roll."
+    : midi.inputs.length
     ? "Spela tonerna när de når tangenterna. Oktaven spelar ingen roll."
     : "Spela tonerna när de når tangenterna, med datortangenten som står på dem. Oktaven spelar ingen roll.";
   /* Egna toner genom appen kommer alltid så mycket efter som ljudet ut tar.
@@ -2205,7 +2530,7 @@ function begin(){
      behövs de inte alls. */
   if (midi.inputs.length && midi.echo && latency() > .04)
     el("caption").textContent = `Ljudet ut har ${Math.round(latency()*1000)} ms fördröjning, så dina toner i appen kommer efter tangenten. Har keyboardet egna högtalare: slå av "Mina toner i appen".`;
-  if (style().fingers) el("caption").textContent += " Siffran på noten är fingret: 1 är tummen, 5 är lillfingret.";
+  if (style().fingers) el("caption").textContent += (view.sheet ? " Siffran vid noten" : " Siffran på noten") + " är fingret: 1 är tummen, 5 är lillfingret.";
   captionUntil = ctx.currentTime+10;
   updateTransport();
   fitSelection(true);
@@ -2272,6 +2597,8 @@ el("btn-play").addEventListener("click", togglePlay);
    iPhone kan inte visa annat än video i helskärm, och där syns ingen knapp. */
 const ICON_FS_IN  = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
 const ICON_FS_OUT = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+const ICON_SHEET = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 3h14M1 6h14M1 9h14M1 12h14" stroke="currentColor" stroke-width="1.2"/><ellipse cx="10" cy="10.5" rx="2.2" ry="1.6" fill="currentColor"/></svg>';
+const ICON_ROLL  = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2h3v6H3zM10 4h3v6h-3z" fill="currentColor"/><path d="M1 13h14" stroke="currentColor" stroke-width="1.8"/></svg>';
 function fsElement(){ return document.fullscreenElement || document.webkitFullscreenElement || null; }
 function toggleFullscreen(){
   const stage = lane.parentElement;
@@ -2288,6 +2615,7 @@ function onFullscreen(){
   el("btn-fs").setAttribute("aria-label", on ? "Lämna helskärm" : "Helskärm");
   el("btn-fs").title = on ? "Lämna helskärm (F eller Esc)" : "Helskärm (F)";
   el("btn-fs-play").hidden = !on;
+  el("btn-fs-view").hidden = !on;
   updateTransport();
   onResize();
 }
@@ -2299,6 +2627,13 @@ if (document.fullscreenEnabled || document.webkitFullscreenEnabled){
   document.addEventListener("webkitfullscreenchange", onFullscreen);
   onFullscreen();
 }
+/* Pianorulle eller notblad. Samma varv, samma klocka, samma bedömning —
+   bara bilden byts, och den kan bytas mitt i ett varv. Valet sparas. */
+setView(view.sheet);
+/* Canvas laddar inga typsnitt själv: klavarna och förtecknen hämtas i förväg. */
+if (document.fonts) document.fonts.load('40px "Noto Music"', "\u{1D11E}\u{1D122}\u266F\u266D\u266E").catch(()=>{});
+el("btn-view").addEventListener("click", ()=>setView(!view.sheet));
+el("btn-fs-view").addEventListener("click", ()=>setView(!view.sheet));
 el("btn-midi").addEventListener("click", connectMidi);
 el("btn-measure").addEventListener("click", measureStart);
 
