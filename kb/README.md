@@ -2,6 +2,10 @@
 
 Kunskapsbas: data som motorn kan luta sig mot. Används inte av `index.html` än.
 
+- [`ackordtrad_c_dur_4ackord.json`](#ackordtrad_c_dur_4ackordjson) — vilka ackord som följer på vilka.
+- [`ackompanjemang.md`](ackompanjemang.md) — sätt att spela ett ackord, i fem
+  svårighetsnivåer från bara grundtonen till stride.
+
 ## `ackordtrad_c_dur_4ackord.json`
 
 Ackordträd för C-dur, fyra ackord djupt. Varje nivå visar vilka ackord som
