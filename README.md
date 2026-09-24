@@ -266,8 +266,28 @@ Samma klocka styr bilden och tidsstämplar anslagen, så de fallande noterna nå
 klaviaturen när tonen faktiskt låter, och tidsspridningen som motorn mäter är
 spelarens, inte ljudkortets.
 
-Spelarens egna toner går genom appens piano (*Mina toner i appen*). Stäng av
-det om keyboardet har egna högtalare.
+**Fördröjning som ingen rapporterar lär sig appen.** Webbläsaren vet ofta
+inte hur lång tid ljudet tar genom Bluetooth-hörlurar eller en extern
+ljudenhet, och keyboardet har sin egen. Allt sådant syns som att varje anslag
+kommer lika mycket för sent. Efter varje varv tas medianen av avvikelserna,
+och tidsfönstret flyttas dit; kvar blir spridningen, som är spelarens. Långt
+ifrån tas stora steg, så en okänd fördröjning hittas på ett varv eller två.
+För att en stor fördröjning alls ska synas räknas närmaste ton upp till 350 ms
+bort, också utanför fönstret. Flyttades fördröjningen mycket under ett
+placeringsprov görs provet om — det mätte klockan, inte spelaren. Värdet sparas
+per keyboard och visas bredvid det, tillsammans med den fördröjning
+webbläsaren själv rapporterar (*ljud ut*). Priset: den som jämnt släpar efter
+tolkas som fördröjning, inte som ett timingfel.
+
+I ett test i webbläsaren med en spelare som alltid slår an 280 ms efter
+tonen blev förut varje varv 0 %. Nu görs första provet om och resten går
+igenom.
+
+Spelarens egna toner går genom appens piano (*Mina toner i appen*). De kommer
+alltid så mycket efter tangenten som ljudet ut tar, och det går inte att
+räkna bort. Har keyboardet egna högtalare, stäng av det: då hörs tonen direkt.
+Appen föreslår det vid start när ljudet ut är över 40 ms, och valet sparas
+per keyboard.
 
 ### Missar låter, de tystnar inte
 
