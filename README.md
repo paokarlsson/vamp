@@ -59,6 +59,38 @@ den aldrig, utan måste hitta den ur utfallet. Hon har dessutom dolda svagheter
 (tvåhandsspel, synkopering, svarta tangenter) som motorn ska upptäcka utan att
 någon berättar om dem.
 
+### Grundton, skala och spelsätt
+
+Tre val under Spela-knappen. *Mix* betyder att motorn väljer själv, som förut.
+Valen är filter på det motorn väljer bland: anpassningen fungerar som vanligt,
+bara inom det man valt. De sparas i webbläsaren och kan ändras medan musiken
+går. Då gäller de från nästa varv som inte redan är lagt.
+
+* **Grundton**: vilken som helst av de tolv. Svarta tangenter mäts redan som
+  svårighet, så en tonart med många förtecken syns i nivån.
+* **Skala**: dur, moll, harmonisk moll, dorisk, mixolydisk, pentatonisk dur
+  och moll, blues. Skalan väljer progressionerna (dorisk i–IV, mixolydisk
+  I–bVII, harmonisk moll med V som durackord) och avgör vart en miss faller.
+  Pentatonerna lånar dur- och mollprogressionerna, eftersom ackorden under
+  är desamma.
+* **Spelsätt**: *Mix*, *Ackord och rytm* eller *Brutna ackord*. Varje
+  spelsätt har egna placeringsprov.
+
+**Ackord och rytm är en trappa.** Stegen kommer i ordning, och tre bra varv
+låser upp nästa; två dåliga i rad tar en tillbaka, tyst.
+
+| Steg | Vänster | Höger |
+|---|---|---|
+| 1 Bas och ackord | Bas, hel not | Blockackord |
+| 2 Öppet grepp | Bas, hel not | Mittentonen upp en oktav: C-E-G blir C-G-E' |
+| 3 Växelvis | Bas på de tunga slagen | De två övre tonerna på de lätta |
+| 4 Växelvis med driv | Kvinten på trean | Föregriper nästa ackord på sista "och" |
+| 5 Delat grepp i en hand | Bas, hel not | Undre tonen på tunga slag, de övre på lätta |
+
+Ordningen följer den uppmätta svårigheten. Att dela greppet i en hand mäts
+som svårast, eftersom handen måste flytta sig en decima varje slag. Ett nytt
+steg kommer i det tempo målnivån räcker till, så det börjar lugnt.
+
 ---
 
 ## Idén
@@ -89,8 +121,8 @@ Tolv moduler i `index.html`, i den ordning de bygger på varandra:
 |---|---|---|
 | 1 | Teori | Romerska siffror → tonhöjdsklasser. `bVII`, `vi`, `V7`, `iio`. |
 | 2 | Röstföring | Ackord → grepp, via billigaste vägen genom hela progressionen. |
-| 3 | Bibliotek | 16 progressioner som text, 4 dur- och 4 molltonarter. |
-| 4 | Texturer | 14 texturer: grepp → faktiska noter, uttryckt i slag. |
+| 3 | Bibliotek | 25 progressioner som text, åtta skalor, alla tolv grundtoner. |
+| 4 | Texturer | 18 texturer: grepp → faktiska noter, uttryckt i slag. Tre spelsätt. |
 | 5 | Svårighet | Noter → formvektor (12 mått) → ett tal. |
 | 6 | Spelare | Simulerad hand med dolda styrkor och svagheter. |
 | 7 | Motor | Skattning, nio-axlig profil, val av nästa varv. |
@@ -105,7 +137,7 @@ Tolv moduler i `index.html`, i den ordning de bygger på varandra:
 En progression skrivs som en rad text:
 
 ```js
-{ id:"andalus", name:"Andalusisk", mood:"dramatisk", mode:"minor",
+{ id:"andalus", name:"Andalusisk", mood:"dramatisk", scale:"harmonic",
   numerals:["i","VII","VI","V"] }
 ```
 
@@ -136,7 +168,7 @@ inte som synkopering. Synkopering börjar först när slaget före är tomt.
 
 `costOf()` viktar ihop formvektorn till ett tal, och tempot multipliceras in med
 exponent 1,25. En variant = progression × tonart × textur × tempo × taktart ×
-swing, vilket ger 336 varianter per progression och tonart — alla med sin egen
+swing, vilket ger 432 varianter per progression och tonart — alla med sin egen
 mätta svårighet.
 
 **Vikterna i `W` är handsatta gissningar.** De ska skattas ur riktig speldata
