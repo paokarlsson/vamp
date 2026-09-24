@@ -665,7 +665,7 @@ const TEXTURE_IDS = Object.keys(TEXTURES);
 /* Spelsätten. Ett spelsätt är ett urval texturer och sina egna placeringsprov.
    Ackord och rytm är en trappa: stegen kommer i ordning, och nästa låses upp
    när det förra sitter. */
-const LADDER = ["bassTriad","openBlock","oompah","oompahFlow","splitPulse"];
+const LADDER = ["triadWhole","bassTriad","openBlock","oompah","oompahFlow","splitPulse"];
 const STYLES = {
   mix:    { label:"Mix",             textures: TEXTURE_IDS,
             probes:["rootsWhole","rootsQuarter","triadWhole","bassTriad"] },
@@ -982,7 +982,7 @@ function axisWeak(a){ return axisConfidence(a) > 0.4 && engine.axis[a].delta < -
    Byggs på begäran och cachas. */
 const VAR_CACHE = {};
 function variantsOf(textures){
-  const bpms = [64,72,80,88,96,104];
+  const bpms = [56,64,72,80,88,96,104];
   const out = [];
   for (const texture of textures)
     for (const bpm of bpms)
@@ -1020,7 +1020,10 @@ function chooseVariation(){
   /* Mjuk landning först: den spelar ett varv hon redan äger, i dess egen
      progression. Ett progressionsbyte får vänta till varvet efter. */
   const probe = engine.phase === "groove" && engine.probeIn <= 0 && engine.cleanRun >= 2;
-  if (!probe && engine.needsHarbour && engine.safeHarbour && matchesPrefs(engine.safeHarbour)){
+  /* Hamnen måste ligga under det nya målet. Ett varv som satt för en stund
+     sedan kan vara för svårt nu, om det är därför nivån sjönk. */
+  if (!probe && engine.needsHarbour && engine.safeHarbour && matchesPrefs(engine.safeHarbour) &&
+      engine.safeHarbour.level <= engine.target+0.2){
     engine.needsHarbour = false; engine.preview = false;
     return Object.assign({}, engine.safeHarbour, {intent:"harbour"});
   }
@@ -1098,7 +1101,8 @@ function climbLadder(v, acc){
     }
   } else {
     engine.stepGood = 0;
-    if (acc < 0.75 && ++engine.stepBad >= 2 && engine.step > 0){
+    /* ett riktigt dåligt varv räcker; annars två under 80 % i rad */
+    if (acc < 0.8 && (++engine.stepBad >= 2 || acc < 0.6) && engine.step > 0){
       engine.step--; engine.stepBad = 0;
       log(`Tillbaka ett steg: ${TEXTURES[LADDER[engine.step]].label}.`, "down");
     }
@@ -1127,16 +1131,19 @@ function updateEngine(st){
     engine.probeIndex++;
     if (failed || engine.probeIndex >= style().probes.length){
       let passed = 0.8, ceiling = 99;
-      for (const r of engine.probeResults) if (r.acc >= 0.82) passed = r.level;
+      /* Ett prov på 82 % är ett prov man kämpat sig igenom, inte ett man
+         äger. Godkänt kräver 90 %, och skattningen läggs strax över det
+         senast godkända — hellre för lätt i början än för svårt. */
+      for (const r of engine.probeResults) if (r.acc >= 0.9) passed = r.level;
       for (const r of engine.probeResults) if (r.acc < 0.72){ ceiling = r.level-0.4; break; }
-      engine.est = Math.max(1.2, Math.min(passed+1.0, ceiling));
+      engine.est = Math.max(1.2, Math.min(passed+0.5, ceiling));
       engine.target = Math.max(1, engine.est-1.0);
       engine.phase = "zoom"; engine.sigma = 1.15;
       /* trappan börjar på det högsta steget som gick bra i proven */
       engine.step = 0;
       for (const r of engine.probeResults){
         const i = LADDER.indexOf(r.texture);
-        if (r.acc >= 0.82 && i > engine.step) engine.step = i;
+        if (r.acc >= 0.9 && i > engine.step) engine.step = i;
       }
       engine.stepGood = 0; engine.stepBad = 0;
       log(`Placering klar. Skattning ${engine.est.toFixed(1)} — startar på ${engine.target.toFixed(1)}.`, "phase");
@@ -1180,8 +1187,16 @@ function updateEngine(st){
     engine.safeHarbour = Object.assign({}, v, {intent:null});
   }
 
+  /* Ett dåligt varv säger var gränsen går: under det som just spelades.
+     Nästa varv läggs så mycket under som missarna motiverar. */
+  const below = acc < 0.8 ? v.level - (0.3 + (0.8-acc)*2.5) : Infinity;
+  /* Två dåliga av tre är ingen otur. Då följer skattningen med ned direkt,
+     annars drar den upp målet igen varvet efter. */
+  const lately = engine.history.slice(-3, -1).filter(h=>h.acc < 0.8).length;
+  if (acc < 0.8 && lately >= 1) engine.est = Math.max(1, Math.min(engine.est, below+0.4));
+
   if (engine.phase === "zoom"){
-    engine.target = Math.max(1, engine.est-0.4);
+    engine.target = Math.max(1, Math.min(engine.est-0.4, below));
     if (engine.history.length >= (engine.fast?4:6) && engine.sigma < 0.6){
       engine.phase = "groove"; engine.target = engine.est;
       log(`Nivån har satt sig på ${engine.est.toFixed(1)}. Nu bor vi här.`, "phase");
@@ -1208,14 +1223,16 @@ function updateEngine(st){
     engine.cleanRun++;
     if (st.sd < 60 && engine.cleanRun >= 3 && engine.loopsAtLevel >= 3){
       /* har skattningen sprungit ifrån under de rena varven, gå ikapp */
-      engine.target = Math.max(engine.target + 0.45, engine.est - 0.4); engine.est += 0.1;
+      /* ...men aldrig mer än ett litet steg: efter en sänkning ska vägen
+         upp gå i trappsteg, inte i ett hopp tillbaka */
+      engine.target = Math.min(engine.target + 0.8, Math.max(engine.target + 0.45, engine.est - 0.4)); engine.est += 0.1;
       engine.cleanRun = 0; engine.loopsAtLevel = 0;
       log(`Tre rena varv, jämn timing (${Math.round(st.sd)} ms) — höjer till ${engine.target.toFixed(1)}.`, "up");
       caption("Tre rena varv i rad och samlad timing. Ett rent varv kan vara tur; tre betyder att mönstret sitter i handen.");
     }
   } else if (acc < 0.8){
     engine.cleanRun = 0; engine.needsHarbour = true;
-    engine.target = Math.max(1, engine.target-0.3);
+    engine.target = Math.max(1, Math.min(engine.target-0.3, engine.est-0.4, below));
     log(`${Math.round(acc*100)} % — sänker tyst och lägger in något som sitter.`, "down");
     caption("Ingen ruta, ingen fanfar. Musiken rullar vidare och nästa varv blir något hon redan äger.");
   } else engine.cleanRun = 0;
@@ -1230,14 +1247,26 @@ function updateEngine(st){
 
 let ctx=null, master=null, musicGain=null, noiseBuf=null, soundOn=true;
 
-function ensureAudio(){
+function ensureAudio(given){
   if (ctx) return;
   const AC = window.AudioContext || window.webkitAudioContext;
-  ctx = new AC();
-  master = ctx.createGain(); master.gain.value = .9;
+  ctx = given || new AC();
+  /* Kompet ensamt når nästan fullt utslag, och spelarens egna toner läggs
+     ovanpå. Därför: lägre master, kompressor, en hård begränsare och sist
+     en mjuk klippning, så att ingenting någonsin slår i taket och rasslar. */
+  master = ctx.createGain(); master.gain.value = .55;
   const comp = ctx.createDynamicsCompressor();
-  comp.threshold.value = -14; comp.ratio.value = 4;
-  master.connect(comp); comp.connect(ctx.destination);
+  comp.threshold.value = -16; comp.ratio.value = 4; comp.knee.value = 10;
+  const limit = ctx.createDynamicsCompressor();
+  limit.threshold.value = -3; limit.knee.value = 0; limit.ratio.value = 20;
+  limit.attack.value = .001; limit.release.value = .1;
+  const soft = ctx.createWaveShaper(), curve = new Float32Array(1025);
+  for (let i=0;i<curve.length;i++){        /* rak upp till 0,7, sedan en mjuk böj mot 1 */
+    const x = i/512-1, a = Math.abs(x);
+    curve[i] = a <= .7 ? x : Math.sign(x)*(.7 + .3*Math.tanh((a-.7)/.3));
+  }
+  soft.curve = curve;
+  master.connect(comp); comp.connect(limit); limit.connect(soft); soft.connect(ctx.destination);
   musicGain = ctx.createGain(); musicGain.gain.value = soundOn?1:0; musicGain.connect(master);
   ctx.onstatechange = updateTransport;
   const len = ctx.sampleRate*0.5;
@@ -1704,8 +1733,11 @@ function liveOn(note, vel){
   o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(f); f.connect(master);
   g.gain.setValueAtTime(.0001,t);
   g.gain.exponentialRampToValueAtTime(peak,t+.012);
+  /* klingar av som en pianoton även om tangenten hålls — och ett tappat
+     note-off lämnar ingen ton kvar som låter för alltid */
   g.gain.setTargetAtTime(peak*.15,t+.012,.6);
-  o1.start(t); o2.start(t);
+  g.gain.setTargetAtTime(.0001,t+3,1.2);
+  o1.start(t); o2.start(t); o1.stop(t+10); o2.stop(t+10);
   held[note] = {g,o1,o2};
 }
 function liveOff(note){
