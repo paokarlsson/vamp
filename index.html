@@ -523,15 +523,16 @@ function syncoPositions(slot, bpb){
   return out.length ? out : [0];
 }
 
-/* Öppet grepp: mittentonen upp en oktav. C-E-G blir C-G-E', en decima.
-   Med fyra toner lyfts den näst understa. Hamnar toppen för högt flyttas
-   hela greppet ned en oktav. `low` är den undre tonen, `up` de övre. */
-function openGrip(rh){
+/* De övre tonerna i ett öppet grepp: mittentonen upp en oktav, undre tonen
+   bort. C-E-G ger G-E'. Med fyra toner lyfts den näst understa. Hamnar
+   toppen för högt flyttas allt ned en oktav. Det ryms alltid inom en oktav.
+   Hela det öppna greppet, en decima, spelas aldrig av en hand: ingen textur
+   får kräva att handen spänner över mer än en oktav i samma ackord. */
+function upperGrip(rh){
   const v = rh.slice().sort((a,b)=>a-b);
-  const g = [v[0]].concat(v.slice(2), [v[1]+12]);
-  const shift = g[g.length-1] > 86 ? -12 : 0;
-  const o = g.map(m=>m+shift);
-  return { all:o, low:o[0], up:o.slice(1) };
+  const up = v.slice(2).concat([v[1]+12]);
+  const shift = up[up.length-1] > 86 ? -12 : 0;
+  return up.map(m=>m+shift);
 }
 
 /* Ackordets grundton i höger hands läge: den som ligger närmast greppets
@@ -542,6 +543,71 @@ function rootNear(s){
   let m = lo - (((lo - s.pcs[0]) % 12) + 12) % 12;
   if (lo - m > 6) m += 12;
   return m;
+}
+
+/* Fingersättning, ur noterna: 1 är tummen och 5 lillfingret, i båda
+   händerna. Räknas för alla texturer men visas bara där spelsättet ber om
+   det. MIDI säger inte vilket finger som tog tangenten, så den visas bara,
+   den bedöms aldrig.
+
+   Grepp: höger hand tar undre tonen med 1 och övre med 5, vänster tvärtom.
+   Mittentonen i en treklang tar 3, utom när höger hand har tersen underst
+   (C-dur: E-G-C, 1-2-5) och vänster har kvinten underst (G-C-E, 5-2-1). Två
+   toner får fingrar efter avståndet: en kvint är 1-5, en ters 1-3.
+   Enstaka toner: handen läggs i ett femtonsläge och ligger kvar så länge
+   tonerna ryms, räknat i vita tangenter. Först när en ton inte ryms flyttas
+   handen, till det läge som rymmer flest av tonerna som kommer. */
+const WHITE_PC = [0,2,4,5,7,9,11];
+function whiteIdx(m){
+  const pc = ((m%12)+12)%12;
+  let i = 0; while (i < 6 && WHITE_PC[i+1] <= pc) i++;
+  return Math.floor(m/12)*7 + i + (isBlack(m) ? .5 : 0);
+}
+function fingerEvents(events, slots){
+  const slotAt = b => slots.find(s=>b >= s.start-1e-6 && b < s.start+s.beats-1e-6) || slots[slots.length-1];
+  for (const hand of ["R","L"]){
+    const R = hand === "R", byTime = {};
+    for (const e of events) if (e.hand === hand) (byTime[e.b.toFixed(3)] = byTime[e.b.toFixed(3)] || []).push(e);
+    const onsets = Object.keys(byTime).map(k=>byTime[k].sort((a,b)=>a.midi-b.midi)).sort((a,b)=>a[0].b-b[0].b);
+    const singles = [];
+    for (const g of onsets){
+      const n = g.length;
+      if (n === 1){ singles.push(g[0]); continue; }
+      g[0].finger = R ? 1 : 5; g[n-1].finger = R ? 5 : 1;
+      if (n === 2){
+        const reach = 1 + Math.min(4, Math.round(whiteIdx(g[1].midi) - whiteIdx(g[0].midi)));
+        if (R) g[1].finger = reach; else g[0].finger = reach;
+      } else if (n === 3){
+        const pcs = slotAt(g[0].b).pcs, low = ((g[0].midi%12)+12)%12;
+        g[1].finger = (R && low === pcs[1]) || (!R && low === pcs[2]) ? 2 : 3;
+      } else for (let i=1; i<n-1; i++) g[i].finger = R ? 1+i : n-i;   /* 1-2-3-5, 5-3-2-1 */
+    }
+    /* Hur många toner i rad, från i och runt loopen, som ryms i läget. */
+    const fits = (i, lo) => {
+      let k = 0;
+      while (k < singles.length){
+        const w = whiteIdx(singles[(i+k) % singles.length].midi);
+        if (w < lo || w > lo+4) break;
+        k++;
+      }
+      return k;
+    };
+    let lo = null;                        /* femtonslägets undre vita tangent */
+    singles.forEach((e, i)=>{
+      const w = whiteIdx(e.midi);
+      if (lo === null || w < lo || w > lo+4){
+        /* läget som rymmer flest av tonerna som kommer; lika långt vinner
+           det med tonen på tummen (höger) eller lillfingret (vänster) */
+        let best = -1;
+        for (let d=0; d<=4; d++){
+          const n = fits(i, Math.floor(w)-d);
+          if (n > best){ best = n; lo = Math.floor(w)-d; }
+        }
+      }
+      e.finger = Math.max(1, Math.min(5, Math.round(R ? w-lo+1 : lo+5-w)));
+    });
+  }
+  return events;
 }
 
 /* Slagen i en ackordplats som är taktens tunga slag: 1 och 3 i 4/4, 1 i 3/4. */
@@ -615,25 +681,16 @@ const TEXTURES = {
     S.forEach(s=>{ e.push({b:s.start,dur:s.beats*0.9,midi:s.bass,hand:"L"});
       for(let k=0;k<s.beats;k++) e.push({b:s.start+k,dur:.85,midi:s.rh[p[k%4]%s.rh.length],hand:"R"}); }); return e; } },
 
-  wide: { label:"Vidgat grepp", gen:(S)=>{
-    const e=[]; S.forEach(s=>{ for(let k=0;k<s.beats;k++){
-      e.push({b:s.start+k,dur:.85,midi:s.rh[0],hand:"R"});
-      e.push({b:s.start+k,dur:.85,midi:s.rh[1]+12,hand:"R"}); } }); return e; } },
-
   /* ---- Ackord och rytm: en trappa där varje steg ändrar en sak ---- */
-
-  openBlock: { label:"Öppet grepp", gen:(S)=>{
-    const e=[]; S.forEach(s=>{ e.push({b:s.start,dur:s.beats*0.9,midi:s.bass,hand:"L"});
-      openGrip(s.rh).all.forEach(m=>e.push({b:s.start,dur:s.beats*0.9,midi:m,hand:"R"})); }); return e; } },
 
   /* Händerna turas om: bas på de tunga slagen, två toner på de lätta. */
   oompah: { label:"Bas och ackord växelvis", gen:(S,bpb)=>{
     const e=[];
-    S.forEach(s=>{ const g = openGrip(s.rh);
+    S.forEach(s=>{ const up = upperGrip(s.rh);
       for (let k=0;k<s.beats;k++){
         const b = s.start+k;
         if (heavy(b,bpb)) e.push({b,dur:.9,midi:s.bass,hand:"L"});
-        else g.up.forEach(m=>e.push({b,dur:.8,midi:m,hand:"R"}));
+        else up.forEach(m=>e.push({b,dur:.8,midi:m,hand:"R"}));
       } });
     return e; } },
 
@@ -641,28 +698,14 @@ const TEXTURES = {
      nästa ackord — högern landar före ettan och vänstern tar den. */
   oompahFlow: { label:"Växelvis med driv", gen:(S,bpb)=>{
     const e=[];
-    S.forEach((s,i)=>{ const g = openGrip(s.rh), next = openGrip(S[(i+1)%S.length].rh);
+    S.forEach((s,i)=>{ const up = upperGrip(s.rh), next = upperGrip(S[(i+1)%S.length].rh);
       for (let k=0;k<s.beats;k++){
         const b = s.start+k, pos = ((b % bpb) + bpb) % bpb;
         if (heavy(b,bpb)) e.push({b,dur:.9,midi: pos===0 ? s.bass : s.bass+7,hand:"L"});
-        else g.up.forEach(m=>e.push({b,dur:.45,midi:m,hand:"R"}));
+        else up.forEach(m=>e.push({b,dur:.45,midi:m,hand:"R"}));
       }
-      next.up.forEach(m=>e.push({b:s.start+s.beats-0.5,dur:.45,midi:m,hand:"R"}));
+      next.forEach(m=>e.push({b:s.start+s.beats-0.5,dur:.45,midi:m,hand:"R"}));
     });
-    return e; } },
-
-  /* Samma växling som ovan, men i en hand: undre tonen på de tunga slagen,
-     de övre på de lätta. Handen spänner aldrig över decimen i ett och samma
-     anslag, men måste flytta sig varje slag — därför sist i trappan. */
-  splitPulse: { label:"Delat grepp i en hand", gen:(S,bpb)=>{
-    const e=[];
-    S.forEach(s=>{ const g = openGrip(s.rh);
-      e.push({b:s.start,dur:s.beats*0.9,midi:s.bass,hand:"L"});
-      for (let k=0;k<s.beats;k++){
-        const b = s.start+k;
-        if (heavy(b,bpb)) e.push({b,dur:.85,midi:g.low,hand:"R"});
-        else g.up.forEach(m=>e.push({b,dur:.85,midi:m,hand:"R"}));
-      } });
     return e; } },
 
   syncoSingle: { label:"Synkoperad enstämmig", gen:(S,bpb)=>{
@@ -690,8 +733,8 @@ const TEXTURE_IDS = Object.keys(TEXTURES);
    Ett spelsätt kan också begränsa resten: `progs` (egna progressioner, och då
    bara vita tangenter), `bpms`, `meters`, `swing` och `probeBpm`. `calm`
    betyder att samma varv gärna får gå igen: tempot byts när nivån flyttar
-   sig, inte för omväxlingens skull. */
-const LADDER = ["triadWhole","bassRoot","bassTriad","openBlock","oompah","oompahFlow","splitPulse"];
+   sig, inte för omväxlingens skull. `fingers` visar fingersättningen på noterna. */
+const LADDER = ["triadWhole","bassRoot","bassTriad","oompah","oompahFlow"];
 const STYLES = {
   mix:    { label:"Mix",             textures: TEXTURE_IDS,
             probes:["rootsWhole","rootsQuarter","triadWhole","bassTriad"] },
@@ -704,9 +747,9 @@ const STYLES = {
             textures:["rootsWhole","rootsQuarter","rootFifth","triadWhole","bassRoot","bassTriad"], ladder:true,
             probes:["rootsWhole","rootsQuarter","rootFifth","triadWhole"],
             progs:["vamp-dur","tre","vamp-moll","doowop","axeln","mollvamp"],
-            bpms:[56,64,72,80], meters:[4], swing:false, probeBpm:64, calm:true },
+            bpms:[56,64,72,80], meters:[4], swing:false, probeBpm:64, calm:true, fingers:true },
   rhythm: { label:"Ackord och rytm", textures: LADDER, ladder:true,
-            probes:["triadWhole","bassTriad","openBlock","oompah"] },
+            probes:["triadWhole","bassTriad","oompah","oompahFlow"] },
   broken: { label:"Brutna ackord",   textures:["brokenQuarter","bassBroken","brokenEighth","alberti"],
             probes:["brokenQuarter","bassBroken","brokenEighth","alberti"] }
 };
@@ -829,7 +872,7 @@ function buildVariation(v){
   const bpb = v.meter;
   const spb = 60/v.bpm;
   const slots = slotsFor(mat, bpb);
-  const events = TEXTURES[v.texture].gen(slots, bpb);
+  const events = fingerEvents(TEXTURES[v.texture].gen(slots, bpb), slots);
   const shape = shapeOf(events, spb, bpb);
   shape.tempoFactor = v.bpm/80;
   const cost = costOf(shape) * Math.pow(v.bpm/80, 1.25) + (v.swing ? 0.35 : 0);
@@ -1945,6 +1988,7 @@ function drawLane(){
     if (y>0 && y<laneH){ lctx.beginPath(); lctx.moveTo(0,y); lctx.lineTo(W,y); lctx.stroke(); }
   }
 
+  const fingers = !!style().fingers;
   for (const loop of state.loops) for (const ev of loop.events){
     if (ev.ghost && !ev.flashed && now >= ev.tPlay){
       ev.flashed = true;
@@ -1968,6 +2012,13 @@ function drawLane(){
       lctx.lineTo(x+rad,yy+hh); lctx.quadraticCurveTo(x,yy+hh,x,yy+hh-rad);
       lctx.lineTo(x,yy+rad); lctx.quadraticCurveTo(x,yy,x+rad,yy);
       lctx.fill();
+      /* Fingret står längst ned i noten, den del som når tangenten först. */
+      if (fingers && ev.finger && !ev.ghost && bh >= 14 && ww >= 9){
+        lctx.fillStyle = "#16242b";
+        lctx.font = `700 ${Math.min(14, ww*.8).toFixed(1)}px "IBM Plex Sans",system-ui,sans-serif`;
+        lctx.textAlign = "center"; lctx.textBaseline = "alphabetic";
+        lctx.fillText(ev.finger, x+ww/2, yy+hh-4);
+      }
     }
   }
 
@@ -2145,6 +2196,7 @@ function begin(){
      behövs de inte alls. */
   if (midi.inputs.length && midi.echo && latency() > .04)
     el("caption").textContent = `Ljudet ut har ${Math.round(latency()*1000)} ms fördröjning, så dina toner i appen kommer efter tangenten. Har keyboardet egna högtalare: slå av "Mina toner i appen".`;
+  if (style().fingers) el("caption").textContent += " Siffran på noten är fingret: 1 är tummen, 5 är lillfingret.";
   captionUntil = ctx.currentTime+10;
   updateTransport();
   fitSelection(true);

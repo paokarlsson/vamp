@@ -75,6 +75,10 @@ går. Då gäller de från nästa varv som inte redan är lagt.
 * **Spelsätt**: *Mix*, *Nybörjare*, *Ackord och rytm* eller *Brutna ackord*.
   Varje spelsätt har egna placeringsprov.
 
+**Ingen hand spänner över mer än en oktav** inom ett och samma ackord, i
+något spelsätt. Därför finns inte längre öppet grepp i en hand (C-G-E', en
+decima), vidgat grepp eller delat grepp i en hand.
+
 **Nybörjare är för barn och den som aldrig spelat.** Också det är en trappa,
 med samma regler som den nedan, men allt runt omkring är enklare:
 
@@ -82,6 +86,12 @@ med samma regler som den nedan, men allt runt omkring är enklare:
   och A-moll, och den första är C–F. Grundton och skala går inte att välja.
 * **Lugnt tempo:** 56–80 bpm, provet på 64. Bara rak 4/4, ingen swing.
 * **Små händer.** Inget grepp är bredare än en sext, så oktavbasen är inte med.
+* **Fingersättning på noterna.** Siffran i noten är fingret: 1 är tummen,
+  5 lillfingret. Grepp får skolboksfingrar (C-E-G 1-3-5, E-G-C 1-2-5, vänster
+  hand spegelvänt). Enstaka toner spelas i ett femtonsläge som ligger kvar så
+  länge tonerna ryms, så C–F–G–F blir 1-4-5-4 utan att handen flyttar sig.
+  MIDI säger inte vilket finger som tog tangenten, så fingret visas men
+  bedöms inte.
 * **Samma varv får gå igen.** Tempot byts när nivån flyttar sig, inte för
   omväxlingens skull.
 
@@ -105,13 +115,10 @@ under 60 % räcker.
 | 1 Blockackord | — | Blockackord |
 | 2 Bas och grundton | Bas, hel not | Grundtonen, hel not |
 | 3 Bas och ackord | Bas, hel not | Blockackord |
-| 4 Öppet grepp | Bas, hel not | Mittentonen upp en oktav: C-E-G blir C-G-E' |
-| 5 Växelvis | Bas på de tunga slagen | De två övre tonerna på de lätta |
-| 6 Växelvis med driv | Kvinten på trean | Föregriper nästa ackord på sista "och" |
-| 7 Delat grepp i en hand | Bas, hel not | Undre tonen på tunga slag, de övre på lätta |
+| 4 Växelvis | Bas på de tunga slagen | Två övre toner på de lätta: C-E-G ger G-E' |
+| 5 Växelvis med driv | Kvinten på trean | Föregriper nästa ackord på sista "och" |
 
-Ordningen följer den uppmätta svårigheten. Att dela greppet i en hand mäts
-som svårast, eftersom handen måste flytta sig en decima varje slag. Steg 2
+Ordningen följer den uppmätta svårigheten. Steg 2
 finns för att andra handen annars kommer in med ett helt ackord på en gång,
 det största hoppet i trappan: där får den i stället en ton i varje hand. Ett nytt
 steg kommer i det tempo målnivån räcker till, så det börjar lugnt.
@@ -147,7 +154,7 @@ Tolv moduler i `index.html`, i den ordning de bygger på varandra:
 | 1 | Teori | Romerska siffror → tonhöjdsklasser. `bVII`, `vi`, `V7`, `iio`. |
 | 2 | Röstföring | Ackord → grepp, via billigaste vägen genom hela progressionen. |
 | 3 | Bibliotek | 25 progressioner som text, åtta skalor, alla tolv grundtoner. |
-| 4 | Texturer | 21 texturer: grepp → faktiska noter, uttryckt i slag. Tre spelsätt. |
+| 4 | Texturer | 18 texturer: grepp → faktiska noter, uttryckt i slag. Tre spelsätt. |
 | 5 | Svårighet | Noter → formvektor (12 mått) → ett tal. |
 | 6 | Axlar | Vad ett varv belastar, axel för axel. |
 | 7 | Motor | Skattning, nio-axlig profil, val av nästa varv. |
@@ -200,7 +207,7 @@ inte som synkopering. Synkopering börjar först när slaget före är tomt.
 
 `costOf()` viktar ihop formvektorn till ett tal, och tempot multipliceras in med
 exponent 1,25. En variant = progression × tonart × textur × tempo × taktart ×
-swing, vilket ger 588 varianter per progression och tonart — alla med sin egen
+swing, vilket ger 504 varianter per progression och tonart — alla med sin egen
 mätta svårighet.
 
 **Vikterna i `W` är handsatta gissningar.** De ska skattas ur riktig speldata
