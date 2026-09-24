@@ -1123,6 +1123,12 @@ function updateEngine(st){
   engine.energy = Math.max(.15, Math.min(1, .25 + engine.layers*.15 + (acc-.8)));
 
   if (engine.phase === "placement"){
+    /* Flyttades fördröjningen mycket mätte provet klockan, inte spelaren.
+       Då görs det om. */
+    if (acc < 0.9 && Math.abs(st.lagMoved) > .05){
+      log(`Prov ${engine.probeIndex+1} görs om — tiden var inte inställd än.`);
+      return;
+    }
     engine.probeResults.push({level:v.level, acc, texture:v.texture});
     log(`Prov ${engine.probeIndex+1}: ${TEXTURES[v.texture].label} — ${Math.round(acc*100)} %`);
     /* Provens första tre takter har ibland bara tre toner. En enda miss är
@@ -1469,6 +1475,8 @@ function commitLoop(loop){
   const after = done.filter(e=>e.after);
   const rec = after.length ? after.filter(e=>!e.hit).length/after.length : null;
 
+  const lagMoved = loop.real ? learnLag() : 0;
+
   const k = varKey(loop.v);
   player.familiarity[k] = (player.familiarity[k]||0)+1;
   engine.recent.unshift(k); if (engine.recent.length>7) engine.recent.pop();
@@ -1478,7 +1486,7 @@ function commitLoop(loop){
   engine.recentTex.unshift(loop.v.texture); if (engine.recentTex.length>4) engine.recentTex.pop();
   engine.history.push({level:loop.v.level, acc, sd, est:engine.est});
 
-  updateEngine({acc, sd, total, missed:total-hits});
+  updateEngine({acc, sd, total, missed:total-hits, lagMoved});
   updatePanels(acc, sd, rec, loop.v);
 
   const limit = {demo:186, free:300}[state.mode] || Infinity;
@@ -1578,7 +1586,7 @@ function onMidi(e){
     if (e.target && e.target.name && e.target.name !== kb.name){ kb.name = e.target.name; applyRange(); }
     if (kb.measuring){ measureKey(note); return; }
     learnKey(note);
-    noteOn(note, vel, e.timeStamp || performance.now(), midi.echo);
+    noteOn(note, vel, e.timeStamp || performance.now(), midi.echo, (e.target && e.target.name) || kb.name || "MIDI");
   }
   else if (cmd === 0x80 || cmd === 0x90) noteOff(note);
 }
@@ -1620,7 +1628,12 @@ function kbRange(){
   }
   return r;
 }
-function applyRange(){ const r = kbRange(); setRange(r[0], r[1]); updateDevice(); }
+function applyRange(){
+  const r = kbRange(); setRange(r[0], r[1]);
+  const st = kb.name && kbStore()[kb.name];
+  if (st && st.echo !== undefined){ midi.echo = st.echo; el("echo").checked = st.echo; }
+  updateDevice();
+}
 function learnKey(note){
   if (!kb.name) return;
   const st = kbStore()[kb.name] || {}, p = st.played || [note, note];
@@ -1669,14 +1682,15 @@ function typeDown(e){
   e.preventDefault();                      /* t.ex. snabbsök i Firefox */
   if (e.repeat || typed.has(e.code)) return;
   typed.add(e.code);
-  noteOn(note, 90, e.timeStamp || performance.now(), true);
+  noteOn(note, 90, e.timeStamp || performance.now(), true, TYPE_SRC);
 }
 function typeUp(e){ if (typed.delete(e.code)) noteOff(typeNote[e.code]); }
 /* Tappar sidan fokus kommer inga keyup — släpp allt som hålls. */
 function typeRelease(){ for (const code of typed) noteOff(typeNote[code]); typed.clear(); }
 
-function noteOn(note, vel, perfMs, echo){
+function noteOn(note, vel, perfMs, echo, src){
   ensureAudio();
+  useSource(src);
   if (ctx.state !== "running"){
     if (state.started) return;             /* pausat: inget låter, inget räknas */
     ctx.resume();
@@ -1703,20 +1717,59 @@ function releaseAll(){
   for (const n of Object.keys(Object.assign({}, held, lit))) noteOff(+n);
 }
 
+/* Fördröjning som ingen rapporterar. Webbläsaren vet ofta inte hur lång tid
+   ljudet tar genom Bluetooth-hörlurar eller en extern ljudenhet, och ett
+   MIDI-keyboard har sin egen. Allt sådant syns som att varje anslag kommer
+   lika mycket för sent. Den delen lär sig appen: medianen av avvikelserna i
+   varje varv, och tidsfönstret flyttas dit. Kvar blir spridningen — den är
+   spelarens. Värdet sparas per keyboard. */
+const TYPE_SRC = "datorns tangentbord";
+const timing = { src:null, lag:0, logged:0, samples:[] };
+function useSource(src){
+  if (!src || timing.src === src) return;
+  timing.src = src;
+  timing.lag = timing.logged = (kbStore()[src] || {}).lag || 0;
+  timing.samples = [];
+  updateDevice();
+}
+/* Returnerar hur mycket fördröjningen flyttades. Långt ifrån tas större
+   steg, så att en okänd Bluetooth-fördröjning hittas på ett par varv. */
+function learnLag(){
+  const xs = timing.samples.sort((a,b)=>a-b);
+  timing.samples = [];
+  if (xs.length < 3 || !timing.src) return 0;
+  const med = xs[xs.length>>1], was = timing.lag;
+  const rate = Math.abs(med - was) > .08 ? .8 : .35;
+  timing.lag = Math.max(-.05, Math.min(.3, was + rate*(med - was)));
+  kbSave(timing.src, {lag: timing.lag});
+  if (Math.abs(timing.lag - timing.logged) > .04){
+    timing.logged = timing.lag;
+    log(`Anslagen kommer jämnt ${Math.round(timing.lag*1000)} ms efter — räknar med det som fördröjning.`);
+    updateDevice();
+  }
+  return timing.lag - was;
+}
+
 function matchPress(note, tp){
-  let best = null, bestCost = Infinity, home = null;
+  let best = null, bestCost = Infinity, home = null, near = null;
+  const tc = tp - timing.lag;
   for (const loop of state.loops){
     if (!loop.real) continue;
     if (tp >= loop.t0 && tp < loop.t1) home = loop;
     for (const ev of loop.events){
       if (ev.ghost || ev.hit || (ev.midi-note) % 12 !== 0) continue;
-      const d = Math.abs(tp - ev.t);
+      /* till inlärningen: närmaste ton även utanför fönstret, annars kan
+         en stor fördröjning aldrig upptäckas */
+      const raw = tp - ev.t;
+      if (Math.abs(raw - timing.lag) < .35 && (near === null || Math.abs(raw - timing.lag) < Math.abs(near - timing.lag))) near = raw;
+      const d = Math.abs(tc - ev.t);
       if (d > loop.win) continue;
       const cost = d + (fold(ev.midi) === note ? 0 : .04);   /* tangenten den visas på vinner på lika villkor */
       if (cost < bestCost){ best = ev; bestCost = cost; }
     }
   }
-  if (best){ best.hit = true; best.dt = (tp - best.t)*1000; return best; }
+  if (near !== null) timing.samples.push(near);
+  if (best){ best.hit = true; best.dt = (tc - best.t)*1000; return best; }
   if (home) home.extras.push(tp);
   return null;
 }
@@ -2058,6 +2111,11 @@ function begin(mode){
     el("caption").textContent = midi.inputs.length
       ? "Spela tonerna när de når tangenterna. Oktaven spelar ingen roll."
       : "Spela tonerna när de når tangenterna, med datortangenten som står på dem. Oktaven spelar ingen roll.";
+    /* Egna toner genom appen kommer alltid så mycket efter som ljudet ut tar.
+       Det går inte att räkna bort — men har keyboardet egna högtalare
+       behövs de inte alls. */
+    if (midi.inputs.length && midi.echo && latency() > .04)
+      el("caption").textContent = `Ljudet ut har ${Math.round(latency()*1000)} ms fördröjning, så dina toner i appen kommer efter tangenten. Har keyboardet egna högtalare: slå av "Mina toner i appen".`;
     captionUntil = ctx.currentTime+10;
   }
   updateTransport();
@@ -2114,6 +2172,11 @@ function updateDevice(){
   else s.textContent = midi.inputs.map(i=>i.name).join(", ") + (kb.source === "standard"
     ? " · storleken okänd"
     : ` · ${HIGH-LOW+1} tangenter (${kb.source === "från namnet" ? "gissat från namnet" : kb.source})`);
+  /* fördröjningen: den webbläsaren rapporterar, och den appen lärt sig */
+  const lat = [];
+  if (ctx) lat.push(`ljud ut ${Math.round(latency()*1000)} ms`);
+  if (Math.abs(timing.lag) >= .01) lat.push(`inlärd fördröjning ${Math.round(timing.lag*1000)} ms`);
+  if (lat.length) s.textContent += " · " + lat.join(" · ");
 }
 
 el("btn-play").addEventListener("click", togglePlay);
@@ -2149,7 +2212,10 @@ if ("wakeLock" in navigator){
   el("btn-wake").addEventListener("click", ()=>setWake(!wake.on));
   document.addEventListener("visibilitychange", applyWake);
 }
-el("echo").addEventListener("change", e=>{ midi.echo = e.target.checked; });
+el("echo").addEventListener("change", e=>{
+  midi.echo = e.target.checked;
+  if (kb.name) kbSave(kb.name, {echo: midi.echo});   /* sparas per keyboard */
+});
 
 /* Grundton, skala och spelsätt. Ändras de medan musiken går gäller de
    från nästa varv som inte redan är lagt — musiken stannar aldrig. */
