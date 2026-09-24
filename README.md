@@ -72,8 +72,29 @@ går. Då gäller de från nästa varv som inte redan är lagt.
   I–bVII, harmonisk moll med V som durackord) och avgör vart en miss faller.
   Pentatonerna lånar dur- och mollprogressionerna, eftersom ackorden under
   är desamma.
-* **Spelsätt**: *Mix*, *Ackord och rytm* eller *Brutna ackord*. Varje
-  spelsätt har egna placeringsprov.
+* **Spelsätt**: *Mix*, *Nybörjare*, *Ackord och rytm* eller *Brutna ackord*.
+  Varje spelsätt har egna placeringsprov.
+
+**Nybörjare är för barn och den som aldrig spelat.** Också det är en trappa,
+med samma regler som den nedan, men allt runt omkring är enklare:
+
+* **Bara vita tangenter.** Sex progressioner med två till fyra ackord i C-dur
+  och A-moll, och den första är C–F. Grundton och skala går inte att välja.
+* **Lugnt tempo:** 56–80 bpm, provet på 64. Bara rak 4/4, ingen swing.
+* **Små händer.** Inget grepp är bredare än en sext, så oktavbasen är inte med.
+* **Samma varv får gå igen.** Tempot byts när nivån flyttar sig, inte för
+  omväxlingens skull.
+
+| Steg | Vänster | Höger |
+|---|---|---|
+| 1 Grundton | — | Grundtonen, hel not |
+| 2 Grundton i fjärdedelar | — | Grundtonen på varje slag |
+| 3 Grundton och kvint | — | Två toner, ett powerchord |
+| 4 Blockackord | — | Blockackord |
+| 5 Bas och grundton | Bas, hel not | Grundtonen, hel not |
+| 6 Bas och ackord | Bas, hel not | Blockackord |
+
+Efter steg 6 är nästa ställe *Ackord och rytm*, som börjar på blockackord.
 
 **Ackord och rytm är en trappa.** Stegen kommer i ordning, och tre bra varv
 låser upp nästa. Två varv under 80 % i rad tar en tillbaka, tyst, och ett
