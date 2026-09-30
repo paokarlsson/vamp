@@ -1812,25 +1812,28 @@ function tick(t,accent){ if(!ctx)return;
   g.gain.setValueAtTime(accent?.3:.18,t); g.gain.exponentialRampToValueAtTime(.0001,t+.05);
   o.connect(g); g.connect(musicGain); o.start(t); o.stop(t+.06); freeAfter([o],[g]); }
 /* Knäppt bas: filtret öppnar i anslaget och stänger sig, så tonen får en
-   attack och sedan en rund kropp. En sinus på samma ton ger botten — en
-   oktav under hamnade den på 16–41 Hz, infraljud som inga små högtalare
-   återger men som tar plats i kompressorn och får membranen att rassla.
+   attack och sedan en rund kropp. Basens grundton ligger på 33–82 Hz, där
+   små högtalare inte ger något ljud men membranet slår som mest — basen
+   hördes minst av allt i bandet och skakade högtalaren mest. Därför bär
+   övertonerna tonen: en sågtand, som har dem alla, genom lågpasset, och ett
+   högpass som tar ned grundtonen på de lägsta tonerna. Örat hör ändå
+   grundtonen ur övertonerna, och membranet vilar.
    En kort ton hinner inte hela avklingningen: kroppen kortas så att den
    alltid är klar innan tonen släpps, annars hoppar nivån. */
 function bassNote(t,midi,dur,vel){ if(!ctx)return;
   vel = vel === undefined ? 1 : vel;
-  const o=ctx.createOscillator(), sub=ctx.createOscillator(), sg=ctx.createGain();
-  const g=ctx.createGain(), f=ctx.createBiquadFilter();
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  const f=ctx.createBiquadFilter(), hp=ctx.createBiquadFilter();
   f.type="lowpass"; f.Q.value=2;
   f.frequency.setValueAtTime(380+900*vel,t); f.frequency.exponentialRampToValueAtTime(360,t+.2);
-  o.type="triangle"; o.frequency.value=mtof(midi-12);
-  sub.type="sine"; sub.frequency.value=mtof(midi-12); sg.gain.value=.35;
+  hp.type="highpass"; hp.frequency.value=70; hp.Q.value=.7;
+  o.type="sawtooth"; o.frequency.value=mtof(midi-12);
   const end = t+Math.max(.12,dur), body = Math.min(.16, end-t-.06);
-  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.18*vel,t+.012);
-  g.gain.exponentialRampToValueAtTime(.11*vel,t+body);
-  g.gain.setValueAtTime(.11*vel,end-.05); g.gain.exponentialRampToValueAtTime(.0001,end);
-  o.connect(g); sub.connect(sg); sg.connect(g); g.connect(f); f.connect(musicGain);
-  o.start(t); sub.start(t); o.stop(end+.05); sub.stop(end+.05); freeAfter([o,sub],[sg,g,f]); }
+  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.1*vel,t+.012);
+  g.gain.exponentialRampToValueAtTime(.06*vel,t+body);
+  g.gain.setValueAtTime(.06*vel,end-.05); g.gain.exponentialRampToValueAtTime(.0001,end);
+  o.connect(g); g.connect(f); f.connect(hp); hp.connect(musicGain);
+  o.start(t); o.stop(end+.05); freeAfter([o],[g,f,hp]); }
 
 /* Basgången. Grundton på ettan, kvint och oktav däremellan, och slaget
    före ett ackordbyte leder in i nästa grundton med ett halvtonssteg —
