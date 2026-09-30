@@ -1635,17 +1635,24 @@ function ensureAudio(given){
   ctx = given || new AC();
   /* Kompet ensamt når nästan fullt utslag, och spelarens egna toner läggs
      ovanpå. Därför: lägre master, kompressor, en hård begränsare och sist
-     en mjuk klippning, så att ingenting någonsin slår i taket och rasslar. */
-  master = ctx.createGain(); master.gain.value = .55;
+     en mjuk klippning, så att ingenting någonsin slår i taket och rasslar.
+     Kompressorn ska bara hålla ihop bandet. Tar den i hårt och snabbt drar
+     bastrumman ned den på varje etta, så fort att förstärkningen följer
+     basens svängningar — och allt som klingar samtidigt, ackordet du just
+     slog an, får ett raspigt skorr. Därför 2:1 och 15 ms attack; topparna
+     är begränsarens. Webbläsaren höjer själv nivån efter en kompressor, mer
+     ju hårdare den tar, så mastern är avvägd mot det. */
+  master = ctx.createGain(); master.gain.value = .45;
   const comp = ctx.createDynamicsCompressor();
-  comp.threshold.value = -16; comp.ratio.value = 4; comp.knee.value = 10;
+  comp.threshold.value = -14; comp.ratio.value = 2; comp.knee.value = 12;
+  comp.attack.value = .015; comp.release.value = .25;
   const limit = ctx.createDynamicsCompressor();
-  limit.threshold.value = -3; limit.knee.value = 0; limit.ratio.value = 20;
-  limit.attack.value = .001; limit.release.value = .1;
+  limit.threshold.value = -4; limit.knee.value = 0; limit.ratio.value = 20;
+  limit.attack.value = .002; limit.release.value = .25;
   const soft = ctx.createWaveShaper(), curve = new Float32Array(1025);
-  for (let i=0;i<curve.length;i++){        /* rak upp till 0,7, sedan en mjuk böj mot 1 */
+  for (let i=0;i<curve.length;i++){        /* rak upp till 0,8, sedan en mjuk böj mot 1 */
     const x = i/512-1, a = Math.abs(x);
-    curve[i] = a <= .7 ? x : Math.sign(x)*(.7 + .3*Math.tanh((a-.7)/.3));
+    curve[i] = a <= .8 ? x : Math.sign(x)*(.8 + .2*Math.tanh((a-.8)/.2));
   }
   soft.curve = curve;
   master.connect(comp); comp.connect(limit); limit.connect(soft); soft.connect(ctx.destination);
@@ -1744,7 +1751,9 @@ function piano(t,midi,dur,gain){
 function pad(t,midis,dur,open){
   if (!ctx) return;
   const g=ctx.createGain(), f=ctx.createBiquadFilter();
-  f.type="lowpass"; f.frequency.setValueAtTime(400+open*1900,t); f.Q.value=.7;
+  /* Filtret öppnar med energin, men inte så långt att sågtänderna surrar
+     under pianot. */
+  f.type="lowpass"; f.frequency.setValueAtTime(400+open*1400,t); f.Q.value=.7;
   g.connect(f); f.connect(musicGain);
   /* Anslaget måste höras på slaget. En exponentiell svällning ligger nära
      noll större delen av tiden och hördes först 350 ms efter ettan. Nu:
@@ -1769,7 +1778,7 @@ function pad(t,midis,dur,open){
 function kick(t,v){ if(!ctx)return;
   const o=ctx.createOscillator(), g=ctx.createGain();
   o.frequency.setValueAtTime(125,t); o.frequency.exponentialRampToValueAtTime(44,t+.11);
-  g.gain.setValueAtTime(v*.85,t); g.gain.exponentialRampToValueAtTime(.0001,t+.22);
+  g.gain.setValueAtTime(v*.5,t); g.gain.exponentialRampToValueAtTime(.0001,t+.22);
   o.connect(g); g.connect(musicGain); o.start(t); o.stop(t+.25); freeAfter([o],[g]); }
 function noiseHit(t,v,hp,dur){ if(!ctx||!noiseBuf)return;
   const s=ctx.createBufferSource(); s.buffer=noiseBuf;
@@ -1803,7 +1812,11 @@ function tick(t,accent){ if(!ctx)return;
   g.gain.setValueAtTime(accent?.3:.18,t); g.gain.exponentialRampToValueAtTime(.0001,t+.05);
   o.connect(g); g.connect(musicGain); o.start(t); o.stop(t+.06); freeAfter([o],[g]); }
 /* Knäppt bas: filtret öppnar i anslaget och stänger sig, så tonen får en
-   attack och sedan en rund kropp. En sinus en oktav under ger botten. */
+   attack och sedan en rund kropp. En sinus på samma ton ger botten — en
+   oktav under hamnade den på 16–41 Hz, infraljud som inga små högtalare
+   återger men som tar plats i kompressorn och får membranen att rassla.
+   En kort ton hinner inte hela avklingningen: kroppen kortas så att den
+   alltid är klar innan tonen släpps, annars hoppar nivån. */
 function bassNote(t,midi,dur,vel){ if(!ctx)return;
   vel = vel === undefined ? 1 : vel;
   const o=ctx.createOscillator(), sub=ctx.createOscillator(), sg=ctx.createGain();
@@ -1811,10 +1824,10 @@ function bassNote(t,midi,dur,vel){ if(!ctx)return;
   f.type="lowpass"; f.Q.value=2;
   f.frequency.setValueAtTime(380+900*vel,t); f.frequency.exponentialRampToValueAtTime(360,t+.2);
   o.type="triangle"; o.frequency.value=mtof(midi-12);
-  sub.type="sine"; sub.frequency.value=mtof(midi-24); sg.gain.value=.35;
-  const end = t+Math.max(.12,dur);
+  sub.type="sine"; sub.frequency.value=mtof(midi-12); sg.gain.value=.35;
+  const end = t+Math.max(.12,dur), body = Math.min(.16, end-t-.06);
   g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.18*vel,t+.012);
-  g.gain.exponentialRampToValueAtTime(.11*vel,t+.16);
+  g.gain.exponentialRampToValueAtTime(.11*vel,t+body);
   g.gain.setValueAtTime(.11*vel,end-.05); g.gain.exponentialRampToValueAtTime(.0001,end);
   o.connect(g); sub.connect(sg); sg.connect(g); g.connect(f); f.connect(musicGain);
   o.start(t); sub.start(t); o.stop(end+.05); sub.stop(end+.05); freeAfter([o,sub],[sg,g,f]); }
