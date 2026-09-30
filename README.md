@@ -351,8 +351,9 @@ per grundton, så alla kombinationer prövas.
 före ett ackordbyte leder in i nästa grundton med ett halvtonssteg, från det
 håll basen redan står. Tre lägen: lugn när basen just kommit in, driv med
 åttondelar när hela kompet är inne, och walking (grundton, ters, kvint, ledton)
-när varvet går i swing. Basen är knäppt: filtret öppnar i anslaget och stänger
-sig, med en sinus på samma ton som botten.
+när varvet går i swing. Basen är knäppt: en sågtand vars filter öppnar i
+anslaget och stänger sig. Det är övertonerna som bär tonen, inte grundtonen
+(se "Basen skakar inte högtalaren" nedan).
 
 Paddan och basen följer **ackorden, inte takterna**. Canon har två ackord per
 takt och får två anslag per takt; ett ackord som varar två takter slås an igen
@@ -476,9 +477,9 @@ svängningar, och allt som klingade samtidigt — ackordet spelaren just slog an
 fick ett raspigt skorr. Topparna tar begränsaren. Dessutom:
 
 * Bastrumman är svagare. Den var starkast av allt i bandet och drev kompressorn.
-* Basens sinus ligger på samma ton som basen, inte en oktav under. Där hamnade
-  den på 16–41 Hz: infraljud som inga små högtalare återger, men som tog plats
-  i kompressorn och får membranen att rassla.
+* Basen har ingen sinus en oktav under längre. Där hamnade den på 16–41 Hz:
+  infraljud som inga små högtalare återger, men som tog plats i kompressorn och
+  får membranen att rassla.
 * En kort baston hann inte sjunka ned till sin kropp innan den släpptes, och nivån
   hoppade — ett litet knäpp på basens åttondelar i 120 och 132 bpm. Nu kortas
   kroppen så att den alltid är klar före släppet.
@@ -488,6 +489,24 @@ fick ett raspigt skorr. Topparna tar begränsaren. Dessutom:
 Mätt offline i webbläsaren, fullt komp och spelarens toner i 120 bpm: den
 sämsta procenten av alla 10 ms-bitar hade förut omkring 5 % distorsion (26 dB
 under signalen), nu 0,2 % (55 dB). Priset är att allt låter ungefär 2 dB svagare.
+
+### Basen skakar inte högtalaren
+
+Det vibrerade ändå, och det var inte kompressorn: mätt på samma sätt rör den sig
+under 1 dB, och drygt 1 dB när spelaren slår an så hårt det går. Det var basen.
+Dess grundton ligger på 33–82 Hz, där en laptop, platta eller telefon inte ger
+något ljud men membranet rör sig som mest. Med triangel och en sinus på samma ton
+satt nästan all energi just där: basen var det som hördes *minst* i bandet
+(A-vägt −47 dB, svagare än paddan) och det som skakade högtalaren *mest* (−25 dB
+under 100 Hz, 11 dB mer än bastrumman).
+
+Nu är basen en sågtand genom samma lågpass, med ett högpass på 70 Hz som tar
+ned grundtonen på de lägsta tonerna (omkring 10 dB på 41 Hz, 2 dB på 82 Hz).
+Övertonerna på 80–350 Hz bär tonen, och örat hör grundtonen ur dem även där
+högtalaren inte kan spela den. Basen ensam: A-vägt −45 dB, alltså lite tydligare,
+och 12 dB mindre under 100 Hz. Hela mixen låter lika starkt som förut men har
+4–7 dB mindre under 100 Hz. Det som finns kvar där är bastrummans anslag och
+spelarens egna bastoner.
 
 ### Beslutsfönstret
 
