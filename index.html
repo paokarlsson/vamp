@@ -77,9 +77,61 @@
   /* Helskärm: bara scenen, noterna så höga som skärmen tillåter. */
   .stage:fullscreen{display:flex;flex-direction:column;border-radius:0;width:100% !important;margin:0 !important}
   .stage:-webkit-full-screen{display:flex;flex-direction:column;border-radius:0;width:100% !important;margin:0 !important}
-  .stage:fullscreen #lane{flex:1;height:auto;min-height:0}
-  .stage:-webkit-full-screen #lane{flex:1;height:auto;min-height:0}
+  .stage:fullscreen .lane-wrap{flex:1;min-height:0}
+  .stage:-webkit-full-screen .lane-wrap{flex:1;min-height:0}
+  .stage:fullscreen #lane{height:100%}
+  .stage:-webkit-full-screen #lane{height:100%}
   .stage:fullscreen .readout{font-size:14px;padding:10px 16px}
+
+  /* ---------- sidhuvudet: nivå, svit, dagens mål ---------- */
+  .top{display:flex;align-items:flex-end;justify-content:space-between;gap:10px 14px;flex-wrap:wrap;margin-bottom:12px}
+  .top .tag{margin:0}
+  .me{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .stat{display:flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);
+        border-radius:20px;padding:5px 11px;font-size:13px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .streak{color:var(--muted)}
+  .streak.lit{color:#e8792b}
+  .goal svg{transform:rotate(-90deg)}
+  .ring-bg{fill:none;stroke:var(--border);stroke-width:3}
+  .ring{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset .6s}
+  .goal.lit .ring{stroke:#e8792b}
+  .lvl{flex-direction:column;align-items:stretch;gap:3px;padding:5px 12px}
+  .xpbar{display:block;width:84px;height:4px;border-radius:2px;background:var(--border);overflow:hidden}
+  .xpbar i{display:block;height:100%;width:0;background:var(--accent);transition:width .4s}
+
+  /* ---------- överlägget på scenen ---------- */
+  .lane-wrap{position:relative}
+  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;
+           background:rgba(22,36,43,.93);color:var(--key);overflow:auto}
+  .ov-in{max-width:470px;width:100%;text-align:center;margin:auto}
+  .ov-in h2{font-family:"Bricolage Grotesque",Georgia,serif;font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0 0 4px}
+  .ov-in p{margin:0 0 12px;font-size:13.5px;color:rgba(243,236,224,.78)}
+  .ov-in p b{color:var(--key)}
+  .ov-stats b{color:var(--hand-r) !important}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 10px}
+  .choices button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;
+                  background:rgba(243,236,224,.07);border:1px solid rgba(243,236,224,.16);color:var(--key);padding:9px 11px;border-radius:12px}
+  .choices button:hover,.choices button.cur{border-color:var(--hand-r);background:rgba(255,201,77,.1)}
+  .choices b{font-family:"Bricolage Grotesque",Georgia,serif;font-size:16px}
+  .choices span{font-size:12px;color:rgba(243,236,224,.72);font-weight:400;line-height:1.35}
+  .overlay .alt{font-size:12.5px;margin:0}
+  button.link{background:none;border:none;padding:2px 3px;color:var(--hand-r);text-decoration:underline;text-underline-offset:3px;font-size:inherit;font-weight:500}
+  button.link.cur{color:var(--key);text-decoration:none;font-weight:700}
+  .ov-act{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:6px;flex-wrap:wrap}
+  button.big{display:inline-flex;align-items:center;gap:8px;font-size:16px;padding:12px 26px;border-radius:12px}
+  .overlay button.primary{background:var(--hand-r);border-color:var(--hand-r);color:#16242b;font-weight:600}
+  .sum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 12px}
+  .sum div,.records div{display:flex;flex-direction:column}
+  .sum b{font-family:"Bricolage Grotesque",Georgia,serif;font-size:22px;color:var(--key);font-variant-numeric:tabular-nums}
+  .sum span{font-size:11.5px;color:rgba(243,236,224,.65)}
+  .overlay .news{font-size:12.5px}
+
+  /* ---------- bandet ---------- */
+  .band{display:inline-flex;gap:3px}
+  .band span{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:7px;
+             color:rgba(243,236,224,.22);background:rgba(243,236,224,.04);transition:color .3s,background .3s}
+  .band span.on{color:var(--hand-r);background:rgba(255,201,77,.15)}
+  .band span.rest{color:rgba(255,201,77,.45);background:rgba(243,236,224,.06)}
 
   /* ---------- keyboard ---------- */
   .device{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--muted)}
@@ -160,26 +212,92 @@
 
   .note{font-size:12.5px;color:var(--muted);margin-top:18px;max-width:58ch}
   .note code{font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+
+  /* ---------- uppdrag och samling ---------- */
+  .ph{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .ph h2,.ph h3{margin:0}
+  .ph h3{font-family:"Bricolage Grotesque",Georgia,serif;font-size:15px}
+  .ph.sub{margin-top:16px}
+  .count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+  .quest{display:grid;grid-template-columns:1fr 90px 44px;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--border);font-size:13.5px}
+  .quest:first-child{border-top:none}
+  .qbar{height:6px;border-radius:3px;background:var(--border);overflow:hidden}
+  .qbar i{display:block;height:100%;background:var(--accent);transition:width .4s}
+  .qn{text-align:right;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .quest.done .qt{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--accent)}
+  .quest.done .qn{color:var(--good);font-weight:600}
+  .ladder{margin-top:12px}
+  .lh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px;margin-bottom:5px}
+  .lh span{font-size:11.5px;color:var(--muted)}
+  .ladder ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:5px}
+  .ladder li{display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 9px 3px 3px;border-radius:20px;
+             background:var(--surface);border:1px solid var(--border)}
+  .ladder li i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;flex:none;width:19px;height:19px;border-radius:50%;
+               background:var(--surface-2);border:1px solid var(--border);font-size:10.5px;font-weight:700;color:var(--muted)}
+  .ladder li em{font-style:normal;font-size:11px;color:var(--muted)}
+  .ladder li.played i{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+  .ladder li.done i{background:#ffc94d;border-color:#e0a82a;color:#16242b}
+  .ladder li.locked{opacity:.45;border-style:dashed}
+  .ladder li.cur{border-color:var(--accent);box-shadow:0 0 0 2px rgba(46,139,122,.28)}
+  .progs{display:flex;flex-wrap:wrap;gap:5px}
+  .pg{font-size:12px;padding:3px 9px;border-radius:20px;background:var(--surface);border:1px solid var(--border);
+      display:inline-flex;gap:6px;align-items:baseline;color:var(--muted)}
+  .pg b{color:var(--text);font-weight:600}
+  .pg i{font-style:normal}
+  .pg.locked{border-style:dashed;opacity:.75}
+  .records{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)}
+  .records b{font-family:"Bricolage Grotesque",Georgia,serif;font-size:18px;font-variant-numeric:tabular-nums}
+  .records span{font-size:11px;color:var(--muted)}
+  .hood{margin-top:18px;border-top:1px solid var(--border)}
+  .hood summary{cursor:pointer;font-family:"Bricolage Grotesque",Georgia,serif;font-weight:700;font-size:16px;padding:12px 2px}
+  .hood summary span{font-family:"IBM Plex Sans",system-ui,sans-serif;font-weight:400;font-size:12.5px;color:var(--muted);margin-left:6px}
+  .hood summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
   @media (max-width:420px){
     #lane{height:310px}
     .row .name{width:96px}
+    .records,.sum{grid-template-columns:1fr 1fr}
+    .quest{grid-template-columns:1fr 56px 40px}
+    .choices span{font-size:11px}
+    .ov-in h2{font-size:20px}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<h1 class="mark">vamp</h1>
-<p class="tag">Fyra ackord, en loop, och en motor som håller dig precis på din nivå. Anslut ett MIDI-keyboard, eller spela på datorns tangentbord, och tryck Spela.</p>
+<header class="top">
+  <div class="brand">
+    <h1 class="mark">vamp</h1>
+    <p class="tag">Spela med ett band som lyssnar. Det håller dig precis på din nivå, och det låter bättre ju bättre du spelar.</p>
+  </div>
+  <div class="me" aria-label="Dina framsteg">
+    <div class="stat streak" id="p-streak-wrap">
+      <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M8.2 1.2c.4 2.3 3.8 3.7 3.8 7.6A4 4 0 0 1 8 13a4 4 0 0 1-4-4.2c0-1.7.9-2.9 1.8-3.6-.1 1.3.4 2.3 1.3 2.6-.4-2.5.3-4.8 1.1-6.6z" fill="currentColor"/></svg>
+      <b id="p-streak">0</b>
+    </div>
+    <div class="stat goal" id="p-goal-wrap" title="Dagens mål: fem minuter vid pianot">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" class="ring-bg"/><circle cx="10" cy="10" r="7" class="ring" id="p-ring" stroke-dasharray="43.98" stroke-dashoffset="43.98"/></svg>
+      <span id="p-goal">0/5 min</span>
+    </div>
+    <div class="stat lvl" id="p-lvl-wrap">
+      <span id="p-level">Nivå 1</span>
+      <span class="xpbar"><i id="p-xp"></i></span>
+    </div>
+  </div>
+</header>
 
 <div class="stage">
-  <canvas id="lane"></canvas>
+  <div class="lane-wrap">
+    <canvas id="lane"></canvas>
+    <div class="overlay" id="overlay" hidden></div>
+  </div>
   <div class="readout">
     <span class="chip prog" id="c-prog">—</span>
     <span class="chip" id="c-texture">—</span>
     <span class="chip" id="c-bpm">—</span>
     <span class="grow"></span>
-    <span class="chip" id="c-layers">—</span>
+    <span class="band" id="band" role="img" aria-label="Bandet"></span>
     <button class="icon" id="btn-fs-play" hidden aria-label="Spela"></button>
     <button class="icon" id="btn-fs-view" hidden></button>
     <button class="icon" id="btn-fs" hidden aria-label="Helskärm" title="Helskärm (F)"></button>
@@ -202,7 +320,7 @@
   <button id="btn-wake" aria-pressed="false" hidden title="Hindrar skärmen från att slockna medan du spelar">Skärmen släcks</button>
   <button id="btn-view" aria-pressed="false" title="Växla mellan fallande noter och ett notblad">Notblad</button>
   <button id="btn-sound" aria-pressed="true">Ljud på</button>
-  <button id="btn-reset">Börja om</button>
+  <button id="btn-reset" title="Glöm nivån i det här spelsättet och gör om proven. XP, svit och samling ligger kvar.">Ny placering</button>
 </div>
 
 <div class="picks">
@@ -212,10 +330,27 @@
 </div>
 
 <div class="panel">
+  <div class="ph"><h2>Dagens uppdrag</h2><span class="count" id="quests-count"></span></div>
+  <div id="quests"></div>
+</div>
+
+<div class="panel">
+  <div class="ph"><h2>Samlingen</h2><span class="count" id="groove-count"></span></div>
+  <p class="hint">Varje spelsätt är en trappa. Tre bra varv tar dig ett steg upp, tre rena varv i en groove gör den behärskad, och ditt bästa tempo sparas.</p>
+  <div id="grooves"></div>
+  <div class="ph sub"><h3>Progressioner</h3><span class="count" id="prog-count"></span></div>
+  <div class="progs" id="progs"></div>
+  <div class="records" id="records"></div>
+</div>
+
+<details class="hood" id="hood">
+<summary>Under huven <span>motorns skattning, varvets form och loggen</span></summary>
+
+<div class="panel">
   <h2>Skattning</h2>
-  <p class="hint">Motorn jämför varje varvs utfall med vad den väntade sig och flyttar sig proportionellt mot sin egen osäkerhet.</p>
+  <p class="hint">Motorn jämför varje varvs utfall med vad den väntade sig och flyttar sig proportionellt mot sin egen osäkerhet. Det här är svårigheten den håller dig på — inte samma sak som din nivå, som bara går uppåt.</p>
   <div class="levels">
-    <div class="lv est"><span class="n" id="m-est">—</span><span class="l">skattad nivå</span></div>
+    <div class="lv est"><span class="n" id="m-est">—</span><span class="l">skattad svårighet</span></div>
     <div class="lv"><span class="n" id="m-sigma">—</span><span class="l">osäkerhet</span></div>
   </div>
   <canvas id="chart"></canvas>
@@ -241,6 +376,7 @@
 <div id="log"></div>
 
 <p class="note">Vikterna i kostnadsfunktionen är handsatta och ska kalibreras mot riktig speldata. Progressionerna skrivs som romerska siffror och får sina grepp av röstföringsmotorn, så biblioteket växer med en rad text per progression.</p>
+</details>
 
 </div>
 
@@ -263,7 +399,8 @@
      9  VARVET         schemaläggning, beslutsfönster
     10  MIDI-IN        riktiga anslag (MIDI eller tangentbord) mot väntade toner
     11  BILD           fallande noter och klaviatur, eller notblad
-    12  GRÄNSSNITT     spela/paus, paneler
+    12  SPELET         bedömning, kombo, stjärnor, nivå, mål, uppdrag, samling
+    13  GRÄNSSNITT     välkomst, spela/paus, paneler
 
    Vad som är mätt och vad som är gissat: allt i modul 5 är gissat och ska
    skattas ur riktig speldata tillsammans med spelarförmågan. Resten av
@@ -280,12 +417,13 @@ const DEG_MINOR = [0,2,3,5,7,8,10];
 const ROMAN_IDX = {I:0, II:1, III:2, IV:3, V:4, VI:5, VII:6};
 const PC_NAMES = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
 
-/* "bVII", "vi", "V7", "ii" → { pcs:[...], root:pc, label:"Bb" } */
+/* "bVII", "vi", "V7", "ii", "Imaj7" → { pcs:[...], root:pc, label:"Bb" } */
 function parseNumeral(sym, tonic, mode){
   let s = sym, acc = 0;
   while (s[0] === "b" || s[0] === "#"){ acc += s[0]==="b" ? -1 : 1; s = s.slice(1); }
-  let seventh = false, dim = false;
-  if (s.slice(-1) === "7"){ seventh = true; s = s.slice(0,-1); }
+  let seventh = 0, dim = false;                  /* septimans intervall, 0 = ingen */
+  if (s.slice(-4) === "maj7"){ seventh = 11; s = s.slice(0,-4); }
+  else if (s.slice(-1) === "7"){ seventh = 10; s = s.slice(0,-1); }
   if (s.slice(-1) === "o"){ dim = true; s = s.slice(0,-1); }
 
   const minorQuality = s === s.toLowerCase();
@@ -297,10 +435,11 @@ function parseNumeral(sym, tonic, mode){
   if (dim) iv = [0,3,6];
   else if (minorQuality) iv = [0,3,7];
   else iv = [0,4,7];
-  if (seventh) iv = iv.concat([minorQuality || dim ? 10 : 10]);
+  if (seventh) iv = iv.concat([seventh]);
 
   /* förminskat: viio → B°, iio7 (halvförminskat, liten septima) → Dm7b5 */
-  const label = PC_NAMES[root] + (dim ? (seventh ? "m7b5" : "°") : (minorQuality?"m":"") + (seventh?"7":""));
+  const label = PC_NAMES[root] + (dim ? (seventh ? "m7b5" : "°")
+    : (minorQuality?"m":"") + (seventh === 11 ? "maj7" : seventh ? "7" : ""));
   return { pcs: iv.map(i => (root+i)%12), root, label };
 }
 
@@ -485,7 +624,13 @@ const LIBRARY = [
   { id:"mixo-vamp", name:"Mixolydisk vamp",  mood:"öppen",     scale:"mixolydian", numerals:["I","bVII"] },
   { id:"mixo-v",    name:"Mixolydiskt, mjukt",mood:"solig",    scale:"mixolydian", numerals:["I","v","bVII","IV"] },
   { id:"blues",     name:"Kort blues",       mood:"lurvig",    scale:"blues",      numerals:["I7","IV7","I7","V7"] },
-  { id:"blues-rak", name:"Blues, rak",       mood:"rak",       scale:"blues",      numerals:["I7","IV7","V7","IV7"] }
+  { id:"blues-rak", name:"Blues, rak",       mood:"rak",       scale:"blues",      numerals:["I7","IV7","V7","IV7"] },
+  /* Sjuackorden hör till jazzen och spelas bara där (`only`): i de andra
+     spelsätten skulle blockackorden bli fyrklanger utan förvarning. */
+  { id:"jazz-251",  name:"ii–V–I, jazz",     mood:"elegant",   scale:"major",      numerals:["ii7","V7","Imaj7","Imaj7"], only:"jazz" },
+  { id:"jazz-turn", name:"Turnaround",       mood:"rullande",  scale:"major",      numerals:["Imaj7","vi7","ii7","V7"],   only:"jazz" },
+  { id:"jazz-moll", name:"Moll ii–V–i",      mood:"nattlig",   scale:"harmonic",   numerals:["iio7","V7","i7","i7"],      only:"jazz" },
+  { id:"jazz-iv",   name:"Fyran och tillbaka",mood:"varm",     scale:"major",      numerals:["Imaj7","IVmaj7","iii7","vi7"], only:"jazz" }
 ];
 LIBRARY.forEach(p => { p.mode = SCALES[p.scale].mode; });
 
@@ -545,6 +690,19 @@ function rootNear(s){
   let m = lo - (((lo - s.pcs[0]) % 12) + 12) % 12;
   if (lo - m > 6) m += 12;
   return m;
+}
+
+/* Ackordtonernas avstånd från grundtonen: 1 är tersen, 2 kvinten, 3 septiman. */
+const ivOf = (s, k) => (((s.pcs[k] - s.pcs[0]) % 12) + 12) % 12;
+const fifthOf = s => ivOf(s, 2);
+/* Jazzens skalgrepp i vänster hand: grundton och septima, eller grundton och
+   ters när ackordet saknar septima. */
+const shellOf = s => [s.bass, s.bass + (s.pcs.length > 3 ? ivOf(s,3) : ivOf(s,1))];
+/* Det högern tar ovanför skalet: ackordets toner utom de skalet redan har. */
+function aboveShell(s){
+  const has = shellOf(s).map(m=>((m%12)+12)%12);
+  const up = s.rh.filter(m=>has.indexOf(((m%12)+12)%12) < 0);
+  return up.length ? up : s.rh;
 }
 
 /* Fingersättning, ur noterna: 1 är tummen och 5 lillfingret, i båda
@@ -740,21 +898,129 @@ const TEXTURES = {
       }
       pos.forEach(o=>s.rh.forEach(m=>e.push({b:s.start+o, dur:.6, midi:m, hand:"R"})));
     });
-    return e; } }
+    return e; } },
+
+  /* ---- Avancerat: komp som låter som en platta ---- */
+
+  /* Rockpiano: högern slår ackordet på varje åttondel, vänstern tar basen
+     och oktaven på de tunga slagen. Oktaven är handens gräns, inte mer. */
+  pump8: { label:"Pumpande åttondelar", gen:(S,bpb)=>{
+    const e=[];
+    S.forEach(s=>{ for (let k=0;k<s.beats*2;k++){ const b = s.start+k*.5;
+      s.rh.forEach(m=>e.push({b,dur:.4,midi:m,hand:"R"}));
+      if (k%2 === 0 && heavy(b,bpb)) e.push({b,dur:.9,midi:s.bass,hand:"L"},{b,dur:.9,midi:s.bass+12,hand:"L"}); } });
+    return e; } },
+
+  /* Balladkomp: vänstern bryter grundton, kvint och oktav i åttondelar och
+     högern håller ackordet från de tunga slagen. Vänsterns toner kommer en i
+     taget, så handen spänner aldrig över mer än oktaven. */
+  ballad: { label:"Ballad", gen:(S,bpb)=>{
+    const e=[];
+    S.forEach(s=>{ const p = [0, fifthOf(s), 12, fifthOf(s)], span = bpb >= 4 ? 2 : bpb;
+      for (let k=0;k<s.beats*2;k++){ const b = s.start+k*.5;
+        e.push({b,dur:.45,midi:s.bass+p[k%4],hand:"L"});
+        if (k%2 === 0 && heavy(b,bpb)) s.rh.forEach(m=>e.push({b,dur:Math.min(span, s.start+s.beats-b)*.9,midi:m,hand:"R"})); } });
+    return e; } },
+
+  /* Tresillo, 3+3+2 i åttondelar: båda händerna i samma synkoperade rytm.
+     Det mjukaste sättet in i synkopering — ingen hand har en egen rytm. */
+  tresillo: { label:"Tresillo", gen:(S,bpb)=>{
+    const pos = bpb >= 4 ? [0,1.5,3] : [0,1.5], e=[];
+    S.forEach(s=>{ for (let off=0; off<s.beats; off+=bpb) pos.forEach((o,i)=>{
+      if (off+o >= s.beats) return;
+      const b = s.start+off+o, len = (i+1 < pos.length ? pos[i+1] : bpb) - o;
+      e.push({b,dur:len*.8,midi:s.bass,hand:"L"});
+      s.rh.forEach(m=>e.push({b,dur:len*.8,midi:m,hand:"R"})); }); });
+    return e; } },
+
+  /* Arpeggio över båda händerna: vänstern tar grundton, kvint och oktav,
+     högern fortsätter uppåt genom ackordet och vänder. Händerna lämnar över
+     till varandra och spelar aldrig samtidigt. I 3/4 bara uppåt. */
+  arpHands: { label:"Arpeggio i två händer", gen:(S,bpb)=>{
+    const e=[];
+    S.forEach(s=>{ const r = s.rh.slice(0,3);
+      const seq = [["L",s.bass],["L",s.bass+fifthOf(s)],["L",s.bass+12],["R",r[0]],["R",r[1]],["R",r[2]],["R",r[1]],["R",r[0]]];
+      for (let off=0; off<s.beats; off+=bpb)
+        for (let k=0; k<bpb*2 && off+k*.5 < s.beats; k++){ const [hand, midi] = seq[k % seq.length];
+          e.push({b:s.start+off+k*.5,dur:.45,midi,hand}); } });
+    return e; } },
+
+  /* Stride: vänstern hoppar mellan basen på de tunga slagen och ackordet på
+     de lätta. Högern håller ackordet från ettan. Hoppet är svårigheten —
+     varje grepp för sig ryms fortfarande i en oktav. */
+  stride: { label:"Stride", gen:(S,bpb)=>{
+    const e=[];
+    S.forEach(s=>{ const bass = s.bass > s.lh[0]-3 && s.bass-12 >= 28 ? s.bass-12 : s.bass;
+      s.rh.forEach(m=>e.push({b:s.start,dur:s.beats*.9,midi:m,hand:"R"}));
+      for (let k=0;k<s.beats;k++){ const b = s.start+k;
+        if (heavy(b,bpb)) e.push({b,dur:.9,midi:bass,hand:"L"});
+        else s.lh.forEach(m=>e.push({b,dur:.8,midi:m,hand:"L"})); } });
+    return e; } },
+
+  /* Walking bass: vänstern går i fjärdedelar — grundton, ters, kvint och en
+     ledton in i nästa ackord — och högern slår ackordet på ettan och tvåans
+     "och", Charlestonrytmen. Bandets bas tystnar: den spelar du. */
+  walking: { label:"Walking bass", ownsBass:true, gen:(S,bpb)=>{
+    const e = bassPart(S, bpb, "walk").map(n=>({b:n.b,dur:.85,midi:n.midi,hand:"L"}));
+    S.forEach(s=>{ for (let off=0; off<s.beats; off+=bpb) [0,1.5].forEach(o=>{
+      if (off+o < s.beats) s.rh.forEach(m=>e.push({b:s.start+off+o,dur:o ? .45 : 1.2,midi:m,hand:"R"})); }); });
+    return e; } },
+
+  brokenSixteenth: { label:"Brutna ackord, sextondelar", gen:(S)=>{
+    const p=[0,1,2,1]; const e=[];
+    S.forEach(s=>{ e.push({b:s.start,dur:s.beats*.9,midi:s.bass,hand:"L"});
+      for (let k=0;k<s.beats*4;k++) e.push({b:s.start+k*.25,dur:.22,midi:s.rh[p[k%4]%s.rh.length],hand:"R"}); });
+    return e; } },
+
+  /* ---- Jazz: skal, guidetoner och Charleston ----
+     Skalgreppet är grundton och septima i vänster hand (grundton och ters
+     när ackordet saknar septima). Högern tar det som saknas ovanför. */
+  shellLeft: { label:"Skalgrepp", jazz:true, gen:(S)=>{
+    const e=[]; S.forEach(s=>shellOf(s).forEach(m=>e.push({b:s.start,dur:s.beats*.9,midi:m,hand:"L"}))); return e; } },
+
+  shellGuide: { label:"Skal och ackord", jazz:true, gen:(S)=>{
+    const e=[];
+    S.forEach(s=>{ shellOf(s).forEach(m=>e.push({b:s.start,dur:s.beats*.9,midi:m,hand:"L"}));
+      aboveShell(s).forEach(m=>e.push({b:s.start,dur:s.beats*.9,midi:m,hand:"R"})); });
+    return e; } },
+
+  /* Charleston: ettan och tvåans "och", båda händerna tillsammans. */
+  charleston: { label:"Charleston", jazz:true, gen:(S,bpb)=>{
+    const e=[];
+    S.forEach(s=>{ for (let off=0; off<s.beats; off+=bpb) [0,1.5].forEach(o=>{
+      if (off+o >= s.beats) return;
+      const b = s.start+off+o, dur = o ? .45 : 1.2;
+      shellOf(s).forEach(m=>e.push({b,dur,midi:m,hand:"L"}));
+      aboveShell(s).forEach(m=>e.push({b,dur,midi:m,hand:"R"})); }); });
+    return e; } },
+
+  /* Walking bass under rotlösa grepp i Charleston: ters, kvint och septima i
+     högern, grundtonen får basen ta. */
+  walkComp: { label:"Walking och komp", jazz:true, ownsBass:true, gen:(S,bpb)=>{
+    const e = bassPart(S, bpb, "walk").map(n=>({b:n.b,dur:.85,midi:n.midi,hand:"L"}));
+    S.forEach(s=>{ const up = s.rh.filter(m=>((m%12)+12)%12 !== s.pcs[0]);
+      for (let off=0; off<s.beats; off+=bpb) [0,1.5].forEach(o=>{
+        if (off+o < s.beats) up.forEach(m=>e.push({b:s.start+off+o,dur:o ? .45 : 1.2,midi:m,hand:"R"})); }); });
+    return e; } },
+
+  /* Fritt spel: inga toner att träffa. Bandet spelar och du hittar på. */
+  jam: { label:"Fritt spel", gen:()=>[] }
 };
-const TEXTURE_IDS = Object.keys(TEXTURES);
+const TEXTURE_IDS = Object.keys(TEXTURES).filter(k=>k !== "jam");
 
 /* Spelsätten. Ett spelsätt är ett urval texturer och sina egna placeringsprov.
    Nybörjare, Ackord och rytm och Brutna ackord är trappor: stegen kommer i ordning, och
    nästa låses upp när det förra sitter.
 
-   Ett spelsätt kan också begränsa resten: `progs` (egna progressioner, och då
-   bara vita tangenter), `bpms`, `meters`, `swing` och `probeBpm`. `calm`
+   Ett spelsätt kan också begränsa resten: `progs` (egna progressioner),
+   `white` (bara vita tangenter: grundtonen följer progressionen), `bpms`,
+   `meters`, `swing` (false bara rakt, true bara swing) och `probeBpm`. `calm`
    betyder att samma varv gärna får gå igen: tempot byts när nivån flyttar
-   sig, inte för omväxlingens skull. `fingers` visar fingersättningen på noterna. */
+   sig, inte för omväxlingens skull. `fingers` visar fingersättningen på
+   noterna. `jam` är fritt spel: inga toner att träffa, ingen anpassning. */
 const LADDER = ["triadWhole","bassRoot","bassTriad","oompah","oompahFlow"];
 const STYLES = {
-  mix:    { label:"Mix",             textures: TEXTURE_IDS,
+  mix:    { label:"Mix",             textures: TEXTURE_IDS.filter(k=>!TEXTURES[k].jazz),
             probes:["rootsWhole","rootsQuarter","triadWhole","bassTriad"] },
   /* För barn och den som aldrig spelat. En hand först, en ton i taget, och
      andra handen kommer in sist. Bara vita tangenter, lugnt tempo, rak 4/4,
@@ -764,14 +1030,31 @@ const STYLES = {
   kids:   { label:"Nybörjare",
             textures:["rootsWhole","rootsQuarter","rootFifth","triadWhole","bassRoot","bassTriad"], ladder:true,
             probes:["rootsWhole","rootsQuarter","rootFifth","triadWhole"],
-            progs:["vamp-dur","tre","vamp-moll","doowop","axeln","mollvamp"],
+            progs:["vamp-dur","tre","vamp-moll","doowop","axeln","mollvamp"], white:true,
             bpms:[56,64,72,80], meters:[4], swing:false, probeBpm:64, calm:true, fingers:true },
   rhythm: { label:"Ackord och rytm", textures: LADDER, ladder:true,
             probes:["triadWhole","bassTriad","oompah","oompahFlow"] },
   /* Också en trappa, så att man aldrig kastas in i Alberti eller åttondelar:
      de kommer först när stegen under sitter. Proven går i lugnt tempo. */
   broken: { label:"Brutna ackord",   textures:["brokenUp","brokenQuarter","bassPulse","bassBroken","brokenEighth","alberti"], ladder:true,
-            probes:["brokenUp","brokenQuarter","bassPulse","bassBroken"], probeBpm:64 }
+            probes:["brokenUp","brokenQuarter","bassPulse","bassBroken"], probeBpm:64 },
+  /* För den som redan spelar. Stegen är komp man hör på skivor, i den
+     ordning de mäts vid 80 bpm: tresillo 6,6, walking 8,8, pumpande
+     åttondelar 9,8, arpeggio 10,4, stride 10,5, ballad 11,6 och sextondelar
+     15,2. Balladen låter lättast men mäts näst svårast — vänsterns
+     åttondelar hoppar, och högern tar ackord ovanpå. Tempot går högre än i
+     de andra trapporna. */
+  pro:    { label:"Avancerat",       textures:["tresillo","walking","pump8","arpHands","stride","ballad","brokenSixteenth"], ladder:true,
+            probes:["tresillo","walking","pump8","arpHands"],
+            bpms:[64,72,80,88,96,104,112,120,132] },
+  /* Sjuackord, skalgrepp och swing. Egna progressioner, men fri grundton. */
+  jazz:   { label:"Jazz",            textures:["shellLeft","shellGuide","charleston","walkComp"], ladder:true,
+            probes:["shellLeft","shellGuide","charleston","walkComp"],
+            progs:["jazz-251","jazz-turn","jazz-moll","jazz-iv","blues"], swing:true,
+            bpms:[64,72,80,88,96,104,112,120,132] },
+  /* Fritt spel: bandet spelar, du hittar på. Tonerna i skalan lyser och
+     ackordtonerna starkast. Ingen placering, ingen anpassning. */
+  jam:    { label:"Fritt spel",      textures:[], probes:[], jam:true, bpms:[72,80,88,96] }
 };
 
 
@@ -949,25 +1232,29 @@ if (!STYLES[prefs.style]) prefs.style = "mix";
 
 const style = () => STYLES[prefs.style];
 const PROBE_BPM = 80;
+const EST_MAX = 30;
 const probeBpm = () => style().probeBpm || PROBE_BPM;
 /* Trappan i det valda spelsättet, eller null. */
 const ladder = () => style().ladder ? style().textures : null;
 
-/* Har spelsättet egna progressioner gäller inte valen för grundton och skala:
-   grundtonen följer progressionen, på vita tangenter (C-dur, A-moll). */
-const fixedKeys = () => !!style().progs;
+/* Spelar spelsättet bara på vita tangenter gäller inte valen för grundton och
+   skala: grundtonen följer progressionen (C-dur, A-moll). */
+const fixedKeys = () => !!style().white;
 const progOf = id => LIBRARY.find(x=>x.id===id);
 function wantedTonic(progId){
   if (fixedKeys()) return SCALES[progOf(progId).scale].home;
   return prefs.tonic;
 }
 
-/* Progressionerna som hör till vald skala. */
+/* Progressionerna som hör till spelsättet och vald skala. Ryms ingen i
+   skalan blir det spelsättets alla, hellre än inga. */
 function allowedProgs(){
-  if (fixedKeys()) return style().progs.map(progOf);
-  if (prefs.scale === "mix") return LIBRARY;
+  const st = style();
+  const pool = st.progs ? st.progs.map(progOf) : LIBRARY.filter(p=>!p.only);
+  if (fixedKeys() || prefs.scale === "mix") return pool;
   const base = SCALES[prefs.scale].from || prefs.scale;
-  return LIBRARY.filter(p=>p.scale === base);
+  const fit = pool.filter(p=>p.scale === base);
+  return fit.length ? fit : pool;
 }
 /* Skalan ett varv låter i: den valda, annars progressionens egen. */
 const scaleFor = progId => prefs.scale !== "mix" && !fixedKeys() ? prefs.scale : progOf(progId).scale;
@@ -1025,8 +1312,8 @@ AXES.forEach(a=>{ engine.axis[a] = {load:0, miss:0, n:0, delta:0}; });
 
 function probeVariation(i){
   const probes = style().probes;
-  return buildVariation({prog:engine.prog, tonic:engine.tonic, texture:probes[Math.min(i, probes.length-1)],
-                         bpm:probeBpm(), meter:4, swing:false});
+  return Object.assign(buildVariation({prog:engine.prog, tonic:engine.tonic, texture:probes[Math.min(i, probes.length-1)],
+                         bpm:probeBpm(), meter:4, swing:style().swing === true}), {intent:"placement", probe:i, probeStyle:prefs.style});
 }
 
 /* Hur säkra vi är på en axel: 0 = ingen aning, 1 = gott om data. */
@@ -1038,12 +1325,12 @@ function axisWeak(a){ return axisConfidence(a) > 0.4 && engine.axis[a].delta < -
 const VAR_CACHE = {};
 function variantsOf(textures){
   const st = style();
-  const bpms = st.bpms || [56,64,72,80,88,96,104];
+  const bpms = st.bpms || [56,64,72,80,88,96,104,112,120];
   const out = [];
   for (const texture of textures)
     for (const bpm of bpms)
       for (const meter of st.meters || [4,3])
-        for (const swing of st.swing === false ? [false] : [false,true]){
+        for (const swing of st.swing === false ? [false] : st.swing === true ? [true] : [false,true]){
           const k = [engine.prog,engine.tonic,texture,bpm,meter,swing?1:0].join("|");
           if (!VAR_CACHE[k]) VAR_CACHE[k] = buildVariation({prog:engine.prog, tonic:engine.tonic, texture, bpm, meter, swing});
           out.push(VAR_CACHE[k]);
@@ -1067,7 +1354,31 @@ function nearest(target){
   return all.filter(v=>gap(v) <= best+0.3);
 }
 
+/* Fritt spel: progressionen byts var fjärde varv, tempot står kvar tills
+   progressionen byts. Inga toner att träffa, så ingen svårighet att välja. */
+function jamVariation(){
+  const prev = engine.current;
+  let changed = fitSelection(!prev);
+  if (!changed && engine.progIn <= 0){
+    const pool = allowedProgs().filter(p=>p.id !== engine.prog);
+    if (pool.length){
+      const p = pool[Math.floor(Math.random()*pool.length)], was = progOf(engine.prog).mode;
+      engine.prog = p.id;
+      if (wantedTonic(p.id) !== "mix") engine.tonic = wantedTonic(p.id);
+      else if (p.mode !== was) engine.tonic = (engine.tonic + (p.mode==="minor" ? 9 : 3)) % 12;
+      changed = true;
+    }
+  }
+  if (changed) engine.progIn = 4;
+  engine.progIn--;
+  const bpms = style().bpms;
+  const bpm = prev && prev.texture === "jam" && !changed ? prev.bpm : bpms[Math.floor(Math.random()*bpms.length)];
+  engine.preview = false;
+  return Object.assign(buildVariation({prog:engine.prog, tonic:engine.tonic, texture:"jam", bpm, meter:4, swing:false}), {intent:"jam"});
+}
+
 function chooseVariation(){
+  if (engine.phase === "jam") return jamVariation();
   if (engine.phase === "placement"){ fitSelection(true); engine.preview = false; return probeVariation(engine.probeIndex); }
 
   /* Progressionen roterar på sin egen, långsammare klocka. Musikalisk
@@ -1179,26 +1490,34 @@ function updateEngine(st){
   }
   engine.energy = Math.max(.15, Math.min(1, .25 + engine.layers*.15 + (acc-.8)));
 
+  /* Fritt spel anpassar ingenting. Byttes spelsättet, eller gjordes
+     placeringen om, efter att varvet lades säger varvet inget om det nya:
+     bara det prov som står på tur, i spelsättet som gäller, räknas. */
+  if (engine.phase === "jam") return;
   if (engine.phase === "placement"){
+    if (v.intent !== "placement" || v.probe !== engine.probeIndex || v.probeStyle !== prefs.style) return;
     /* Flyttades fördröjningen mycket mätte provet klockan, inte spelaren.
        Då görs det om. */
     if (acc < 0.9 && Math.abs(st.lagMoved) > .05){
       log(`Prov ${engine.probeIndex+1} görs om — tiden var inte inställd än.`);
       return;
     }
-    engine.probeResults.push({level:v.level, acc, texture:v.texture});
-    log(`Prov ${engine.probeIndex+1}: ${TEXTURES[v.texture].label} — ${Math.round(acc*100)} %`);
     /* Provens första tre takter har ibland bara tre toner. En enda miss är
        inget riktigt misslyckande. */
     const failed = acc < 0.72 && st.missed >= 2;
+    engine.probeResults.push({level:v.level, acc, texture:v.texture, failed});
+    log(`Prov ${engine.probeIndex+1}: ${TEXTURES[v.texture].label} — ${Math.round(acc*100)} %`);
     engine.probeIndex++;
     if (failed || engine.probeIndex >= style().probes.length){
       let passed = 0.8, ceiling = 99;
       /* Ett prov på 82 % är ett prov man kämpat sig igenom, inte ett man
          äger. Godkänt kräver 90 %, och skattningen läggs strax över det
-         senast godkända — hellre för lätt i början än för svårt. */
+         senast godkända — hellre för lätt i början än för svårt. Taket
+         sätts bara av ett riktigt misslyckat prov: en enda missad ton i
+         första provet, där Grundton bara har två, är att man inte hann
+         lägga handen på tangenterna — inte en gräns. */
       for (const r of engine.probeResults) if (r.acc >= 0.9) passed = r.level;
-      for (const r of engine.probeResults) if (r.acc < 0.72){ ceiling = r.level-0.4; break; }
+      for (const r of engine.probeResults) if (r.failed){ ceiling = r.level-0.4; break; }
       engine.est = Math.max(1.2, Math.min(passed+0.5, ceiling));
       engine.target = Math.max(1, engine.est-1.0);
       engine.phase = "zoom"; engine.sigma = 1.15;
@@ -1227,7 +1546,8 @@ function updateEngine(st){
   let weakLoad = 0;
   for (const a of AXES) if (axisWeak(a)) weakLoad = Math.max(weakLoad, load[a]);
   if (signal < 0) signal *= (1 - 0.55*weakLoad);      /* svag axel får inte sänka helheten */
-  engine.est = Math.max(1, Math.min(14, engine.est + 2.4*engine.sigma*signal));
+  /* Taket ligger högt: Avancerat och Jazz i 132 bpm mäts över 20. */
+  engine.est = Math.max(1, Math.min(EST_MAX, engine.est + 2.4*engine.sigma*signal));
   if (!flawless) engine.sigma = Math.max(0.32, engine.sigma*0.91);
 
   /* axlarna: avvikelse från den allmänna nivån, krympt mot noll
@@ -1260,7 +1580,7 @@ function updateEngine(st){
     engine.target = Math.max(1, Math.min(engine.est-0.4, below));
     if (engine.history.length >= 6 && engine.sigma < 0.6){
       engine.phase = "groove"; engine.target = engine.est;
-      log(`Nivån har satt sig på ${engine.est.toFixed(1)}. Nu bor vi här.`, "phase");
+      log(`Svårigheten har satt sig på ${engine.est.toFixed(1)}. Nu bor vi här.`, "phase");
     }
     return;
   }
@@ -1268,11 +1588,14 @@ function updateEngine(st){
   engine.probeIn--; engine.breathIn--; engine.progIn--;
 
   if (v.intent === "probe"){
-    /* Klarar hon ett varv en nivå över målet är målet för lågt. */
+    /* Klarar hon ett varv en nivå över målet är målet för lågt. Provet syns
+       som ett bonusvarv med dubbla poäng: det som för motorn är en mätning är
+       för spelaren en chans, och ett misslyckat bonusvarv är inget
+       misslyckande. */
     const passed = acc >= 0.85;
     if (passed){ engine.target += 0.45; engine.cleanRun = 0; engine.loopsAtLevel = 0; }
     else if (acc < 0.7) engine.needsHarbour = true;
-    log(`Tyst prov på nivå ${v.level.toFixed(1)} — ${Math.round(acc*100)} %` +
+    log(`Bonusvarv på svårighet ${v.level.toFixed(1)} — ${Math.round(acc*100)} %` +
         (passed ? ` — höjer till ${engine.target.toFixed(1)}.` : ""), passed?"up":"");
     return;
   }
@@ -1304,6 +1627,7 @@ function updateEngine(st){
    ========================================================================== */
 
 let ctx=null, master=null, musicGain=null, noiseBuf=null, soundOn=true;
+let room=null, bandRoom=null, PIANO_WAVE=null;   /* rummet, bandets väg dit, pianots klang */
 
 function ensureAudio(given){
   if (ctx) return;
@@ -1331,6 +1655,31 @@ function ensureAudio(given){
   noiseBuf = ctx.createBuffer(1,len,ctx.sampleRate);
   const d = noiseBuf.getChannelData(0);
   for (let i=0;i<len;i++) d[i] = Math.random()*2-1;
+
+  /* Rummet. Torra oscillatorer låter som en leksak; lite efterklang får
+     bandet och pianot att låta som att de spelar på samma ställe. Ett
+     genererat impulssvar — brus som klingar av på knappt två sekunder, lite
+     dovare än det kom in — och ingen fil att ladda. Bandet skickas dit genom
+     `bandRoom`, som tystnar med resten av bandet när ljudet slås av. */
+  room = ctx.createGain();
+  const conv = ctx.createConvolver(), damp = ctx.createBiquadFilter(), wet = ctx.createGain();
+  conv.buffer = roomImpulse(1.8);
+  damp.type = "lowpass"; damp.frequency.value = 4800; wet.gain.value = .3;
+  room.connect(conv); conv.connect(damp); damp.connect(wet); wet.connect(master);
+  bandRoom = ctx.createGain(); bandRoom.gain.value = soundOn?1:0; bandRoom.connect(room);
+
+  /* Pianots övertoner, starkast längst ned och svagare uppåt. */
+  const amps = [0, 1, .42, .3, .16, .12, .07, .05, .03, .02, .012, .008];
+  PIANO_WAVE = ctx.createPeriodicWave(new Float32Array(amps.length), new Float32Array(amps));
+}
+function roomImpulse(secs){
+  const n = Math.floor(ctx.sampleRate*secs), fade = ctx.sampleRate*.01;
+  const b = ctx.createBuffer(2, n, ctx.sampleRate);
+  for (let c=0; c<2; c++){
+    const d = b.getChannelData(c);
+    for (let i=0; i<n; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/n, 3) * Math.min(1, i/fade);
+  }
+  return b;
 }
 const mtof = m => 440*Math.pow(2,(m-69)/12);
 /* En ton som klingat ut kopplas loss ur ljudgrafen. Annars ligger dess
@@ -1345,20 +1694,52 @@ function freeAfter(srcs, nodes){
   };
 }
 
-function piano(t,midi,dur,gain,hand){
-  if (!ctx) return;
+/* Pianoklangen. Två svängningar en hårsmån isär ger liv, ett filter som
+   öppnar i anslaget och sedan stänger sig ger ett ljust anslag och en mjuk
+   klang — hårdare anslag öppnar mer — och en kort filtrerad brusknäpp är
+   hammaren. Låga toner klingar längre än höga, som på ett riktigt piano.
+   `hold` betyder att tonen klingar tills pianoRelease(), annars släpps den
+   efter `dur` sekunder. */
+function pianoVoice(t, midi, peak, dur, out, send, sendTo, hold){
+  const f0 = mtof(midi), soft = Math.min(1, peak/.3);
   const g=ctx.createGain(), f=ctx.createBiquadFilter();
-  f.type="lowpass"; f.frequency.setValueAtTime(hand==="L"?1300:2900,t);
+  f.type="lowpass"; f.Q.value=.4;
+  f.frequency.setValueAtTime(Math.min(14000, f0*(5 + 9*soft) + 600), t);
+  f.frequency.setTargetAtTime(Math.min(7000, f0*2.2 + 500), t+.01, .3);
   const o1=ctx.createOscillator(), o2=ctx.createOscillator(), g2=ctx.createGain();
-  o1.type="triangle"; o2.type="sine"; g2.gain.value=.2;
-  o1.frequency.value=mtof(midi); o2.frequency.value=mtof(midi)*2.001;
-  o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(f); f.connect(musicGain);
+  o1.setPeriodicWave(PIANO_WAVE); o2.setPeriodicWave(PIANO_WAVE);
+  o1.frequency.value = o2.frequency.value = f0; o2.detune.value = midi < 48 ? 6 : 3.5; g2.gain.value = .55;
+  o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(f); f.connect(out);
+  const nodes = [g2,g,f];
+  if (send){ const s = ctx.createGain(); s.gain.value = send; f.connect(s); s.connect(sendTo); nodes.push(s); }
+  const ring = 1 + Math.max(0, 84-midi)/26;
   g.gain.setValueAtTime(.0001,t);
-  g.gain.exponentialRampToValueAtTime(gain,t+.012);
-  g.gain.exponentialRampToValueAtTime(gain*.3,t+.25);
-  g.gain.exponentialRampToValueAtTime(.0001,t+Math.max(.35,dur));
-  o1.start(t); o2.start(t); o1.stop(t+dur+.5); o2.stop(t+dur+.5);
-  freeAfter([o1,o2], [g2,g,f]);
+  g.gain.exponentialRampToValueAtTime(peak,t+.005);
+  g.gain.setTargetAtTime(peak*.35,t+.005,.12);
+  g.gain.setTargetAtTime(.0001,t+.2,ring);
+  /* hammaren */
+  const h=ctx.createBufferSource(), hf=ctx.createBiquadFilter(), hg=ctx.createGain();
+  h.buffer = noiseBuf; hf.type="bandpass"; hf.frequency.value = Math.min(5000, f0*3 + 800); hf.Q.value = 1.1;
+  hg.gain.setValueAtTime(peak*.22*soft,t); hg.gain.exponentialRampToValueAtTime(.0001,t+.028);
+  h.connect(hf); hf.connect(hg); hg.connect(out); nodes.push(hf,hg);
+  h.start(t, Math.random()*.4); h.stop(t+.04);
+  const end = hold ? t+10 : t+Math.max(.2,dur);
+  if (!hold) g.gain.setTargetAtTime(.0001,end,.09);
+  o1.start(t); o2.start(t); o1.stop(end+.6); o2.stop(end+.6);
+  freeAfter([o1,o2,h], nodes);
+  return {g,o1,o2};
+}
+/* Tangenten släpps: dämparen tar strängen. */
+function pianoRelease(v){
+  const t = ctx.currentTime;
+  if (v.g.gain.cancelAndHoldAtTime) v.g.gain.cancelAndHoldAtTime(t);
+  else { v.g.gain.cancelScheduledValues(t); v.g.gain.setValueAtTime(v.g.gain.value,t); }
+  v.g.gain.setTargetAtTime(.0001,t,.07);
+  v.o1.stop(t+.5); v.o2.stop(t+.5);
+}
+function piano(t,midi,dur,gain){
+  if (!ctx) return;
+  pianoVoice(t, midi, gain, dur, musicGain, .5, bandRoom, false);
 }
 function pad(t,midis,dur,open){
   if (!ctx) return;
@@ -1373,7 +1754,8 @@ function pad(t,midis,dur,open){
   g.gain.linearRampToValueAtTime(.09,t+.02);
   g.gain.setTargetAtTime(.065,t+.02,.25);
   g.gain.setTargetAtTime(.0001,t+Math.max(.05,dur-.03),.06);
-  const srcs = [], nodes = [g,f];
+  const send = ctx.createGain(); send.gain.value = .45; f.connect(send); send.connect(bandRoom);
+  const srcs = [], nodes = [g,f,send];
   midis.forEach((m,i)=>{
     const o=ctx.createOscillator(), og=ctx.createGain();
     o.type = i===0?"triangle":"sawtooth";
@@ -1395,10 +1777,26 @@ function noiseHit(t,v,hp,dur){ if(!ctx||!noiseBuf)return;
   const g=ctx.createGain(); g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
   s.connect(f); f.connect(g); g.connect(musicGain); s.start(t); s.stop(t+dur+.05); freeAfter([s],[f,g]); }
 function snare(t,v){ noiseHit(t,v*.5,1400,.16); if(!ctx)return;
-  const o=ctx.createOscillator(), g=ctx.createGain();
+  const o=ctx.createOscillator(), g=ctx.createGain(), s=ctx.createGain();
   o.type="triangle"; o.frequency.setValueAtTime(215,t);
   g.gain.setValueAtTime(v*.3,t); g.gain.exponentialRampToValueAtTime(.0001,t+.1);
-  o.connect(g); g.connect(musicGain); o.start(t); o.stop(t+.12); freeAfter([o],[g]); }
+  s.gain.value = .5;
+  o.connect(g); g.connect(musicGain); g.connect(s); s.connect(bandRoom); o.start(t); o.stop(t+.12); freeAfter([o],[g,s]); }
+/* Crash: brus genom högpass, lång avklingning och mycket rum. Slås på ettan
+   när något nytt kommer in — firandet ska höras i musiken, inte bara synas. */
+const crashes = [];
+function crash(t,v){ if(!ctx||!noiseBuf)return;
+  if (crashes.some(c=>Math.abs(c-t) < .15)) return;     /* två firanden, ett slag */
+  crashes.push(t); while (crashes.length > 8) crashes.shift();
+  const s=ctx.createBufferSource(), f=ctx.createBiquadFilter(), pk=ctx.createBiquadFilter();
+  const g=ctx.createGain(), send=ctx.createGain();
+  s.buffer=noiseBuf; s.loop=true;
+  f.type="highpass"; f.frequency.value=4800;
+  pk.type="peaking"; pk.frequency.value=8000; pk.gain.value=5;
+  g.gain.setValueAtTime(v,t); g.gain.setTargetAtTime(.0001,t+.015,.45);
+  send.gain.value=.7;
+  s.connect(f); f.connect(pk); pk.connect(g); g.connect(musicGain); g.connect(send); send.connect(bandRoom);
+  s.start(t, Math.random()*.3); s.stop(t+2.4); freeAfter([s],[f,pk,g,send]); }
 function tick(t,accent){ if(!ctx)return;
   const o=ctx.createOscillator(), g=ctx.createGain();
   o.frequency.value = accent ? 1760 : 1320;
@@ -1469,8 +1867,8 @@ function bassPart(slots, bpb, feel){
 const state = { running:false, started:false, loops:[], startedAt:0, loopIndex:0, shown:null };
 const flashes = [];
 
-function scheduleLoop(t0){
-  const v = chooseVariation();
+function scheduleLoop(t0, given){
+  const v = given || chooseVariation();
   engine.current = v;
   const bpb = v.meter, spb = 60/v.bpm;
   const swing = v.swing ? .14*spb : 0;
@@ -1489,7 +1887,11 @@ function scheduleLoop(t0){
     steps: ladder() ? ladder().length : 0,
     commitAt: Math.max(t0+loopDur*.5, t1 - Math.max(2.9, barDur)),
     committed:false, index: ++state.loopIndex, events:[],
-    win: Math.min(.2, spb*.45), extras:[]
+    win: Math.min(.2, spb*.45), extras:[],
+    style: prefs.style, bonus: v.intent === "probe", jam: v.texture === "jam",
+    probe: v.intent === "placement" ? engine.probeIndex : -1,
+    jamStats: {good:0, chord:0, out:0}, jamXp:0, ended:false, popped:{},
+    noteCount: v.events.length - (preview ? v.events.filter(e=>e.hand==="L").length : 0)
   };
 
   loop.events = played.map(ev=>{
@@ -1501,7 +1903,7 @@ function scheduleLoop(t0){
 
   /* övriga toner spelar hon själv */
   for (const ev of loop.events)
-    if (ev.ghost) piano(ev.tPlay, ev.midi, ev.dur*spb, .1, ev.hand);
+    if (ev.ghost) piano(ev.tPlay, ev.midi, ev.dur*spb, .1);
 
   /* Paddan och basen följer ackorden, inte takterna: Canon har två ackord
      per takt, tvåackordsvampen ett ackord över två takter. Ett ackord som
@@ -1516,7 +1918,8 @@ function scheduleLoop(t0){
       b = next;
     }
   }
-  if (L>=3){
+  /* Spelar du själv en walking bass tystnar bandets. */
+  if (L>=3 && !TEXTURES[v.texture].ownsBass){
     const feel = v.swing ? "walk" : L>=5 ? "drive" : "calm";
     for (const n of bassPart(v.slots, bpb, feel)){
       const off = (swing && Math.abs(n.b%1-.5)<.01) ? swing : 0;
@@ -1528,7 +1931,7 @@ function scheduleLoop(t0){
     if (breath) continue;
     for (let beat=0; beat<bpb; beat++){
       const tb = bt+beat*spb;
-      if (L>=2){ noiseHit(tb,.06+open*.05,7000,.03); noiseHit(tb+spb/2,.05+open*.05,7000,.03); }
+      if (L>=2){ noiseHit(tb,.06+open*.05,7000,.03); noiseHit(tb+spb/2+swing,.05+open*.05,7000,.03); }
       if (L>=4 && (beat===0 || (bpb===4 && beat===2))) kick(tb,.5+open*.4);
       if (L>=5 && bpb===4 && (beat===1||beat===3)) snare(tb,.32+open*.2);
       if (L>=5 && bpb===3 && beat===2) snare(tb,.3);
@@ -1538,6 +1941,10 @@ function scheduleLoop(t0){
 
   const before = state.loops[state.loops.length-1];
   loop.newProg = !!before && (before.v.prog !== v.prog || before.v.tonic !== v.tonic || before.scale !== scale);
+  /* Det som är nytt i varvet — ett lager till i bandet, ett nytt steg, en
+     groove man aldrig spelat — firas med en crash på ettan, när det hörs. */
+  loop.news = newsFor(loop, before);
+  if (loop.news.some(n=>n.crash)) crash(t0, .26);
   logLoop(loop);
   state.loops.push(loop);
   return loop;
@@ -1557,9 +1964,10 @@ function logLoop(loop){
   if (v.swing) extra.push("swing");
   const tag = extra.length ? " · "+extra.join(" · ") : "";
   if (v.intent==="harbour") log(`Mjuk landning: ${TEXTURES[v.texture].label} — något som sitter.`);
-  else if (v.intent==="probe") log(`Tyst prov: ${TEXTURES[v.texture].label}, ${v.bpm} bpm${tag}`);
-  else if (engine.phase!=="placement")
-    log(`Varv ${loop.index}: ${TEXTURES[v.texture].label}, ${v.bpm} bpm${tag} — nivå ${v.level.toFixed(1)}`);
+  else if (v.intent==="probe") log(`Bonusvarv: ${TEXTURES[v.texture].label}, ${v.bpm} bpm${tag}`);
+  else if (v.intent==="jam") log(`Varv ${loop.index}: fritt spel, ${v.bpm} bpm`);
+  else if (v.intent!=="placement")
+    log(`Varv ${loop.index}: ${TEXTURES[v.texture].label}, ${v.bpm} bpm${tag} — svårighet ${v.level.toFixed(1)}`);
   if (loop.preview) log("Appen spelar vänsterhanden först.");
   if (loop.breath) log("Trummorna ut ett varv — andrum.");
 }
@@ -1567,6 +1975,16 @@ function logLoop(loop){
 /* Beslut på det som redan spelats, tillämpat på nästa etta. */
 function commitLoop(loop){
   loop.committed = true;
+  if (loop.jam){
+    /* Fritt spel bedöms inte. Bandet växer med det du spelar: ett lager
+       till för varje varv där minst fyra toner låg i skalan. */
+    const j = loop.jamStats, names = ["","padda","hi-hat","bas","bastrumma","virvel"];
+    if (j.good >= 4 && engine.layers < 5){ engine.layers++; log(`Lager in: ${names[engine.layers]}.`, "up"); }
+    engine.energy = Math.max(.15, Math.min(1, .25 + engine.layers*.15 + Math.min(.2, j.good/40)));
+    timing.samples = [];
+    scheduleLoop(loop.t1);
+    return;
+  }
   /* En ton är avgjord först när dess tidsfönster har stängt. */
   const cut = loop.commitAt - loop.win;
   const done = loop.events.filter(e=>!e.ghost && e.t < cut);
@@ -1595,6 +2013,7 @@ function commitLoop(loop){
 
   updateEngine({acc, sd, total, missed:total-hits, lagMoved});
   updatePanels(acc, sd, rec, loop.v);
+  saveEngine();
 
   scheduleLoop(loop.t1);
 }
@@ -1798,13 +2217,17 @@ function noteOn(note, vel, perfMs, echo, src){
   if (echo) liveOn(note, vel);
   const tp = heardTime(perfMs);
   const ev = state.running ? matchPress(note, tp) : null;
+  /* I fritt spel finns inga toner att träffa: tonen bedöms mot skalan. En
+     ton utanför skalan lyser blekt, inte rött — i fritt spel är inget fel. */
+  const jam = !ev && state.running ? jamNote(note, tp) : null;
   const shown = fold(ev ? ev.midi : note);
   unlight(note);
   flashes.push(lit[note] = { midi:shown, raw: ev ? ev.midi : note, end:Infinity, ghost:false,
-    hit: !!ev || !state.started,          /* före start: bara visa var handen är */
+    hit: !!ev || !state.started || !!(jam && jam.good),   /* före start: bara visa var handen är */
+    out: !!jam && !jam.good,
     hand: ev ? ev.hand : (note < 60 ? "L" : "R") });
 }
-function noteOff(note){ if (ctx){ liveOff(note); unlight(note); } }
+function noteOff(note){ if (ctx){ liveOff(note); unlight(note); trailOff(note); } }
 /* Tangenten lyser tills den släpps. Släppt under paus släcks den direkt,
    annars skulle den lysa kvar tills klockan går igen. */
 function unlight(note){
@@ -1851,7 +2274,7 @@ function learnLag(){
 }
 
 function matchPress(note, tp){
-  let best = null, bestCost = Infinity, home = null, near = null;
+  let best = null, bestCost = Infinity, bestLoop = null, home = null, near = null;
   const tc = tp - timing.lag;
   for (const loop of state.loops){
     if (tp >= loop.t0 && tp < loop.t1) home = loop;
@@ -1864,43 +2287,28 @@ function matchPress(note, tp){
       const d = Math.abs(tc - ev.t);
       if (d > loop.win) continue;
       const cost = d + (fold(ev.midi) === note ? 0 : .04);   /* tangenten den visas på vinner på lika villkor */
-      if (cost < bestCost){ best = ev; bestCost = cost; }
+      if (cost < bestCost){ best = ev; bestCost = cost; bestLoop = loop; }
     }
   }
   if (near !== null) timing.samples.push(near);
-  if (best){ best.hit = true; best.dt = (tc - best.t)*1000; return best; }
-  if (home) home.extras.push(tp);
+  if (best){ best.hit = true; best.dt = (tc - best.t)*1000; onHit(best, bestLoop); return best; }
+  if (home && !home.jam){ home.extras.push(tp); onWrong(); }
   return null;
 }
 
-/* Samma klang som piano(), men den klingar tills tangenten släpps. */
+/* Samma klang som bandets piano, men den klingar tills tangenten släpps.
+   Den klingar av som en pianoton även om tangenten hålls, och tystnar helt
+   efter tio sekunder — ett tappat note-off lämnar ingen ton som låter för
+   alltid. Den går rakt till mastern och till rummet, inte via bandet, så
+   "Ljud av" tystar kompet men aldrig det du själv spelar. */
 function liveOn(note, vel){
   liveOff(note);
-  const t = ctx.currentTime, peak = .08 + .22*(vel/127);
-  const g=ctx.createGain(), f=ctx.createBiquadFilter();
-  f.type="lowpass"; f.frequency.value = note<60 ? 1300 : 2900;
-  const o1=ctx.createOscillator(), o2=ctx.createOscillator(), g2=ctx.createGain();
-  o1.type="triangle"; o2.type="sine"; g2.gain.value=.2;
-  o1.frequency.value=mtof(note); o2.frequency.value=mtof(note)*2.001;
-  o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(f); f.connect(master);
-  g.gain.setValueAtTime(.0001,t);
-  g.gain.exponentialRampToValueAtTime(peak,t+.012);
-  /* klingar av som en pianoton även om tangenten hålls — och ett tappat
-     note-off lämnar ingen ton kvar som låter för alltid */
-  g.gain.setTargetAtTime(peak*.15,t+.012,.6);
-  g.gain.setTargetAtTime(.0001,t+3,1.2);
-  o1.start(t); o2.start(t); o1.stop(t+10); o2.stop(t+10);
-  freeAfter([o1,o2], [g2,g,f]);
-  held[note] = {g,o1,o2};
+  held[note] = pianoVoice(ctx.currentTime, note, .07 + .2*(vel/127), 0, master, .4, room, true);
 }
 function liveOff(note){
   const v = held[note]; if (!v) return;
   delete held[note];
-  const t = ctx.currentTime;
-  if (v.g.gain.cancelAndHoldAtTime) v.g.gain.cancelAndHoldAtTime(t);
-  else { v.g.gain.cancelScheduledValues(t); v.g.gain.setValueAtTime(v.g.gain.value,t); }
-  v.g.gain.setTargetAtTime(.0001,t,.07);
-  v.o1.stop(t+.5); v.o2.stop(t+.5);
+  pianoRelease(v);
 }
 
 
@@ -1955,7 +2363,7 @@ let laneSize = {w:340,h:352};
    delen som varvet använder markeras. */
 const MIN_WHITE = 16;
 function layoutStage(){
-  const stage = lane.parentElement, col = document.querySelector(".device").offsetWidth;
+  const stage = lane.closest(".stage"), col = document.querySelector(".device").offsetWidth;
   if (fsElement() === stage){ stage.style.width = stage.style.marginLeft = ""; laneSize = resizeCanvas(lane); return; }
   const avail = document.documentElement.clientWidth - 32;
   const w = view.sheet ? col : Math.max(col, Math.min(avail, whites.length*MIN_WHITE));
@@ -1970,8 +2378,37 @@ const FADE = .12;
 function flashColor(f, now){
   const a = (now < f.end ? 1 : Math.max(0,1-(now-f.end)/FADE))*.92;
   if (f.ghost) return `rgba(243,236,224,${a*.45})`;
+  if (f.out)   return `rgba(143,165,172,${a*.8})`;
   if (!f.hit)  return `rgba(226,96,127,${a})`;
   return f.hand==="L" ? `rgba(122,168,255,${a})` : `rgba(255,201,77,${a})`;
+}
+
+/* Var ett anslag syns: ovanför tangenten i pianorullen, vid noten på
+   linjen i notbladet. Gnistor och bedömningar startar där. */
+function hitPoint(midi, hand){
+  if (view.sheet && view.lay){
+    const p = staffPos(midi, view.key);
+    return { x: view.playX, y: view.lay.y(p.dn, hand === "L" ? "L" : "R") };
+  }
+  const r = keyRect(fold(midi), laneSize.w);
+  return { x: r.x + r.w/2, y: laneSize.h - 64 };
+}
+
+/* Tangenternas namn, så att man hittar på klaviaturen: C överallt, och
+   alla vita i Nybörjare. Där datortangenterna står skrivs inget. */
+function drawKeyNames(W, laneH, kbH){
+  if (!midi.inputs.length) return;
+  const all = !!style().fingers, ww = W/whites.length;
+  if (ww < 11) return;
+  lctx.fillStyle = "rgba(22,36,43,.45)"; lctx.textAlign = "center"; lctx.textBaseline = "alphabetic";
+  lctx.font = `600 ${Math.min(11, ww*.6).toFixed(1)}px "IBM Plex Sans",system-ui,sans-serif`;
+  for (const m of whites){
+    const pc = m % 12;
+    if (!all && pc !== 0) continue;
+    const r = keyRect(m, W);
+    lctx.fillText(PC_NAMES[pc] + (pc === 0 ? Math.floor(m/12)-1 : ""), r.x + r.w/2, laneH + kbH - 8);
+  }
+  lctx.textAlign = "start";
 }
 
 function drawLane(){
@@ -1990,7 +2427,7 @@ function drawLane(){
     if (now-flashes[i].end > FADE){ flashes.splice(i,1); i--; }
 
   lctx.clearRect(0,0,W,H);
-  if (view.sheet){ drawSheet(W, H, now); drawPaused(W, H); return; }
+  if (view.sheet){ drawSheet(W, H, now); drawHud(W, H, now); drawPaused(W, H); return; }
   lctx.fillStyle = "#16242b"; lctx.fillRect(0,0,W,H);
 
   /* Smala tangenter: markera delen som varvet använder, så att man hittar rätt. */
@@ -2008,6 +2445,7 @@ function drawLane(){
     const y = laneH - (loop.t0+bar*loop.bpb*loop.spb-now)*pps;
     if (y>0 && y<laneH){ lctx.beginPath(); lctx.moveTo(0,y); lctx.lineTo(W,y); lctx.stroke(); }
   }
+  drawJamLanes(W, laneH, now, pps);
 
   const fingers = !!style().fingers;
   for (const loop of state.loops) for (const ev of loop.events){
@@ -2039,7 +2477,19 @@ function drawLane(){
     }
   }
 
-  lctx.strokeStyle = "rgba(243,236,224,.45)"; lctx.lineWidth = 2;
+  /* Linjen pulserar med slagen, starkast på ettan: tiden syns, inte bara
+     hörs. Ett bonusvarv har en guldram. */
+  const glow = beatGlow(now), cur = state.loops.find(l=>now >= l.t0 && now < l.t1);
+  if (glow > .02){
+    const g = lctx.createLinearGradient(0, laneH-30, 0, laneH);
+    g.addColorStop(0, "rgba(243,236,224,0)"); g.addColorStop(1, `rgba(243,236,224,${.16*glow})`);
+    lctx.fillStyle = g; lctx.fillRect(0, laneH-30, W, 30);
+  }
+  if (cur && cur.bonus){
+    lctx.strokeStyle = `rgba(255,201,77,${.35 + .4*glow})`; lctx.lineWidth = 3;
+    lctx.strokeRect(1.5, 1.5, W-3, laneH-3);
+  }
+  lctx.strokeStyle = `rgba(243,236,224,${.45 + .4*glow})`; lctx.lineWidth = 2;
   lctx.beginPath(); lctx.moveTo(0,laneH); lctx.lineTo(W,laneH); lctx.stroke();
   if (used){ lctx.fillStyle = "rgba(255,201,77,.75)"; lctx.fillRect(used.x, laneH-4, used.w, 3); }
 
@@ -2054,6 +2504,7 @@ function drawLane(){
     lctx.fillStyle = flashColor(f,now); lctx.fillRect(r.x, laneH+2, r.w, kbH-4);
   }
   drawTypeLabels(W, false, "rgba(22,36,43,.5)", laneH+kbH-10);
+  drawKeyNames(W, laneH, kbH);
   lctx.fillStyle = "#1d3038";
   for (let m=LOW;m<=HIGH;m++){ if(!isBlack(m)) continue;
     const r = keyRect(m,W); lctx.fillRect(r.x, laneH+2, r.w, kbH*.6); }
@@ -2063,12 +2514,17 @@ function drawLane(){
     lctx.fillStyle = flashColor(f,now); lctx.fillRect(r.x, laneH+2, r.w, kbH*.6);
   }
   drawTypeLabels(W, true, "rgba(243,236,224,.65)", laneH+kbH*.6-4);
+  drawJamKeys(W, laneH, kbH, now);
+  drawHud(W, laneH, now);
   drawPaused(W, laneH);
 }
 
+/* Pausad: bilden mörknar. Pausade spelaren själv står sammanfattningen
+   ovanpå; annars (ljudet stoppat av systemet) en rad här. */
 function drawPaused(W, h){
   if (!(state.started && ctx && ctx.state !== "running")) return;
   lctx.fillStyle = "rgba(22,36,43,.6)"; lctx.fillRect(0,0,W,h);
+  if (!el("overlay").hidden) return;
   lctx.fillStyle = "#f3ece0"; lctx.textAlign = "center";
   lctx.font = '600 16px "IBM Plex Sans",system-ui,sans-serif';
   lctx.fillText("Pausad", W/2, h/2-4);
@@ -2198,8 +2654,10 @@ function drawSheet(W, H, now){
   lctx.stroke();
   lctx.fillStyle = SHEET.ink; lctx.fillRect(Lo.x0-1, Lo.top, 2, Lo.bottom-Lo.top);
 
-  /* spelmarkören */
-  lctx.fillStyle = "rgba(31,111,106,.10)";
+  /* spelmarkören, som pulserar med slagen; guld i ett bonusvarv */
+  const glow = beatGlow(now);
+  view.lay = Lo; view.playX = playX; view.key = key;
+  lctx.fillStyle = cur && cur.bonus ? `rgba(217,162,27,${.14 + .16*glow})` : `rgba(31,111,106,${.10 + .12*glow})`;
   lctx.fillRect(playX - hs*1.6, Lo.top - 5*hs, hs*3.2, Lo.bottom - Lo.top + 10*hs);
 
   /* Allt som rör sig ritas bakom klaven: det glider in under den och ut. */
@@ -2354,7 +2812,7 @@ function drawSheet(W, H, now){
     sheetHead(playX, Lo.y(p.dn, hand), hs, 1, color);
     lctx.globalAlpha = 1;
   }
-  lctx.strokeStyle = "rgba(31,111,106,.8)"; lctx.lineWidth = 2;
+  lctx.strokeStyle = `rgba(31,111,106,${.6 + .4*glow})`; lctx.lineWidth = 2 + glow;
   lctx.beginPath(); lctx.moveTo(playX, Lo.top - 5*hs); lctx.lineTo(playX, Lo.bottom + 5*hs); lctx.stroke();
 
   /* klavarna och förtecknen */
@@ -2401,7 +2859,7 @@ function drawChart(){
   const cs = getComputedStyle(document.body);
   const border = cs.getPropertyValue("--border").trim()||"#ddd";
   const accent = cs.getPropertyValue("--accent").trim()||"#1f6f6a";
-  const maxL = 12, pad = 6;
+  const maxL = Math.max(12, ...engine.history.map(h=>Math.max(h.level, h.est||0)+1)), pad = 6;
   const y = L => H-pad-(L/maxL)*(H-pad*2);
   const n = Math.max(22, engine.history.length);
   const x = i => pad+(i/(n-1))*(W-pad*2);
@@ -2423,7 +2881,517 @@ function drawChart(){
 
 
 /* ==========================================================================
-   12. GRÄNSSNITT
+   12. SPELET
+
+   Motorn håller dig på rätt nivå. Det här är det som får dig att vilja
+   stanna kvar där: bedömning av varje anslag, kombo, stjärnor efter varje
+   varv, bandet som växer, och det som bär mellan gångerna — nivå, dagens
+   mål, svit, uppdrag och en samling av det du spelat.
+
+   Ingenting här påverkar motorn. Poängen är belöning, inte mätning.
+
+   Samma princip som i motorn gäller: framsteg firas, nedgångar syns inte.
+   En miss ger ingen text, en bruten kombo försvinner bara, och ett
+   bonusvarv som inte gick är bara ett varv till.
+   ========================================================================== */
+
+const dayKey = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const today = () => dayKey(new Date());
+const yesterday = () => { const d = new Date(); d.setDate(d.getDate()-1); return dayKey(d); };
+
+/* Spelaren, sparad mellan gångerna. `engine` är motorns läge per spelsätt,
+   så att den som kommer tillbaka slipper placeringen. */
+const GOAL_SECS = 300;
+const P = { xp:0, streak:0, bestStreak:0, goalDay:null, day:null, secs:0, totalSecs:0, hits:0, bestCombo:0,
+            grooves:{}, progs:{}, onboarded:false, engine:{}, quests:null };
+try { Object.assign(P, JSON.parse(localStorage.getItem("vamp.player")) || {}); } catch(e){}
+function saveP(){ try { localStorage.setItem("vamp.player", JSON.stringify(P)); } catch(e){} }
+
+/* Nivån räknas ur XP och går bara uppåt. Den är inte motorns skattning —
+   den kan sjunka, och ska aldrig synas göra det. De första nivåerna kommer
+   snabbt, sedan glesare. */
+const xpFor = L => Math.round(120*Math.pow(L-1, 1.8));
+function levelOf(xp){ let L = 1; while (xpFor(L+1) <= xp) L++; return L; }
+const streakNow = () => P.goalDay === today() || P.goalDay === yesterday() ? P.streak : 0;
+const secsToday = () => P.day === today() ? P.secs : 0;
+
+const game = {
+  combo:0, comboAt:-9,
+  sess:{ xp:0, hits:0, notes:0, secs:0, bestCombo:0, stars:0, loops:0, news:[] },
+  toasts:[], sparks:[], pops:[], banner:null, trails:[],
+  maxStep:{}, pausedByUser:false, dirty:true
+};
+const fxNow = () => performance.now()/1000;
+const HAND_RGB = { R:"255,201,77", L:"122,168,255" };
+const fmt = n => Math.round(n).toLocaleString("sv-SE");
+
+/* --- Varje anslag ---------------------------------------------------------
+   Tidsfelet är redan rensat från fördröjning, så gränserna gäller spelaren.
+   Kombon räknar toner i rad; en miss eller en felton nollar den. Ett
+   bonusvarv ger dubbelt.
+
+   XP ska följa tid och kvalitet, inte antalet toner: sextondelar i 120 bpm
+   har femtio gånger fler toner per varv än hela noter, och räknat per ton
+   skulle en nybörjare aldrig hinna ifatt. Varje ton väger därför 12 delat
+   med varvets antal toner, och svårare varv ger mer i stjärnorna i stället. */
+const JUDGE = [ {ms:45, text:"Perfekt", pts:3}, {ms:100, text:"Bra", pts:2}, {ms:Infinity, text:"OK", pts:1} ];
+const multOf = c => c >= 50 ? 4 : c >= 25 ? 3 : c >= 10 ? 2 : 1;
+const noteWeight = loop => 12/Math.max(4, loop.noteCount);
+
+function onHit(ev, loop){
+  /* Ett anslag kan behandlas efter att tonen redan räknats som miss, om det
+     tidsstämplats före bildrutan som avgjorde den. Då räknas tonen inte två gånger. */
+  if (!ev.judged) game.sess.notes++;
+  ev.judged = true;
+  const j = JUDGE.find(x=>Math.abs(ev.dt) <= x.ms);
+  game.combo++;
+  addXp(j.pts * multOf(game.combo) * (loop.bonus ? 2 : 1) * noteWeight(loop));
+  game.sess.hits++; P.hits++;
+  game.sess.bestCombo = Math.max(game.sess.bestCombo, game.combo);
+  P.bestCombo = Math.max(P.bestCombo, game.combo);
+  quest("combo", game.combo, true);
+  if (game.combo === 10 || game.combo === 25 || game.combo === 50 || game.combo % 100 === 0) game.comboAt = fxNow();
+  const p = hitPoint(ev.midi, ev.hand);
+  burst(p.x, p.y, HAND_RGB[ev.hand], j.pts === 3 ? 9 : 5);
+  /* en text per grepp, inte en per ton */
+  const key = ev.hand + ev.b.toFixed(3);
+  if (!loop.popped[key]){
+    loop.popped[key] = true;
+    game.pops.push({ text:j.text, x:p.x, y:p.y, t:fxNow(), rgb: j.pts === 3 ? "255,255,255" : HAND_RGB[ev.hand] });
+  }
+}
+function onMiss(ev){ ev.judged = true; game.sess.notes++; game.combo = 0; }
+function onWrong(){ game.combo = 0; }
+
+/* Missar avgörs när tonens tidsfönster stängt, sett från det som hörs. */
+function judgeMisses(heard){
+  for (const loop of state.loops) for (const ev of loop.events)
+    if (!ev.ghost && !ev.hit && !ev.judged && heard - timing.lag > ev.t + loop.win) onMiss(ev);
+}
+
+function burst(x, y, rgb, n){
+  const t = fxNow();
+  for (let i=0; i<n; i++){
+    const a = -Math.PI/2 + (Math.random()-.5)*2.4, v = 60 + Math.random()*140;
+    game.sparks.push({ x, y, vx:Math.cos(a)*v, vy:Math.sin(a)*v, t, life:.35 + Math.random()*.3, rgb, r:1.4 + Math.random()*2 });
+  }
+  if (game.sparks.length > 400) game.sparks.splice(0, game.sparks.length-400);
+}
+
+/* --- Fritt spel ------------------------------------------------------------
+   Ingen ton är fel, men några är rättare: en ackordton ger mest, en ton i
+   skalan ger poäng, och en ton nära en åttondel i takten ger mer. En ton
+   utanför skalan bryter kombon, inget annat. Den som föregriper nästa
+   ackord med en åttondel räknas till det nya ackordet. */
+function jamNote(note, tp){
+  const tc = tp - timing.lag;
+  const loop = state.loops.find(l=>l.jam && tc >= l.t0 - .1 && tc < l.t1 - .1);
+  if (!loop) return null;
+  const pos = (tc - loop.t0)/loop.spb, beats = loop.bpb*4;
+  const b = Math.min(beats - 1e-6, Math.max(0, pos + .5));
+  const slot = loop.v.slots.find(s=>b >= s.start && b < s.start + s.beats) || loop.v.slots[0];
+  const pc = ((note % 12) + 12) % 12;
+  const inScale = SCALES[loop.scale].steps.some(s=>(loop.v.tonic + s) % 12 === pc);
+  const chord = slot.pcs.indexOf(pc) >= 0;
+  const good = chord || inScale;
+  const onGrid = Math.abs(pos*2 - Math.round(pos*2))/2*loop.spb < .06;
+  const st = loop.jamStats;
+  if (good){ st.good++; if (chord){ st.chord++; quest("jam", 1); } } else st.out++;
+  const p = hitPoint(note, note < 60 ? "L" : "R");
+  if (good){
+    game.combo++;
+    game.sess.bestCombo = Math.max(game.sess.bestCombo, game.combo);
+    P.bestCombo = Math.max(P.bestCombo, game.combo);
+    if (game.combo === 10 || game.combo === 25 || game.combo === 50 || game.combo % 100 === 0) game.comboAt = fxNow();
+    /* Högst 100 XP per varv i fritt spel: poängen är för att lyssna, inte
+       för att hamra. */
+    const xp = Math.min((chord ? 1 : .5) * (onGrid ? 2 : 1) * multOf(game.combo), 100 - loop.jamXp);
+    if (xp > 0){ loop.jamXp += xp; addXp(xp); }
+    burst(p.x, p.y, chord ? HAND_RGB.R : "99,210,195", chord ? 7 : 4);
+    if (chord) game.pops.push({ text: onGrid ? "Ackordton, i takt" : "Ackordton", x:p.x, y:p.y, t:fxNow(), rgb:HAND_RGB.R });
+    else if (onGrid) game.pops.push({ text:"I takt", x:p.x, y:p.y, t:fxNow(), rgb:"99,210,195" });
+  } else game.combo = 0;
+  game.sess.notes++; if (good) game.sess.hits++;
+  game.trails.push({ key:note, midi:fold(note), t0:tp, t1:null, rgb: chord ? HAND_RGB.R : good ? "99,210,195" : "243,236,224" });
+  if (game.trails.length > 120) game.trails.shift();
+  return { good, chord };
+}
+function trailOff(note){
+  for (let i=game.trails.length-1; i>=0; i--)
+    if (game.trails[i].key === note && game.trails[i].t1 === null){ game.trails[i].t1 = audioClock.now; break; }
+}
+
+/* --- XP, nivå och firanden --------------------------------------------- */
+function addXp(n){
+  if (!n) return;
+  const was = levelOf(P.xp);
+  P.xp += n; game.sess.xp += n; game.dirty = true;
+  const now = levelOf(P.xp);
+  if (now > was) celebrate(`Nivå ${now}`, "Du går uppåt", "level");
+}
+
+/* Nästa etta som ännu inte hörts, i ljudklockans tid. */
+function nextDownbeat(){
+  if (!ctx || !state.loops.length) return null;
+  const t = ctx.currentTime + .08;
+  const loop = state.loops.find(l=>t >= l.t0 && t < l.t1) || state.loops[state.loops.length-1];
+  const bar = loop.bpb*loop.spb;
+  return loop.t0 + Math.max(0, Math.ceil((t - loop.t0)/bar - 1e-6))*bar;
+}
+/* Firandet kommer på nästa etta: en crash i musiken, en rad i bilden. */
+function celebrate(text, sub, kind){
+  const at = nextDownbeat();
+  if (at !== null) crash(at, .2);
+  game.toasts.push({ text, sub, kind, at: at === null ? 0 : at });
+  /* bara den senaste nivån i sammanfattningen, inte varje steg dit */
+  if (kind === "level") game.sess.news = game.sess.news.filter(n=>!/^Nivå \d/.test(n));
+  if (game.sess.news.indexOf(text) < 0) game.sess.news.push(text);
+}
+
+/* Det nya i ett varv, bestämt när varvet läggs och visat när det hörs. */
+function newsFor(loop, before){
+  const out = [], v = loop.v, tex = TEXTURES[v.texture];
+  const names = ["","Paddan","Hi-hatten","Basen","Bastrumman","Virveln"];
+  if (before && loop.layers > before.layers)
+    out.push({ text: loop.layers >= 5 ? "Hela bandet spelar" : `${names[loop.layers]} kommer in`,
+               sub: `${loop.layers} av 5 i bandet`, kind:"band", crash:true });
+  if (!loop.jam){
+    const seen = game.maxStep[loop.style];
+    if (loop.step >= 0 && seen !== undefined && loop.step > seen)
+      out.push({ text:`Steg ${loop.step+1}: ${tex.label}`, sub: loop.step+1 < loop.steps ? `${loop.steps-loop.step-1} kvar i trappan` : "Trappans sista steg", kind:"step", crash:true });
+    else if (!P.grooves[v.texture])
+      out.push({ text:`Ny groove: ${tex.label}`, sub: loop.probe >= 0 ? "Uppvärmning" : "Första gången", kind:"new", crash:true });
+    if (loop.step >= 0) game.maxStep[loop.style] = Math.max(seen === undefined ? -1 : seen, loop.step);
+    P.grooves[v.texture] = P.grooves[v.texture] || { n:0, clean:0, best:0 };
+  }
+  if (P.progs[v.prog] === undefined){
+    const p = progOf(v.prog);
+    out.push({ text:`Ny progression: ${p.name}`, sub:`${p.mood} · ${loop.v.mat.chords.map(c=>c.label).join(" ")}`, kind:"new" });
+    P.progs[v.prog] = 0;
+  }
+  return out;
+}
+function showNews(loop){
+  for (const n of loop.news){
+    game.toasts.push({ text:n.text, sub:n.sub, kind:n.kind, at:loop.t0 });
+    if (n.kind !== "band" && game.sess.news.indexOf(n.text) < 0) game.sess.news.push(n.text);
+  }
+}
+
+/* --- Varvets slut ---------------------------------------------------------
+   Här räknas hela varvet, också sista takten som motorn inte hann se.
+   Stjärnor, samlingen, rekord och speltid. Ett varv där ingen spelade
+   räknas inte alls — det är ingen som gått ifrån, inte ett dåligt varv. */
+function loopEnd(loop){
+  loop.ended = true;
+  if (loop.jam){
+    if (loop.jamStats.good + loop.jamStats.out > 0){ game.sess.loops++; addTime(loop); if (loop.layers >= 5) quest("band", 1); saveP(); }
+    return;
+  }
+  const evs = loop.events.filter(e=>!e.ghost), hits = evs.filter(e=>e.hit).length;
+  if (!evs.length || !hits) return;
+  const acc = hits/(evs.length + loop.extras.length*.5);
+  const stars = acc >= .97 ? 3 : acc >= .9 ? 2 : acc >= .75 ? 1 : 0;
+  const v = loop.v, label = TEXTURES[v.texture].label, x2 = loop.bonus ? 2 : 1;
+  const flawless = hits === evs.length && !loop.extras.length;
+  game.sess.loops++; game.sess.stars += stars;
+  /* Stjärnorna väger mer i svårare varv. */
+  addXp([0,3,8,15][stars] * x2 * (1 + v.level/8));
+  if (stars) quest("stars", stars);
+  if (acc >= .94) quest("clean", 1);
+  if (flawless) quest("flawless", 1);
+  if (loop.layers >= 5) quest("band", 1);
+  if (stars || loop.bonus)
+    game.banner = { stars, t:fxNow(), acc,
+      text: loop.bonus ? (acc >= .85 ? "Bonusvarvet klarat" : "Bonusvarv") :
+            flawless ? "Felfritt" : ["","Bra","Snyggt","Rent varv"][stars] };
+  if (loop.bonus && acc >= .85){ addXp(30); quest("bonus", 1); }
+
+  const g = P.grooves[v.texture] = P.grooves[v.texture] || { n:0, clean:0, best:0 };
+  g.n++;
+  if (acc >= .94 && ++g.clean === 3) celebrate(`Behärskad: ${label}`, "Tre rena varv", "star");
+  if (acc >= .9 && v.bpm > g.best){
+    if (g.best) celebrate(`Rekord: ${label}`, `${v.bpm} bpm`, "record");
+    g.best = v.bpm;
+  }
+  P.progs[v.prog] = (P.progs[v.prog] || 0) + 1;
+  addTime(loop);
+  saveP();
+  renderCollection();
+}
+
+/* Dagens mål är tid vid pianot, inte poäng: fem minuter är fem minuter,
+   oavsett nivå. Sviten är dagar i rad med målet klarat. */
+function addTime(loop){
+  const secs = loop.t1 - loop.t0, d = today();
+  if (P.day !== d){ P.day = d; P.secs = 0; }
+  const was = P.secs;
+  P.secs += secs; P.totalSecs += secs; game.sess.secs += secs; game.dirty = true;
+  if (was < GOAL_SECS && P.secs >= GOAL_SECS){
+    P.streak = P.goalDay === yesterday() ? P.streak + 1 : P.goalDay === d ? P.streak : 1;
+    P.goalDay = d; P.bestStreak = Math.max(P.bestStreak, P.streak);
+    addXp(50);
+    celebrate("Dagens mål klart", P.streak > 1 ? `${P.streak} dagar i rad` : "Första dagen i en ny svit", "goal");
+  }
+}
+
+/* --- Dagens uppdrag --------------------------------------------------------
+   Tre om dagen, samma hela dagen, svårare med nivån. Dragna ur datumet, så
+   de är desamma om sidan laddas om. */
+const QUESTS = {
+  combo:   { text:n=>`Nå kombo ${n}`,                    need:[15,30,50], max:true },
+  clean:   { text:n=>`Spela ${n} rena varv`,              need:[3,5,8] },
+  flawless:{ text:n=>n === 1 ? "Spela ett felfritt varv" : `Spela ${n} felfria varv`, need:[1,2,3] },
+  stars:   { text:n=>`Samla ${n} stjärnor`,                need:[8,15,25] },
+  bonus:   { text:()=>"Klara ett bonusvarv",               need:[1,1,1] },
+  band:    { text:()=>"Spela ett varv med hela bandet",    need:[1,1,1] },
+  jam:     { text:n=>`${n} ackordtoner i Fritt spel`,      need:[20,40,80] }
+};
+function questsToday(){
+  const d = today();
+  /* Ett uppdrag som inte finns längre (ett sparat id från en äldre version)
+     drar om dagens lista hellre än att rita något trasigt. */
+  if (P.quests && P.quests.day === d && P.quests.list.every(q=>QUESTS[q.id])) return P.quests.list;
+  const tier = Math.min(2, Math.floor((levelOf(P.xp)-1)/6)), ids = Object.keys(QUESTS), list = [];
+  let h = 7; for (const c of d) h = (Math.imul(h, 31) + c.charCodeAt(0)) >>> 0;
+  while (list.length < 3){
+    h = (Math.imul(h, 1103515245) + 12345) >>> 0;
+    const id = ids[(h >>> 8) % ids.length];
+    if (!list.some(q=>q.id === id)) list.push({ id, need:QUESTS[id].need[tier], n:0, done:false });
+  }
+  P.quests = { day:d, list };
+  return list;
+}
+function quest(id, amount, isMax){
+  const q = questsToday().find(x=>x.id === id);
+  if (!q || q.done) return;
+  q.n = isMax ? Math.max(q.n, amount) : q.n + amount;
+  if (q.n >= q.need){
+    q.n = q.need; q.done = true;
+    addXp(40);
+    celebrate("Uppdrag klart", QUESTS[id].text(q.need), "quest");
+  }
+  game.dirty = true;
+}
+
+/* --- Motorns läge mellan gångerna -------------------------------------- */
+function saveEngine(){
+  if ((engine.phase === "zoom" || engine.phase === "groove") && engine.est !== null)
+    P.engine[prefs.style] = { est: Math.round(engine.est*100)/100, step: engine.step };
+}
+/* Var motorn börjar när spelet startar eller spelsättet byts. Fritt spel har
+   ingen nivå. Har spelsättet spelats förut börjar det strax under där det
+   slutade — en uppvärmning, inte en ny placering. Annars placering vid
+   start, och en trappa som byts till mitt i börjar längst ned. */
+function enterStyle(fresh){
+  if (style().jam){ engine.phase = "jam"; engine.progIn = 0; return "jam"; }
+  const saved = P.engine[prefs.style];
+  if (saved && saved.est){
+    Object.assign(engine, { phase:"zoom", est:saved.est, sigma:.8, target:Math.max(1, saved.est-1),
+      step: ladder() ? Math.min(saved.step || 0, ladder().length-1) : 0, stepGood:0, stepBad:0,
+      cleanRun:0, loopsAtLevel:0, safeHarbour:null, needsHarbour:false });
+    return "resume";
+  }
+  if (fresh || engine.phase === "jam" || engine.phase === "placement" || engine.est === null){
+    Object.assign(engine, { phase:"placement", probeIndex:0, probeResults:[] });
+    return "placement";
+  }
+  /* Ny trappa mitt i: börja längst ned, i provtempot, och klättra därifrån.
+     Nivån från förut säger inget om det nya spelsättet. */
+  if (ladder()){
+    engine.step = 0; engine.stepGood = 0; engine.stepBad = 0;
+    fitSelection(false);
+    engine.target = Math.max(1, Math.min(engine.target, probeVariation(0).level));
+    engine.est = Math.min(engine.est, engine.target + 0.4);
+    engine.cleanRun = 0; engine.loopsAtLevel = 0; engine.safeHarbour = null;
+  }
+  return "switch";
+}
+
+/* --- Bilden: pulsen, bandet, kombon, gnistor och firanden ----------------- */
+function pathRound(x, y, w, h, r){
+  r = Math.max(0, Math.min(r, w/2, h/2));
+  lctx.beginPath(); lctx.moveTo(x+r, y);
+  lctx.arcTo(x+w, y, x+w, y+h, r); lctx.arcTo(x+w, y+h, x, y+h, r);
+  lctx.arcTo(x, y+h, x, y, r); lctx.arcTo(x, y, x+w, y, r); lctx.closePath();
+}
+function pill(x, y, w, h, fill){ lctx.fillStyle = fill; pathRound(x, y, w, h, h/2); lctx.fill(); }
+const hudFont = (w, px, display) => `${w} ${px}px ${display ? '"Bricolage Grotesque",Georgia,serif' : '"IBM Plex Sans",system-ui,sans-serif'}`;
+
+/* Hur starkt slaget lyser just nu: 1 precis på slaget, starkast på ettan. */
+function beatGlow(now){
+  if (!ctx || ctx.state !== "running") return 0;
+  const cur = state.loops.find(l=>now >= l.t0 && now < l.t1);
+  if (!cur) return 0;
+  const beat = (now - cur.t0)/cur.spb, ph = beat - Math.floor(beat);
+  return Math.exp(-ph*7) * (Math.floor(beat) % cur.bpb === 0 ? 1 : .55);
+}
+
+function drawHud(W, H, now){
+  const t = fxNow(), cur = state.loops.find(l=>now >= l.t0 && now < l.t1);
+  lctx.textBaseline = "middle"; lctx.textAlign = "center";
+
+  /* Varvets fyra takter, och vad det är för varv. I notbladet nedtill, där
+     ackordnamnen inte står. */
+  if (cur && state.started){
+    const gap = 4, sw = Math.max(16, Math.min(38, (W*.32 - gap*3)/4)), tw = sw*4 + gap*3, x0 = (W - tw)/2;
+    const y = view.sheet ? H - 12 : 9, ly = view.sheet ? y - 26 : y + 9;
+    pill(x0-7, y-5, tw+14, 13, "rgba(22,36,43,.55)");
+    const pos = (now - cur.t0)/(cur.bpb*cur.spb);
+    for (let i=0; i<4; i++){
+      lctx.fillStyle = "rgba(243,236,224,.2)"; lctx.fillRect(x0 + i*(sw+gap), y, sw, 3);
+      const f = Math.max(0, Math.min(1, pos - i));
+      lctx.fillStyle = cur.bonus ? "#ffc94d" : cur.jam ? "#63d2c3" : "rgba(243,236,224,.9)";
+      if (f > 0) lctx.fillRect(x0 + i*(sw+gap), y, sw*f, 3);
+    }
+    const label = cur.probe >= 0 ? `Uppvärmning ${cur.probe+1} av ${STYLES[cur.style].probes.length}`
+      : cur.bonus ? "Bonusvarv · dubbla poäng" : cur.jam ? "Fritt spel · ackordtonerna lyser" : "";
+    if (label){
+      lctx.font = hudFont(600, 11.5);
+      const w = lctx.measureText(label).width + 18;
+      pill((W-w)/2, ly, w, 19, cur.bonus ? "rgba(255,201,77,.92)" : "rgba(22,36,43,.62)");
+      lctx.fillStyle = cur.bonus ? "#16242b" : "#f3ece0"; lctx.fillText(label, W/2, ly+10);
+    }
+  }
+
+  /* Kombon, uppe till vänster. Den växer till vid 10, 25, 50 och hundratal. */
+  if (game.combo >= 5){
+    const k = Math.max(0, 1 - (t - game.comboAt)/.4), sc = 1 + .4*k, m = multOf(game.combo);
+    lctx.save(); lctx.translate(12, 12); lctx.scale(sc, sc);
+    lctx.font = hudFont(800, 22, true);
+    const nw = lctx.measureText(String(game.combo)).width;
+    lctx.font = hudFont(600, 10.5);
+    const w = Math.max(nw, lctx.measureText("KOMBO").width) + (m > 1 ? 30 : 0) + 18;
+    pill(0, 0, w, 40, "rgba(22,36,43,.6)");
+    lctx.textAlign = "left";
+    lctx.fillStyle = "#f3ece0"; lctx.font = hudFont(800, 22, true); lctx.fillText(String(game.combo), 9, 16);
+    lctx.fillStyle = "rgba(243,236,224,.6)"; lctx.font = hudFont(600, 9.5); lctx.fillText("KOMBO", 9, 32);
+    if (m > 1){ lctx.fillStyle = "#ffc94d"; lctx.font = hudFont(800, 15, true); lctx.fillText("×"+m, w-30, 20); }
+    lctx.restore(); lctx.textAlign = "center";
+  }
+
+  /* Poängen i kväll, uppe till höger. */
+  if (state.started && game.sess.xp > 0){
+    const s = `${fmt(game.sess.xp)} XP`;
+    lctx.font = hudFont(700, 12.5);
+    const w = lctx.measureText(s).width + 18;
+    pill(W-w-10, 12, w, 22, "rgba(22,36,43,.6)");
+    lctx.fillStyle = "#f3ece0"; lctx.fillText(s, W-10-w/2, 23);
+  }
+
+  /* gnistor */
+  for (let i=0; i<game.sparks.length; i++){
+    const s = game.sparks[i], age = t - s.t;
+    if (age > s.life){ game.sparks.splice(i,1); i--; continue; }
+    lctx.fillStyle = `rgba(${s.rgb},${(1-age/s.life)*.95})`;
+    lctx.beginPath(); lctx.arc(s.x + s.vx*age, s.y + s.vy*age + 260*age*age, s.r, 0, Math.PI*2); lctx.fill();
+  }
+  /* bedömningarna stiger och bleknar */
+  lctx.font = hudFont(800, 13, true); lctx.lineWidth = 3; lctx.strokeStyle = "rgba(22,36,43,.85)";
+  for (let i=0; i<game.pops.length; i++){
+    const p = game.pops[i], age = t - p.t;
+    if (age > .75){ game.pops.splice(i,1); i--; continue; }
+    const y = p.y - 18 - age*38, x = Math.max(34, Math.min(W-34, p.x));
+    lctx.globalAlpha = Math.min(1, (1 - age/.75)*1.6);
+    lctx.strokeText(p.text, x, y); lctx.fillStyle = `rgb(${p.rgb})`; lctx.fillText(p.text, x, y);
+  }
+  lctx.globalAlpha = 1;
+
+  /* Varvets resultat: stjärnor, en kort rad, andelen. */
+  const b = game.banner;
+  if (b && t - b.t < 1.8){
+    const age = t - b.t, a = Math.min(1, age/.12, (1.8 - age)/.35), y = H*.46;
+    lctx.globalAlpha = a;
+    lctx.font = hudFont(800, 20, true);
+    const line = `${b.text} · ${Math.round(b.acc*100)} %`, w = Math.max(150, lctx.measureText(line).width + 36);
+    pill((W-w)/2, y-34, w, 64, "rgba(22,36,43,.72)");
+    lctx.font = hudFont(400, 22);
+    for (let i=0; i<3; i++){
+      const pop = i < b.stars ? 1 + .3*Math.max(0, 1 - (age - i*.08)/.25) : 1;
+      lctx.save(); lctx.translate(W/2 + (i-1)*26, y-15); lctx.scale(pop, pop);
+      lctx.fillStyle = i < b.stars ? "#ffc94d" : "rgba(243,236,224,.22)"; lctx.fillText("★", 0, 0);
+      lctx.restore();
+    }
+    lctx.fillStyle = "#f3ece0"; lctx.font = hudFont(700, 15, true); lctx.fillText(line, W/2, y+13);
+    lctx.globalAlpha = 1;
+  }
+
+  /* Firanden, en i taget, från den etta de hör till. */
+  const q = game.toasts[0];
+  if (q && now >= q.at - .02){
+    if (q.shown === undefined) q.shown = t;
+    const age = t - q.shown;
+    if (age > 2.4) game.toasts.shift();
+    else {
+      const a = Math.min(1, age/.15, (2.4 - age)/.4), y = Math.max(66, H*.2) + (1-Math.min(1, age/.2))*10;
+      const color = { level:"#ffc94d", goal:"#ff9f5a", record:"#ff8fb1", star:"#ffc94d", quest:"#63d2c3", band:"#7aa8ff", step:"#63d2c3", new:"#f3ece0" }[q.kind] || "#f3ece0";
+      lctx.globalAlpha = a;
+      lctx.font = hudFont(800, 17, true);
+      const tw = lctx.measureText(q.text).width;
+      lctx.font = hudFont(500, 11.5);
+      const w = Math.max(tw, lctx.measureText(q.sub || "").width) + 40;
+      pill((W-w)/2, y-24, w, 48, "rgba(22,36,43,.82)");
+      lctx.fillStyle = color; lctx.fillRect((W-w)/2 + 16, y+18, w-32, 2);
+      lctx.font = hudFont(800, 17, true); lctx.fillStyle = color; lctx.fillText(q.text, W/2, y-7);
+      lctx.font = hudFont(500, 11.5); lctx.fillStyle = "rgba(243,236,224,.75)"; lctx.fillText(q.sub || "", W/2, y+10);
+      lctx.globalAlpha = 1;
+    }
+  }
+  lctx.textAlign = "start"; lctx.textBaseline = "alphabetic";
+}
+
+/* Fritt spel i pianorullen: ackordtonerna faller som ljusa band, så man ser
+   nästa ackord komma, och det man spelar stiger uppåt ur tangenterna. */
+function drawJamLanes(W, laneH, now, pps){
+  lctx.font = hudFont(700, 12);
+  for (const loop of state.loops){
+    if (!loop.jam) continue;
+    for (const s of loop.v.slots){
+      const ta = loop.t0 + s.start*loop.spb, tb = ta + s.beats*loop.spb;
+      const yb = Math.min(laneH, laneH - (ta - now)*pps), yt = Math.max(0, laneH - (tb - now)*pps);
+      if (yb <= 0 || yt >= laneH) continue;
+      for (let m=LOW; m<=HIGH; m++){
+        const pc = ((m%12)+12)%12, k = s.pcs.indexOf(pc);
+        if (k < 0) continue;
+        const r = keyRect(m, W);
+        lctx.fillStyle = k === 0 ? "rgba(255,201,77,.2)" : "rgba(255,201,77,.1)";
+        lctx.fillRect(r.x, yt, r.w, yb-yt);
+      }
+      if (yb < laneH - 2 && yb > 14){
+        lctx.fillStyle = "rgba(255,201,77,.8)";
+        lctx.fillText(s.name, 8, yb - 5);
+        lctx.fillStyle = "rgba(255,201,77,.35)"; lctx.fillRect(0, yb, W, 1);
+      }
+    }
+  }
+  for (let i=0; i<game.trails.length; i++){
+    const tr = game.trails[i], end = tr.t1 === null ? now : tr.t1;
+    const yb = laneH - (now - end)*pps, yt = laneH - (now - tr.t0)*pps;
+    if (yb < 0){ game.trails.splice(i,1); i--; continue; }
+    const r = keyRect(tr.midi, W), h = Math.max(4, yb-yt);
+    lctx.fillStyle = `rgba(${tr.rgb},${tr.t1 === null ? .85 : .6})`;
+    pathRound(r.x+1, yb-h, r.w-2, h, Math.min(4, r.w/3)); lctx.fill();
+  }
+}
+/* Skalans toner som prickar på tangenterna, det klingande ackordets starkast. */
+function drawJamKeys(W, laneH, kbH, now){
+  const cur = state.loops.find(l=>l.jam && now >= l.t0 && now < l.t1);
+  if (!cur) return;
+  const pos = (now - cur.t0)/cur.spb;
+  const slot = cur.v.slots.find(s=>pos >= s.start && pos < s.start + s.beats) || cur.v.slots[0];
+  const scale = SCALES[cur.scale].steps.map(s=>(cur.v.tonic + s) % 12);
+  for (let m=LOW; m<=HIGH; m++){
+    const pc = ((m%12)+12)%12, chord = slot.pcs.indexOf(pc) >= 0;
+    if (!chord && scale.indexOf(pc) < 0) continue;
+    const r = keyRect(m, W), y = isBlack(m) ? laneH + kbH*.6 - 9 : laneH + kbH - 22;
+    lctx.fillStyle = chord ? "#ffc94d" : isBlack(m) ? "rgba(99,210,195,.9)" : "rgba(31,111,106,.7)";
+    lctx.beginPath(); lctx.arc(r.x + r.w/2, y, Math.min(chord ? 4.5 : 3, r.w/3), 0, Math.PI*2); lctx.fill();
+  }
+}
+
+
+/* ==========================================================================
+   13. GRÄNSSNITT
    ========================================================================== */
 
 const el = id => document.getElementById(id);
@@ -2492,9 +3460,27 @@ function updateChips(loop){
   el("c-texture").textContent = TEXTURES[v.texture].label +
     (loop.step >= 0 ? ` · steg ${loop.step+1}/${loop.steps}` : "");
   el("c-bpm").textContent = v.bpm+" bpm"+(v.meter===3?" · 3/4":"")+(v.swing?" · swing":"");
-  const names = ["","padda","padda + hi-hat","padda + bas","+ bastrumma","fullt komp"];
-  el("c-layers").textContent = loop.breath ? "andrum" : names[loop.layers];
   el("c-texture").className = "chip"+(v.shape.independence>0?" two":"");
+  renderBand(loop);
+}
+
+/* Bandet: fem musiker som kommer in ett i taget, ett per bra varv. I ett
+   andrumsvarv vilar trummorna. Spelar du själv basen vilar bandets bas. */
+const BAND = [
+  ["Padda",     '<path d="M2 3.5h12v9H2zM5.5 3.5v5.5M8 3.5v5.5M10.5 3.5v5.5" fill="none" stroke="currentColor" stroke-width="1.4"/>'],
+  ["Hi-hat",    '<path d="M2 6.5h12M3.5 9h9M8 6.5V14M8 4v2.5" fill="none" stroke="currentColor" stroke-width="1.5"/>'],
+  ["Bas",       '<path d="M2 9.5c1.5-4 3-4 4.5 0s3 4 4.5 0 2-3 3-2" fill="none" stroke="currentColor" stroke-width="1.6"/>'],
+  ["Bastrumma", '<circle cx="8" cy="8.5" r="5.2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8.5" r="1.4" fill="currentColor"/>'],
+  ["Virvel",    '<ellipse cx="8" cy="5.5" rx="5.8" ry="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.2 5.5v5c0 1.1 2.6 2 5.8 2s5.8-.9 5.8-2v-5" fill="none" stroke="currentColor" stroke-width="1.4"/>']
+];
+function renderBand(loop){
+  const L = loop ? loop.layers : 0, own = loop && TEXTURES[loop.v.texture].ownsBass;
+  el("band").innerHTML = BAND.map(([name, path], i)=>{
+    const on = i < L, rest = on && ((loop.breath && i !== 0 && i !== 2) || (own && i === 2));
+    return `<span class="${on ? (rest ? "on rest" : "on") : ""}" title="${name}${!on ? " — inte inne än" : rest ? " — vilar" : ""}">` +
+           `<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">${path}</svg></span>`;
+  }).join("");
+  el("band").setAttribute("aria-label", `Bandet: ${L} av 5` + (loop && loop.breath ? ", trummorna vilar" : ""));
 }
 
 function frame(){
@@ -2506,10 +3492,16 @@ function frame(){
       commitLoop(newest);
     }
     for (const loop of state.loops)
-      if (now>=loop.t0 && now<loop.t1 && state.shown!==loop){ state.shown=loop; updateChips(loop); announceLoop(loop); }
-    while (state.loops.length>2 && state.loops[0].t1 < now-.5) state.loops.shift();
+      if (now>=loop.t0 && now<loop.t1 && state.shown!==loop){ state.shown=loop; updateChips(loop); announceLoop(loop); showNews(loop); }
+    /* Missar och varvens slut avgörs mot det som hörs. */
+    const heard = audioClock.now;
+    if (state.running && ctx.state === "running") judgeMisses(heard);
+    for (const loop of state.loops)
+      if (!loop.ended && heard >= loop.t1 + loop.win + Math.max(0, timing.lag)) loopEnd(loop);
+    while (state.loops.length>2 && state.loops[0].t1 < now-.5 && state.loops[0].ended) state.loops.shift();
     if (captionUntil && now>captionUntil){ el("caption").textContent=""; captionUntil=0; }
   }
+  if (game.dirty){ game.dirty = false; renderMe(); }
   requestAnimationFrame(frame);
 }
 
@@ -2520,7 +3512,11 @@ function begin(){
   state.started = true;
   state.running = true;
   state.startedAt = ctx.currentTime;
-  el("caption").textContent = view.sheet
+  P.onboarded = true; saveP();
+  hideOverlay();
+  el("caption").textContent = style().jam
+    ? "Spela vad du vill. Ackordtonerna faller som ljusa band, och prickarna på tangenterna visar skalan — guld är ackordet som klingar nu."
+    : view.sheet
     ? "Spela noterna när de når linjen. Oktaven spelar ingen roll."
     : midi.inputs.length
     ? "Spela tonerna när de når tangenterna. Oktaven spelar ingen roll."
@@ -2533,23 +3529,164 @@ function begin(){
   if (style().fingers) el("caption").textContent += (view.sheet ? " Siffran vid noten" : " Siffran på noten") + " är fingret: 1 är tummen, 5 är lillfingret.";
   captionUntil = ctx.currentTime+10;
   updateTransport();
+  const how = enterStyle(true);
   fitSelection(true);
-  log(`Placering: fyra korta prov i ${keyName(engine.tonic, scaleFor(engine.prog))}, samma padda, ${probeBpm()} bpm.`,"phase");
-  /* En takt inräkning. Utan den når första tonen tangenterna innan den
-     hunnit synas, och första provet börjar med en miss. */
-  const spb = 60/probeBpm();
+  const where = keyName(engine.tonic, scaleFor(engine.prog));
+  if (how === "placement") log(`Placering: ${style().probes.length} korta prov i ${where}, samma padda, ${probeBpm()} bpm.`,"phase");
+  else if (how === "resume") log(`Välkommen tillbaka till ${style().label}: svårighet ${engine.est.toFixed(1)} förra gången, uppvärmning på ${engine.target.toFixed(1)}.`,"phase");
+  else log(`Fritt spel i ${where}.`,"phase");
+  /* En takt inräkning, i första varvets tempo och taktart. Utan den når
+     första tonen tangenterna innan den hunnit synas. */
+  const first = chooseVariation(), spb = 60/first.bpm;
   let t0 = ctx.currentTime+.3;
-  for (let k=0;k<4;k++) tick(t0+k*spb, k===0);
-  t0 += 4*spb;
-  scheduleLoop(t0);
+  for (let k=0;k<first.meter;k++) tick(t0+k*spb, k===0);
+  t0 += first.meter*spb;
+  scheduleLoop(t0, first);
+  renderCollection();
 }
 
 /* Paus fryser ljudklockan. Allt — schemalagda toner, fallande noter,
-   beslutsfönstret — räknar på den, så allt står still på samma ställe. */
+   beslutsfönstret — räknar på den, så allt står still på samma ställe.
+   Den som pausar själv får se vad kvällen gett så här långt. */
 function togglePlay(){
   if (!state.started){ begin(); return; }
   if (!ctx) return;
-  if (ctx.state === "running") ctx.suspend(); else ctx.resume();
+  if (ctx.state === "running"){ game.pausedByUser = true; ctx.suspend(); }
+  else { game.pausedByUser = false; hideOverlay(); ctx.resume(); }
+}
+
+/* --- Överlägget på scenen: välkommen, spelsätt och paus ------------------- */
+let overlayMode = null;
+function showOverlay(mode, html){ const o = el("overlay"); o.innerHTML = html; o.hidden = false; overlayMode = mode; }
+function hideOverlay(){ el("overlay").hidden = true; overlayMode = null; }
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+function showWelcome(){
+  if (!P.onboarded) return showChoices(true);
+  const L = levelOf(P.xp), s = streakNow(), mins = Math.floor(secsToday()/60);
+  const saved = !style().jam && P.engine[prefs.style];
+  const where = style().jam ? "Bandet spelar, du hittar på." : saved ? "Du börjar strax under där du slutade."
+    : `Vi börjar med ${style().probes.length} korta prov.`;
+  showOverlay("welcome", `<div class="ov-in">
+    <h2>Välkommen tillbaka</h2>
+    <p class="ov-stats"><b>Nivå ${L}</b> · ${s ? plural(s, "dag", "dagar") + " i rad" : "ingen svit just nu"} · ${Math.min(mins, GOAL_SECS/60)} av ${GOAL_SECS/60} minuter i dag</p>
+    <p><b>${style().label}.</b> ${where}</p>
+    <div class="ov-act"><button class="primary big" data-act="play">${ICON_PLAY}<span>Spela</span></button>
+      <button class="link" data-act="choose">Byt spelsätt</button></div>
+  </div>`);
+}
+const CHOICES = [
+  ["kids",   "Aldrig",     "En ton i taget på vita tangenter, med fingrarna utskrivna."],
+  ["rhythm", "Lite",       "Du hittar ackorden. Nu kommer rytmen och andra handen."],
+  ["mix",    "En hel del", "Två händer. Motorn blandar allt och hittar din nivå."],
+  ["pro",    "Mycket",     "Synkoper, stride, walking bass och sextondelar, upp till 132 bpm."]
+];
+function showChoices(first){
+  showOverlay("choose", `<div class="ov-in">
+    <h2>${first ? "Hur mycket har du spelat?" : "Vad vill du spela?"}</h2>
+    <p>${first ? "Vamp anpassar sig efter dig medan du spelar. Välj bara var vi börjar." : "Varje spelsätt minns sin egen nivå."}</p>
+    <div class="choices">${CHOICES.map(([id, t, d])=>
+      `<button data-style="${id}"${!first && prefs.style === id ? ' class="cur"' : ""}><b>${first ? t : STYLES[id].label}</b><span>${d}</span></button>`).join("")}</div>
+    <p class="alt">Eller: ${["broken","jazz","jam"].map(id=>`<button class="link${!first && prefs.style === id ? " cur" : ""}" data-style="${id}">${STYLES[id].label}</button>`).join(" · ")}</p>
+  </div>`);
+}
+function showPause(){
+  const s = game.sess, acc = s.notes ? Math.round(s.hits/s.notes*100) : 0;
+  const time = Math.floor(s.secs/60) + ":" + String(Math.round(s.secs % 60)).padStart(2, "0");
+  showOverlay("pause", `<div class="ov-in">
+    <h2>Paus</h2>
+    ${s.loops ? `<div class="sum">
+      <div><b>${time}</b><span>speltid</span></div>
+      <div><b>${fmt(s.hits)}</b><span>träffar · ${acc} %</span></div>
+      <div><b>${s.bestCombo}</b><span>bästa kombo</span></div>
+      <div><b>+${fmt(s.xp)}</b><span>XP</span></div>
+    </div>
+    ${s.news.length ? `<p class="news"><b>Nytt den här gången:</b> ${s.news.slice(-6).join(" · ")}</p>` : ""}`
+    : "<p>Musiken väntar där du lämnade den.</p>"}
+    <div class="ov-act"><button class="primary big" data-act="play">${ICON_PLAY}<span>Fortsätt</span></button>
+      <button class="link" data-act="choose">Byt spelsätt</button></div>
+  </div>`);
+}
+function chooseStyle(id){
+  el("pick-style").value = id;
+  setPref("style", id);
+  P.onboarded = true; saveP();
+  if (!state.started){ begin(); return; }
+  hideOverlay();
+  if (ctx.state !== "running"){ game.pausedByUser = false; ctx.resume(); }
+}
+el("overlay").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.style) chooseStyle(b.dataset.style);
+  else if (b.dataset.act === "play") togglePlay();
+  else if (b.dataset.act === "choose") showChoices(false);
+});
+
+/* --- Sidhuvudet, uppdragen och samlingen ---------------------------------- */
+const RING = 2*Math.PI*7;
+function renderMe(){
+  const L = levelOf(P.xp), a = xpFor(L), b = xpFor(L+1);
+  el("p-level").textContent = `Nivå ${L}`;
+  el("p-xp").style.width = ((P.xp - a)/(b - a)*100).toFixed(1) + "%";
+  el("p-lvl-wrap").title = `${fmt(P.xp)} XP · ${fmt(b - P.xp)} kvar till nivå ${L+1}`;
+  const s = streakNow(), done = P.goalDay === today();
+  el("p-streak").textContent = s;
+  el("p-streak-wrap").classList.toggle("lit", done);
+  el("p-streak-wrap").title = s ? `${plural(s, "dag", "dagar")} i rad med dagens mål klarat` + (done ? "" : " — spela i dag för att hålla sviten")
+    : "Klara dagens mål flera dagar i rad för en svit";
+  const secs = secsToday(), f = Math.min(1, secs/GOAL_SECS);
+  el("p-ring").style.strokeDashoffset = (RING*(1-f)).toFixed(2);
+  el("p-goal").textContent = f >= 1 ? "Klart" : `${Math.floor(secs/60)}/${GOAL_SECS/60} min`;
+  el("p-goal-wrap").classList.toggle("lit", f >= 1);
+  renderQuests();
+}
+function renderQuests(){
+  const list = questsToday();
+  el("quests").innerHTML = list.map(q=>`<div class="quest${q.done ? " done" : ""}">
+    <span class="qt">${QUESTS[q.id].text(q.need)}</span>
+    <span class="qbar"><i style="width:${(q.n/q.need*100).toFixed(0)}%"></i></span>
+    <span class="qn">${q.done ? "Klart" : `${q.n}/${q.need}`}</span></div>`).join("");
+  el("quests-count").textContent = `${list.filter(q=>q.done).length} av ${list.length} · +40 XP styck`;
+}
+/* Samlingen: trapporna som stigar, det man spelat, behärskat och sitt
+   bästa tempo i varje. Det man inte nått än syns, men låst — man ska se
+   vart man är på väg. Progressionerna man inte hittat visar bara stämningen. */
+const LADDER_STYLES = ["kids","rhythm","broken","pro","jazz"];
+function renderCollection(){
+  const g = t => P.grooves[t], mastered = t => g(t) && g(t).clean >= 3;
+  const li = (t, i, locked, cur) => {
+    const s = g(t), played = s && s.n > 0;
+    const cls = [mastered(t) ? "done" : played ? "played" : locked ? "locked" : "", cur ? "cur" : ""].join(" ").trim();
+    const tip = mastered(t) ? "Behärskad" : played ? `Spelad ${plural(s.n, "varv", "varv")}` : locked ? "Låst — klättra i trappan" : "Inte spelad än";
+    return `<li class="${cls}" title="${tip}"><i>${mastered(t) ? "★" : i}</i><span>${TEXTURES[t].label}</span>${s && s.best ? `<em>${s.best} bpm</em>` : ""}</li>`;
+  };
+  let html = "";
+  for (const id of LADDER_STYLES){
+    const st = STYLES[id], saved = P.engine[id], reached = saved ? saved.step : 0;
+    const active = state.started && prefs.style === id && engine.phase !== "placement";
+    const n = st.textures.filter(mastered).length;
+    html += `<div class="ladder"><div class="lh"><b>${st.label}</b><span>${n} av ${st.textures.length} behärskade</span></div><ol>` +
+      st.textures.map((t, i)=>li(t, i+1, !(g(t) && g(t).n) && i > Math.max(reached, active ? engine.step : 0), active && i === engine.step)).join("") + "</ol></div>";
+  }
+  const inLadders = new Set([].concat(...LADDER_STYLES.map(s=>STYLES[s].textures)));
+  const rest = TEXTURE_IDS.filter(t=>!inLadders.has(t));
+  html += `<div class="ladder"><div class="lh"><b>Fler i Mix</b><span>motorn väljer dem när de passar</span></div><ol class="loose">` +
+    rest.map(t=>li(t, "·", false, false)).join("") + "</ol></div>";
+  el("grooves").innerHTML = html;
+  const all = TEXTURE_IDS.length, played = TEXTURE_IDS.filter(t=>g(t) && g(t).n).length;
+  el("groove-count").textContent = `${played} av ${all} spelade · ${TEXTURE_IDS.filter(mastered).length} behärskade`;
+
+  const found = LIBRARY.filter(p=>P.progs[p.id] !== undefined).length;
+  el("prog-count").textContent = `${found} av ${LIBRARY.length}`;
+  el("progs").innerHTML = LIBRARY.map(p=>P.progs[p.id] !== undefined
+    ? `<span class="pg" title="${p.numerals.join(" ")}"><b>${p.name}</b>${p.mood}</span>`
+    : `<span class="pg locked" title="Inte hittad än">?<i>${p.mood}</i></span>`).join("");
+
+  const hours = Math.floor(P.totalSecs/3600), mins = Math.floor(P.totalSecs % 3600 / 60);
+  el("records").innerHTML = [
+    [P.bestCombo, "bästa kombo"], [plural(P.bestStreak, "dag", "dagar"), "längsta svit"],
+    [hours ? `${hours} h ${mins} min` : `${mins} min`, "speltid"], [fmt(P.hits), "träffade toner"]
+  ].map(([v, k])=>`<div><b>${v}</b><span>${k}</span></div>`).join("");
 }
 
 const ICON_PLAY  = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9.5-5.5z" fill="currentColor"/></svg>';
@@ -2565,6 +3702,10 @@ function updateTransport(){
   const f = el("btn-fs-play");
   f.innerHTML = icon; f.disabled = false; f.setAttribute("aria-label", label);
   b.title = label + " (mellanslag)";
+  /* Sammanfattningen bara när spelaren själv pausat — inte när ljudet
+     ännu inte hunnit starta, och inte när systemet stoppat det. */
+  if (state.started && ctx && ctx.state !== "running" && game.pausedByUser){ if (overlayMode !== "pause" && overlayMode !== "choose") showPause(); }
+  else if (state.started && overlayMode === "pause") hideOverlay();
 }
 
 function updateDevice(){
@@ -2601,7 +3742,7 @@ const ICON_SHEET = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden=
 const ICON_ROLL  = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2h3v6H3zM10 4h3v6h-3z" fill="currentColor"/><path d="M1 13h14" stroke="currentColor" stroke-width="1.8"/></svg>';
 function fsElement(){ return document.fullscreenElement || document.webkitFullscreenElement || null; }
 function toggleFullscreen(){
-  const stage = lane.parentElement;
+  const stage = lane.closest(".stage");
   if (fsElement()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
   else {
     const req = stage.requestFullscreen || stage.webkitRequestFullscreen;
@@ -2691,21 +3832,20 @@ function syncPicks(){
 }
 syncPicks();
 function setPref(key, value){
-  const wasLadder = ladder();
+  const was = prefs[key], newStyle = key === "style" && value !== was;
+  if (newStyle && state.started) saveEngine();     /* det gamla spelsättet minns var det var */
   prefs[key] = value;
   try { localStorage.setItem("vamp.prefs", JSON.stringify(prefs)); } catch(e){}
   syncPicks();
-  if (!state.started) return;
-  /* Ny trappa: börja längst ned, i provtempot, och klättra därifrån. Nivån
-     från förut säger inget om det nya spelsättet, så den får visa sig igen. */
-  if (key === "style" && ladder() && ladder() !== wasLadder && engine.phase !== "placement"){
-    engine.step = 0; engine.stepGood = 0; engine.stepBad = 0;
-    fitSelection(false);
-    engine.target = Math.max(1, Math.min(engine.target, probeVariation(0).level));
-    engine.est = Math.min(engine.est, engine.target + 0.4);
-    engine.cleanRun = 0; engine.loopsAtLevel = 0; engine.safeHarbour = null;
+  if (!state.started){ if (newStyle && overlayMode === "welcome") showWelcome(); return; }
+  if (newStyle){
+    const how = enterStyle(false);
+    if (how === "placement") log(`${style().label}: placering från nästa varv.`, "phase");
+    else if (how === "resume") log(`${style().label}: där du slutade, svårighet ${engine.est.toFixed(1)}.`, "phase");
+    renderCollection();
   }
-  log(`Från nästa varv: ` + (fixedKeys() ? style().label + ", vita tangenter." :
+  log(`Från nästa varv: ` + (style().jam ? `fritt spel, ${el("pick-tonic").selectedOptions[0].text} · ${el("pick-scale").selectedOptions[0].text}.` :
+    fixedKeys() ? style().label + ", vita tangenter." :
     `${el("pick-tonic").selectedOptions[0].text} · ${el("pick-scale").selectedOptions[0].text} · ${style().label}.`));
 }
 el("pick-tonic").addEventListener("change", e=>setPref("tonic", e.target.value === "mix" ? "mix" : Number(e.target.value)));
@@ -2724,19 +3864,30 @@ document.addEventListener("keydown", e=>{        /* F är ingen ton, så den är
 document.addEventListener("keydown", typeDown);
 document.addEventListener("keyup", typeUp);
 window.addEventListener("blur", typeRelease);
-el("btn-reset").addEventListener("click", ()=>location.reload());
+/* Ny placering: glöm nivån i det här spelsättet och gör om proven, från
+   nästa varv. XP, svit och samling rörs aldrig. */
+el("btn-reset").addEventListener("click", ()=>{
+  delete P.engine[prefs.style]; saveP();
+  if (!state.started){ say(`${style().label} börjar med placeringen nästa gång du spelar.`, 6); if (overlayMode === "welcome") showWelcome(); return; }
+  if (style().jam) return;
+  Object.assign(engine, { phase:"placement", probeIndex:0, probeResults:[] });
+  log("Ny placering från nästa varv.", "phase");
+});
 el("btn-sound").addEventListener("click", ()=>{
   soundOn = !soundOn;
-  if (musicGain) musicGain.gain.value = soundOn?1:0;
+  if (musicGain){ musicGain.gain.value = soundOn?1:0; bandRoom.gain.value = soundOn?1:0; }
   el("btn-sound").textContent = soundOn?"Ljud på":"Ljud av";
   el("btn-sound").setAttribute("aria-pressed", soundOn?"true":"false");
 });
+el("hood").addEventListener("toggle", ()=>{ if (el("hood").open) onResize(); });
 
 function onResize(){ layoutStage(); chartSize = resizeCanvas(chart); drawChart(); }
 window.addEventListener("resize", onResize);
 setRange(KB_DEFAULT[0], KB_DEFAULT[1]);
 onResize();
 updateDevice(); updateTransport();
+renderMe(); renderCollection(); renderBand(null);
+showWelcome();
 /* Redan tillåtet → anslut direkt. Annars väntar vi på knappen, så att
    ingen möts av en behörighetsfråga innan de ens sett sidan. */
 if (midi.supported && navigator.permissions)

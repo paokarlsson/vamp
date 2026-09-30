@@ -4,6 +4,12 @@ En adaptiv loopmotor för piano. Fyra ackord, fyra takter, och en motor som
 håller spelaren precis på gränsen av vad hon klarar — utan att musiken någonsin
 stannar för att motorn tänker.
 
+Ovanpå motorn ligger ett spel: varje anslag bedöms och ger gnistor och kombo,
+varje varv ger stjärnor, bandet växer med det du spelar, och nivå, dagens mål,
+svit, uppdrag och en samling bär mellan gångerna. Sju spelsätt täcker allt från
+barnet som aldrig spelat till jazzpianisten, och *Fritt spel* låter vem som
+helst improvisera över bandet.
+
 Hela prototypen är **en fil, noll beroenden**. Öppna `index.html` i en webbläsare,
 anslut ett MIDI-keyboard och tryck *Spela*. Utan MIDI går det att spela på datorns
 tangentbord.
@@ -24,8 +30,17 @@ webbläsaren laddas om automatiskt när du sparar `index.html`. Inget att
 bygga och ingen Dockerfile — bara `node`-imagen och browser-sync via `npx`.
 
 **Spela/Paus** (eller mellanslag) fryser ljudklockan, så att musik, fallande noter
-och motor står still på exakt samma ställe tills du fortsätter. MIDI kräver Web
-MIDI (Chrome, Edge, Firefox) och https eller `localhost`.
+och motor står still på exakt samma ställe tills du fortsätter. Pausen visar vad
+passet gett hittills. MIDI kräver Web MIDI (Chrome, Edge, Firefox) och https
+eller `localhost`.
+
+**Första gången** frågar scenen *Hur mycket har du spelat?* — Aldrig, Lite, En
+hel del eller Mycket — och väljer spelsätt efter svaret (Nybörjare, Ackord och
+rytm, Mix, Avancerat). Brutna ackord, Jazz och Fritt spel finns som länkar under.
+Sedan hälsar scenen välkommen tillbaka, med nivå, svit och dagens minuter.
+
+**Ny placering** glömmer nivån i det spelsätt du står i och gör om proven, från
+nästa varv. XP, svit och samling ligger kvar.
 
 **Datorns tangentbord** spelar som i en tracker: nedre bokstavsraden `Z`–`M` är
 en oktav från C3 (svarta tangenter på `S D G H J`), övre raden `Q`–`P` fortsätter
@@ -94,8 +109,9 @@ går. Då gäller de från nästa varv som inte redan är lagt.
   I–bVII, harmonisk moll med V som durackord) och avgör vart en miss faller.
   Pentatonerna lånar dur- och mollprogressionerna, eftersom ackorden under
   är desamma.
-* **Spelsätt**: *Mix*, *Nybörjare*, *Ackord och rytm* eller *Brutna ackord*.
-  Varje spelsätt har egna placeringsprov.
+* **Spelsätt**: *Mix*, *Nybörjare*, *Ackord och rytm*, *Brutna ackord*,
+  *Avancerat*, *Jazz* eller *Fritt spel*. Varje spelsätt har egna
+  placeringsprov och minns sin egen nivå.
 
 **Ingen hand spänner över mer än en oktav** inom ett och samma ackord, i
 något spelsätt. Därför finns inte längre öppet grepp i en hand (C-G-E', en
@@ -161,9 +177,51 @@ stegen under sitter.
 Steg 3 har samma roll som bas och grundton ovan: andra handen kommer in utan
 egen rytm.
 
+**Avancerat är för den som redan spelar.** Stegen är komp man hör på skivor,
+ordnade efter vad de mäts till vid 80 bpm, och tempot går upp till 132 bpm.
+Balladen låter lättast men mäts näst svårast: vänsterns åttondelar hoppar
+mellan grundton, kvint och oktav medan högern tar ackord.
+
+| Steg | Vänster | Höger | Mätt vid 80 |
+|---|---|---|---|
+| 1 Tresillo | Basen i 3+3+2 | Ackordet i samma rytm | 6,6 |
+| 2 Walking bass | Grundton, ters, kvint, ledton i fjärdedelar | Ackordet på ettan och tvåans "och" | 8,8 |
+| 3 Pumpande åttondelar | Bas och oktav på de tunga slagen | Ackordet på varje åttondel | 9,8 |
+| 4 Arpeggio i två händer | Grundton, kvint, oktav | Fortsätter uppåt genom ackordet och vänder | 10,4 |
+| 5 Stride | Bas på de tunga slagen, ackord på de lätta | Ackordet hålls från ettan | 10,5 |
+| 6 Ballad | 1-5-8-5 i åttondelar | Ackordet på de tunga slagen | 11,6 |
+| 7 Brutna ackord, sextondelar | Bas, hel not | 1-3-5-3 i sextondelar | 15,2 |
+
+Spelar du själv en walking bass tystnar bandets bas.
+
+**Jazz har sjuackord och swing.** Fyra egna progressioner (ii–V–I,
+turnaround, moll ii–V–i och Imaj7–IVmaj7–iii7–vi7) plus den korta bluesen, i
+vilken grundton som helst, alltid swing. Romerska siffror kan nu skrivas
+`Imaj7`; `ii7` och `V7` fungerade redan. Sjuackordsprogressionerna är märkta
+`only:"jazz"` och dyker inte upp i de andra spelsätten, där blockackorden
+annars skulle bli fyrklanger utan förvarning.
+
+| Steg | Vänster | Höger |
+|---|---|---|
+| 1 Skalgrepp | Grundton och septima, hel not | — |
+| 2 Skal och ackord | Skalgreppet | Ters och kvint ovanför |
+| 3 Charleston | Skalgreppet på ettan och tvåans "och" | Samma rytm |
+| 4 Walking och komp | Walking bass | Rotlösa grepp (ters, kvint, septima) i Charleston |
+
+**Fritt spel är för alla.** Inga toner att träffa och ingen anpassning:
+bandet spelar, du hittar på. Ackordtonerna faller som ljusa band i
+pianorullen, så man ser nästa ackord komma, och prickar på tangenterna visar
+skalan — guld för ackordet som klingar. Det du spelar stiger uppåt ur
+tangenterna. En ackordton ger mest poäng, en skalton poäng, en ton nära en
+åttondel i takten dubbelt, och en ton utanför skalan bryter bara kombon —
+den lyser blekt, inte rött. Den som föregriper nästa ackord med en åttondel
+räknas till det nya. Bandet växer med ett lager för varje varv där minst fyra
+toner låg i skalan. Progressionen byts var fjärde varv.
+
 **Varje ingång är lätt.** Byter man till en trappa mitt i börjar man på
 första steget, i provtempot, och nivån får visa sig igen därifrån. Det man
-klarade i ett annat spelsätt flyttar inte med.
+klarade i ett annat spelsätt flyttar inte med — men har man spelat det nya
+spelsättet förut börjar det där man slutade, med ett varvs uppvärmning.
 
 ---
 
@@ -171,9 +229,9 @@ klarade i ett annat spelsätt flyttar inte med.
 
 De flesta övningsappar ställer en fråga, väntar på svar, visar en ruta och
 fortsätter. Vamp gör tvärtom: kompet rullar hela tiden, och all anpassning sker
-mellan två varv, i övergången, utan avbrott. Nivåhöjningar firas inte,
-nivåsänkningar syns inte alls — nästa varv blir bara något som redan sitter i
-handen.
+mellan två varv, i övergången, utan avbrott. Framsteg firas — i musiken, med en
+crash på ettan — men nivåsänkningar syns inte alls: nästa varv blir bara något
+som redan sitter i handen.
 
 Tre påståenden som hela konstruktionen vilar på:
 
@@ -185,26 +243,89 @@ Tre påståenden som hela konstruktionen vilar på:
 3. **Musiken får aldrig stanna.** Nästa varv beslutas och schemaläggs medan det
    nuvarande fortfarande låter.
 
+Ett fjärde tillkom när motorn väl höll spelaren på rätt nivå:
+
+4. **Att vara på rätt nivå räcker inte för att man ska stanna där.** Motorn
+   ser till att varvet går att spela; spelet ser till att det känns i
+   stunden och att det finns något att komma tillbaka till. Ingenting i
+   spelet påverkar motorn — poängen är belöning, inte mätning.
+
+---
+
+## Spelet: det som får en att stanna
+
+Tre tidsskalor, var och en med sin återkoppling.
+
+**Varje anslag.** Tidsfelet, redan rensat från fördröjning, ger *Perfekt*
+(inom 45 ms), *Bra* (inom 100 ms) eller *OK*, som stiger ur tangenten
+tillsammans med gnistor i handens färg — en text per grepp, inte en per ton.
+Kombon räknar träffade toner i rad och ger ×2 vid 10, ×3 vid 25 och ×4 vid 50.
+En miss eller en felton nollar den, tyst. Linjen tonerna faller mot pulserar
+med slagen, starkast på ettan, så att tiden syns och inte bara hörs.
+
+**Varje varv.** När varvet klingat ut räknas hela varvet, också sista takten
+som motorn inte hann se: tre stjärnor från 97 %, två från 90 %, en från 75 %.
+Under 75 % syns ingenting. Bandet — padda, hi-hat, bas, bastrumma, virvel —
+står som fem ikoner under scenen, och när en ny musiker kommer in slås en
+crash på ettan och scenen säger *Basen kommer in*. Samma crash för ett nytt
+steg i trappan och för en groove man aldrig spelat. Överst står varvets fyra
+takter, och under placeringen *Uppvärmning 2 av 4*.
+
+Motorns tysta prov är inte tyst längre: det heter **bonusvarv**, har en
+guldram och ger dubbla poäng. För motorn är det en mätning ~1,1 nivåer över
+målet; för spelaren är det en chans. Ett bonusvarv som inte gick är bara ett
+varv till — det ger ingen text.
+
+**Mellan gångerna.** Allt sparas i webbläsaren (`vamp.player`).
+
+* **Nivå** räknas ur XP och går bara uppåt: nivå L kräver 120·(L−1)^1,8 XP, så
+  de första kommer fort. Den är inte motorns skattning, som kan sjunka och
+  aldrig ska synas göra det — den kallas *svårighet* under huven.
+* **XP följer tid och kvalitet, inte antalet toner.** Varje ton väger 12
+  delat med varvets antal toner (bedömning 1–3 gånger kombons multiplikator),
+  och stjärnorna ger 3, 8 eller 15 gånger 1 + svårighet/8. Räknat per ton gav
+  en robot i Avancerat fjorton gånger så mycket XP i minuten som i
+  Nybörjare; nu är det ungefär tre gånger, och det som skiljer är svårigheten
+  och kombon, inte tätheten. Fritt spel ger högst 100 XP per varv.
+* **Dagens mål** är fem minuter vid pianot, räknat i varv där någon faktiskt
+  spelade. Tid, inte poäng, så att det är lika långt på varje nivå. **Sviten**
+  är dagar i rad med målet klarat.
+* **Tre uppdrag om dagen**, dragna ur datumet (samma hela dagen, också efter
+  omladdning) och svårare med nivån: nå kombo 30, spela fem rena varv, spela
+  två felfria varv, samla 15 stjärnor, klara ett bonusvarv, spela ett varv
+  med hela bandet, eller ackordtoner i Fritt spel — det sista för att locka
+  in i det spelsätt man kanske inte provat.
+* **Samlingen** visar varje trappa som en stig: spelade steg, behärskade
+  (tre rena varv, en stjärna), och det man inte nått än, låst med streckad
+  kant. Bästa tempo sparas per groove, och ett nytt rekord firas. De
+  progressioner man inte hittat visar bara sin stämning.
+* **Motorns läge sparas per spelsätt.** Den som kommer tillbaka slipper
+  placeringen: motorn börjar en nivå under förra skattningen, med osäkerhet
+  0,8, och zoomar in därifrån.
+
+Pausen visar passet: speltid, träffar, bästa kombo, XP och det som var nytt.
+
 ---
 
 ## Arkitektur
 
-Tolv moduler i `index.html`, i den ordning de bygger på varandra:
+Tretton moduler i `index.html`, i den ordning de bygger på varandra:
 
 | # | Modul | Ansvar |
 |---|---|---|
-| 1 | Teori | Romerska siffror → tonhöjdsklasser. `bVII`, `vi`, `V7`, `iio`. |
+| 1 | Teori | Romerska siffror → tonhöjdsklasser. `bVII`, `vi`, `V7`, `iio`, `Imaj7`. |
 | 2 | Röstföring | Ackord → grepp, via billigaste vägen genom hela progressionen. |
-| 3 | Bibliotek | 25 progressioner som text, åtta skalor, alla tolv grundtoner. |
-| 4 | Texturer | 18 texturer: grepp → faktiska noter, uttryckt i slag. Tre spelsätt. |
+| 3 | Bibliotek | 29 progressioner som text, åtta skalor, alla tolv grundtoner. |
+| 4 | Texturer | 31 texturer: grepp → faktiska noter, uttryckt i slag. Sju spelsätt. |
 | 5 | Svårighet | Noter → formvektor (12 mått) → ett tal. |
 | 6 | Axlar | Vad ett varv belastar, axel för axel. |
 | 7 | Motor | Skattning, nio-axlig profil, val av nästa varv. |
-| 8 | Ljud | Web Audio. Piano, padda, bas, trummor — inga samplingar. |
+| 8 | Ljud | Web Audio. Piano, padda, bas, trummor, crash och ett rum — inga samplingar. |
 | 9 | Varvet | Schemaläggning, beslutsfönster, mjuka landningar. |
 | 10 | MIDI-in | Riktiga anslag, från MIDI eller datorns tangentbord, matchade mot väntade toner. |
-| 11 | Bild | Fallande noter och klaviatur på canvas. |
-| 12 | Gränssnitt | Spela/paus, paneler, logg. |
+| 11 | Bild | Fallande noter och klaviatur, eller notblad, på canvas. |
+| 12 | Spelet | Bedömning, kombo, stjärnor, XP och nivå, mål, svit, uppdrag, samling. |
+| 13 | Gränssnitt | Välkomst, spela/paus, paneler, logg. |
 
 ### Röstföring är det som gör biblioteket billigt
 
@@ -266,9 +387,14 @@ och då lånas den allmänna nivån.
 Motorn kör tre faser:
 
 * **Placering** — fyra korta prov i stigande svårighet, samma tonart och tempo.
+  Den som spelat spelsättet förut hoppar över den (se *Spelet*).
   Avbryts vid första riktiga misslyckandet; ingen ska plöja igenom något som
   uppenbart är för svårt. En enda miss är inget riktigt misslyckande — provens
-  första tre takter har ibland bara tre toner — så det krävs två. Med riktig
+  första tre takter har ibland bara tre toner — så det krävs två. Samma regel
+  gäller taket som ett misslyckat prov sätter: förut räckte det att första
+  provet låg under 72 %, så en enda missad ton av Grundtonens två — den ton
+  man oftast missar, precis efter att ha klickat — klämde ned hela
+  placeringen till golvet, också efter tre felfria prov. Med riktig
   spelare föregås första provet av en takts inräkning, annars når första tonen
   tangenterna innan den hunnit synas. Ett prov räknas som klarat först vid
   90 % — 82 % är ett prov man kämpat sig igenom, inte ett man äger.
@@ -293,9 +419,14 @@ dåliga följer skattningen med ned direkt, annars drar den upp målet igen.
 I simuleringen, där spelaren tappar två nivåer mitt i, tog det tidigare
 12–15 varv att hitta tillbaka, och nu tar det ungefär 5.
 
-Var nionde varv smyger motorn in ett **tyst prov** ~1,1 nivåer över målet. Går
+Var nionde varv lägger motorn in ett **bonusvarv** ~1,1 nivåer över målet. Går
 det bra (≥ 85 %) är målet för lågt och höjs; går det dåligt loggas ingenting
-dramatiskt, och nästa varv landar mjukt.
+dramatiskt, och nästa varv landar mjukt. Förut var provet tyst; nu syns det,
+med guldram och dubbla poäng — samma mätning, men för spelaren en chans i
+stället för ett test.
+
+Skattningen har tak på 30, inte 14 som förut: Avancerat och Jazz i 132 bpm
+mäts över 20, och en van spelare slog i taket långt innan.
 
 Två skyddsmekanismer värda att känna till:
 
@@ -310,6 +441,25 @@ ligger nära noll större delen av tiden, så paddan hördes först 350 ms efter
 ettan och lät som att den kom in för sent. Nu har den en rak attack på 20 ms,
 sjunker sedan mjukt till en jämn nivå och klingar ut en liten bit in i nästa
 ackord, så att inget glapp uppstår.
+
+### Pianot, rummet och crashen
+
+Både bandets piano och dina egna toner går genom samma röst: tolv övertoner
+som faller av uppåt (en `PeriodicWave`), två svängningar en hårsmån isär för
+liv, ett lågpassfilter som öppnar i anslaget och stänger sig — ljust anslag,
+mjuk klang, och hårdare anslag öppnar mer — och en kort filtrerad brusknäpp
+som hammare. Låga toner klingar längre än höga. Förut var det en triangelvåg
+med en sinus en oktav upp, och det lät som en leksak.
+
+Allt går också till ett **rum**: ett genererat impulssvar, brus som klingar av
+på knappt två sekunder, lite dovare än det kom in, i en `ConvolverNode`. Ingen
+fil att ladda. Bandet skickas dit genom en egen nod som tystnar med resten av
+bandet när ljudet slås av; det du själv spelar går dit direkt.
+
+En **crash** — brus genom högpass med lång avklingning och mycket rum — slås
+på ettan när något nytt kommer in. Två firanden på samma slag ger en crash.
+
+Hi-hattens "och" swingar nu med resten när varvet går i swing.
 
 ### Ljudet slår aldrig i taket
 
