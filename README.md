@@ -419,6 +419,15 @@ dåliga följer skattningen med ned direkt, annars drar den upp målet igen.
 I simuleringen, där spelaren tappar två nivåer mitt i, tog det tidigare
 12–15 varv att hitta tillbaka, och nu tar det ungefär 5.
 
+**Två sorters varv räknas inte alls.** Ett varv där ingen tangent rördes säger
+inget om spelaren — hon har gått ifrån, inte misslyckats — så skattningen
+står still, och ett prov i placeringen väntar i stället för att underkännas.
+Och ett varv som lades innan spelsättet byttes eller placeringen gjordes om
+hör till det gamla: varje byte räknar upp en *epok*, och varv från en äldre
+epok får bara bygga på bandet. Båda spelade roll förut också, men nu sparas
+skattningen mellan gångerna, och ett bortglömt varv i Nybörjare skulle ha
+kunnat skriva över den sparade nivån i Avancerat.
+
 Var nionde varv lägger motorn in ett **bonusvarv** ~1,1 nivåer över målet. Går
 det bra (≥ 85 %) är målet för lågt och höjs; går det dåligt loggas ingenting
 dramatiskt, och nästa varv landar mjukt. Förut var provet tyst; nu syns det,

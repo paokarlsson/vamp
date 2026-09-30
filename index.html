@@ -1257,7 +1257,14 @@ function allowedProgs(){
   return fit.length ? fit : pool;
 }
 /* Skalan ett varv låter i: den valda, annars progressionens egen. */
-const scaleFor = progId => prefs.scale !== "mix" && !fixedKeys() ? prefs.scale : progOf(progId).scale;
+/* Skalan ett varv låter i: den valda, om progressionen hör till den —
+   annars progressionens egen. Jazzen har inga mollprogressioner utom
+   harmonisk moll, och ii–V–I ska inte skrivas med tre b för att Moll är valt. */
+function scaleFor(progId){
+  const own = progOf(progId).scale;
+  if (prefs.scale === "mix" || fixedKeys()) return own;
+  return own === (SCALES[prefs.scale].from || prefs.scale) ? prefs.scale : own;
+}
 
 /* Texturerna motorn får välja bland just nu. I trappan: steget man står på,
    och de under det som mjuk landning. */
@@ -1302,6 +1309,7 @@ const engine = {
   cleanRun:0, loopsAtLevel:0,
   layers:1, energy:.25,
   breathIn:7, probeIn:9, progIn:6,
+  epoch:0,                                 /* räknas upp vid byte av spelsätt och ny placering */
   prog:"axeln", tonic:0,
   step:0, stepGood:0, stepBad:0,          /* trappan, i spelsätt som har en */
   safeHarbour:null, needsHarbour:false, preview:false,
@@ -1493,7 +1501,7 @@ function updateEngine(st){
   /* Fritt spel anpassar ingenting. Byttes spelsättet, eller gjordes
      placeringen om, efter att varvet lades säger varvet inget om det nya:
      bara det prov som står på tur, i spelsättet som gäller, räknas. */
-  if (engine.phase === "jam") return;
+  if (engine.phase === "jam" || st.skip) return;
   if (engine.phase === "placement"){
     if (v.intent !== "placement" || v.probe !== engine.probeIndex || v.probeStyle !== prefs.style) return;
     /* Flyttades fördröjningen mycket mätte provet klockan, inte spelaren.
@@ -1888,7 +1896,7 @@ function scheduleLoop(t0, given){
     commitAt: Math.max(t0+loopDur*.5, t1 - Math.max(2.9, barDur)),
     committed:false, index: ++state.loopIndex, events:[],
     win: Math.min(.2, spb*.45), extras:[],
-    style: prefs.style, bonus: v.intent === "probe", jam: v.texture === "jam",
+    style: prefs.style, epoch: engine.epoch, bonus: v.intent === "probe", jam: v.texture === "jam",
     probe: v.intent === "placement" ? engine.probeIndex : -1,
     jamStats: {good:0, chord:0, out:0}, jamXp:0, ended:false, popped:{},
     noteCount: v.events.length - (preview ? v.events.filter(e=>e.hand==="L").length : 0)
@@ -2009,11 +2017,17 @@ function commitLoop(loop){
   engine.frameRun = engine.frame===fk ? engine.frameRun+1 : 1; engine.frame = fk;
   engine.texRun = engine.recentTex[0]===loop.v.texture ? engine.texRun+1 : 1;
   engine.recentTex.unshift(loop.v.texture); if (engine.recentTex.length>4) engine.recentTex.pop();
-  engine.history.push({level:loop.v.level, acc, sd, est:engine.est});
 
-  updateEngine({acc, sd, total, missed:total-hits, lagMoved});
+  /* Ett varv där ingen spelade säger inget om spelaren: hon har gått ifrån,
+     inte misslyckats. Ett varv som lades före ett byte av spelsätt eller en
+     ny placering säger inget om det som gäller nu. Inget av dem får röra
+     skattningen — och därmed inte det som sparas till nästa gång. */
+  const idle = hits === 0 && extras === 0, stale = loop.epoch !== engine.epoch;
+  if (!idle && !stale) engine.history.push({level:loop.v.level, acc, sd, est:engine.est});
+
+  updateEngine({acc, sd, total, missed:total-hits, lagMoved, skip: idle || stale});
   updatePanels(acc, sd, rec, loop.v);
-  saveEngine();
+  if (!idle && !stale) saveEngine();
 
   scheduleLoop(loop.t1);
 }
@@ -2963,10 +2977,12 @@ function onHit(ev, loop){
 function onMiss(ev){ ev.judged = true; game.sess.notes++; game.combo = 0; }
 function onWrong(){ game.combo = 0; }
 
-/* Missar avgörs när tonens tidsfönster stängt, sett från det som hörs. */
+/* Missar avgörs när tonens tidsfönster stängt, sett från det som hörs, och
+   40 ms till: ett MIDI-anslag i fönstrets sista stund kan komma fram en
+   bildruta efter att fönstret stängt, och ska inte hinna nolla kombon först. */
 function judgeMisses(heard){
   for (const loop of state.loops) for (const ev of loop.events)
-    if (!ev.ghost && !ev.hit && !ev.judged && heard - timing.lag > ev.t + loop.win) onMiss(ev);
+    if (!ev.ghost && !ev.hit && !ev.judged && heard - timing.lag > ev.t + loop.win + .04) onMiss(ev);
 }
 
 function burst(x, y, rgb, n){
@@ -3176,14 +3192,17 @@ function quest(id, amount, isMax){
 
 /* --- Motorns läge mellan gångerna -------------------------------------- */
 function saveEngine(){
-  if ((engine.phase === "zoom" || engine.phase === "groove") && engine.est !== null)
+  if ((engine.phase === "zoom" || engine.phase === "groove") && engine.est !== null){
     P.engine[prefs.style] = { est: Math.round(engine.est*100)/100, step: engine.step };
+    saveP();
+  }
 }
 /* Var motorn börjar när spelet startar eller spelsättet byts. Fritt spel har
    ingen nivå. Har spelsättet spelats förut börjar det strax under där det
    slutade — en uppvärmning, inte en ny placering. Annars placering vid
    start, och en trappa som byts till mitt i börjar längst ned. */
 function enterStyle(fresh){
+  engine.epoch++;                          /* varv som redan ligger hör till det gamla */
   if (style().jam){ engine.phase = "jam"; engine.progIn = 0; return "jam"; }
   const saved = P.engine[prefs.style];
   if (saved && saved.est){
@@ -3871,6 +3890,7 @@ el("btn-reset").addEventListener("click", ()=>{
   if (!state.started){ say(`${style().label} börjar med placeringen nästa gång du spelar.`, 6); if (overlayMode === "welcome") showWelcome(); return; }
   if (style().jam) return;
   Object.assign(engine, { phase:"placement", probeIndex:0, probeResults:[] });
+  engine.epoch++;
   log("Ny placering från nästa varv.", "phase");
 });
 el("btn-sound").addEventListener("click", ()=>{
@@ -3880,6 +3900,8 @@ el("btn-sound").addEventListener("click", ()=>{
   el("btn-sound").setAttribute("aria-pressed", soundOn?"true":"false");
 });
 el("hood").addEventListener("toggle", ()=>{ if (el("hood").open) onResize(); });
+/* Ingen sparning när sidan stängs: en gammal flik som stängs skulle skriva
+   över det en nyare flik sparat. Allt sparas efter varje varv i stället. */
 
 function onResize(){ layoutStage(); chartSize = resizeCanvas(chart); drawChart(); }
 window.addEventListener("resize", onResize);
