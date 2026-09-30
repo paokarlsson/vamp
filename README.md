@@ -352,7 +352,7 @@ före ett ackordbyte leder in i nästa grundton med ett halvtonssteg, från det
 håll basen redan står. Tre lägen: lugn när basen just kommit in, driv med
 åttondelar när hela kompet är inne, och walking (grundton, ters, kvint, ledton)
 när varvet går i swing. Basen är knäppt: filtret öppnar i anslaget och stänger
-sig, med en sinus en oktav under som botten.
+sig, med en sinus på samma ton som botten.
 
 Paddan och basen följer **ackorden, inte takterna**. Canon har två ackord per
 takt och får två anslag per takt; ett ackord som varar två takter slås an igen
@@ -461,13 +461,33 @@ på ettan när något nytt kommer in. Två firanden på samma slag ger en crash.
 
 Hi-hattens "och" swingar nu med resten när varvet går i swing.
 
-### Ljudet slår aldrig i taket
+### Ljudet slår aldrig i taket, och raspar inte
 
 Kompet ensamt når nästan fullt utslag, och spelarens egna toner läggs ovanpå.
 Därför går allt genom lägre master, kompressor, en hård begränsare och sist en
-mjuk klippning som är rak upp till 0,7. Spelarens toner klingar av som en
+mjuk klippning som är rak upp till 0,8. Spelarens toner klingar av som en
 pianoton även om tangenten hålls, och tystnar helt efter tio sekunder, så ett
 tappat note-off lämnar ingen ton kvar som låter för alltid.
+
+Kompressorn ska bara hålla ihop bandet: 2:1 från −14 dB, 15 ms attack. Förut tog
+den i med 4:1 från −16 dB och 3 ms attack, och bastrumman fick den att dra ned
+upp till 7 dB på varje etta och trea. Så snabb reglering följer basens
+svängningar, och allt som klingade samtidigt — ackordet spelaren just slog an —
+fick ett raspigt skorr. Topparna tar begränsaren. Dessutom:
+
+* Bastrumman är svagare. Den var starkast av allt i bandet och drev kompressorn.
+* Basens sinus ligger på samma ton som basen, inte en oktav under. Där hamnade
+  den på 16–41 Hz: infraljud som inga små högtalare återger, men som tog plats
+  i kompressorn och får membranen att rassla.
+* En kort baston hann inte sjunka ned till sin kropp innan den släpptes, och nivån
+  hoppade — ett litet knäpp på basens åttondelar i 120 och 132 bpm. Nu kortas
+  kroppen så att den alltid är klar före släppet.
+* Paddans filter öppnar till högst 1,8 kHz (var 2,3), så att sågtänderna inte
+  surrar under pianot.
+
+Mätt offline i webbläsaren, fullt komp och spelarens toner i 120 bpm: den
+sämsta procenten av alla 10 ms-bitar hade förut omkring 5 % distorsion (26 dB
+under signalen), nu 0,2 % (55 dB). Priset är att allt låter ungefär 2 dB svagare.
 
 ### Beslutsfönstret
 
