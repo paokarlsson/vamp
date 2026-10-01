@@ -10,9 +10,10 @@ svit, uppdrag och en samling bär mellan gångerna. Sju spelsätt täcker allt f
 barnet som aldrig spelat till jazzpianisten, och *Fritt spel* låter vem som
 helst improvisera över bandet.
 
-Hela prototypen är **en fil, noll beroenden**. Öppna `index.html` i en webbläsare,
-anslut ett MIDI-keyboard och tryck *Spela*. Utan MIDI går det att spela på datorns
-tangentbord.
+Hela prototypen är **en fil, noll beroenden** — också bilden: klubben, staden,
+flygeln och bandet ritas i koden, utan en enda bildfil. Öppna `index.html` i en
+webbläsare, anslut ett MIDI-keyboard och tryck *Spela*. Utan MIDI går det att
+spela på datorns tangentbord.
 
 ```
 git clone https://github.com/paokarlsson/vamp.git
@@ -29,18 +30,41 @@ Surfa till <http://localhost:3000>. Repot monteras in i containern och
 webbläsaren laddas om automatiskt när du sparar `index.html`. Inget att
 bygga och ingen Dockerfile — bara `node`-imagen och browser-sync via `npx`.
 
+### Fyra skärmar
+
+1. **Välkommen.** *Vamp* över en flygel vid ett fönster mot staden i natt,
+   *Spela* och *Så funkar det*. Uppe till höger nivån med titel, sviten och
+   dagens mål, och en knapp till samlingen. Den som spelat förut hälsas
+   välkommen tillbaka med nivå, svit och dagens minuter.
+2. **Vad vill du spela idag?** Sju kort, ett per spelsätt, med tonart och skala
+   under och *Kör!*. Den som aldrig spelat får frågan *Hur mycket har du
+   spelat?* — Aldrig, Lite, En hel del eller Mycket — som väljer kortet
+   (Nybörjare, Ackord och rytm, Mix, Avancerat). Ett kort visar var man står i
+   trappan om man spelat det förut.
+3. **Spela.** Hela fönstret. Överst varvets ackord — det som klingar i guld —,
+   texturen, tempot, notbladet, helskärm och inställningarna. I mitten
+   jazzklubben med bandet, och noterna som faller mot klaviaturen. Nederst
+   spela/paus och bandet som fyra mätare: padda, hi-hat, bas och trummor, som
+   rör sig med musiken när de spelar.
+4. **Samlingen**, med flikarna Samling, Statistik och Inställningar.
+
 **Spela/Paus** (eller mellanslag) fryser ljudklockan, så att musik, fallande noter
-och motor står still på exakt samma ställe tills du fortsätter. Pausen visar vad
-passet gett hittills. MIDI kräver Web MIDI (Chrome, Edge, Firefox) och https
-eller `localhost`.
+och motor står still på exakt samma ställe tills du fortsätter. Pausen visar
+**dagsresultatet** — ett ord, stjärnor, antal varv, andelen anslag som var Bra
+eller bättre, XP och sviten —, dagens mål med de tre uppdragen, och nivån med
+XP kvar till nästa. Därifrån går det att byta spelsätt, gå till samlingen eller
+hem. Den som lämnar spelskärmen pausar, och kommer tillbaka till samma ställe i
+varvet. MIDI kräver Web MIDI (Chrome, Edge, Firefox) och https eller `localhost`.
 
-**Första gången** frågar scenen *Hur mycket har du spelat?* — Aldrig, Lite, En
-hel del eller Mycket — och väljer spelsätt efter svaret (Nybörjare, Ackord och
-rytm, Mix, Avancerat). Brutna ackord, Jazz och Fritt spel finns som länkar under.
-Sedan hälsar scenen välkommen tillbaka, med nivå, svit och dagens minuter.
+**Första gången musiken går** står *Lyssna. Spela med. Musiken stannar aldrig.*
+i skrivstil över scenen medan bandet räknar in.
 
-**Ny placering** glömmer nivån i det spelsätt du står i och gör om proven, från
-nästa varv. XP, svit och samling ligger kvar.
+**Inställningarna** nås med kugghjulet under spelet, i en låda som inte
+pausar — ljudet kan slås av mitt i ett varv —, och som en flik i samlingen.
+Där finns keyboardet (anslut, mät, mina toner i appen), bandets ljud,
+notbladet, skärmen tänd och **Ny placering**, som glömmer nivån i det
+spelsätt du står i och gör om proven från nästa varv. XP, svit och samling
+ligger kvar.
 
 **Datorns tangentbord** spelar som i en tracker: nedre bokstavsraden `Z`–`M` är
 en oktav från C3 (svarta tangenter på `S D G H J`), övre raden `Q`–`P` fortsätter
@@ -59,25 +83,25 @@ det förra:
 3. **Mät keyboardet.** Tryck på lägsta och högsta tangenten, så är storleken exakt.
 
 Det inlärda och det mätta sparas per enhetsnamn. Toner utanför keyboardet flyttas
-i hela oktaver in på det. När vita tangenter annars skulle bli smalare än 16 px
-bryter scenen sig ur kolumnen, upp till hela fönsterbredden. Ryms det ändå inte
-(88 tangenter på en telefon) blir tangenterna smalare, och delen som varvet
-använder markeras.
+i hela oktaver in på det. Scenen är lika bred som fönstret, och tangenterna
+blir så breda som det räcker till. Blir vita tangenter smalare än 16 px (88
+tangenter på en telefon) markeras delen som varvet använder.
 
-**Helskärm** (knappen längst ned till höger i scenen, eller `F`) visar bara
-noterna och klaviaturen, med spela/paus i raden under. Esc eller `F` igen
-lämnar. På iPhone går bara video i helskärm, där syns ingen knapp.
+**Helskärm** (knappen överst på spelskärmen, eller `F`) lägger spelskärmen över
+hela skärmen. Esc eller `F` igen lämnar. På iPhone går bara video i helskärm,
+där syns ingen knapp.
 
-**Skärmen tänd** (bredvid Spela) hindrar skärmen från att slockna medan du
+**Skärmen tänd** (i inställningarna) hindrar skärmen från att slockna medan du
 spelar, via Screen Wake Lock. Webbläsaren släpper låset när fliken döljs; appen
 tar det igen när du kommer tillbaka. Valet sparas, och knappen syns bara i
 webbläsare som stöder det.
 
-**Notblad** (knappen bredvid Spela, eller ikonen i scenen i helskärm) byter
-de fallande noterna mot ett notsystem med G- och F-klav, där noterna kommer
-från höger och ska spelas när de når den lodräta linjen. Det är samma varv,
-samma klocka och samma bedömning, bara bilden som byts, och det går att byta
-mitt i ett varv. Valet sparas.
+**Notblad** (ikonen överst på spelskärmen, eller i inställningarna) byter
+de fallande noterna mot ett notsystem med G- och F-klav på ett papper över
+scenen, där noterna kommer från höger och ska spelas när de når den lodräta
+linjen. Klaviaturen ligger kvar under papperet och visar var händerna är. Det
+är samma varv, samma klocka och samma bedömning, bara bilden som byts, och det
+går att byta mitt i ett varv. Valet sparas.
 
 * Höger hand står i G-klaven och vänster i F-klaven, i den oktav tonerna är
   skrivna. Matchningen bryr sig fortfarande inte om oktaven.
@@ -93,14 +117,16 @@ mitt i ett varv. Valet sparas.
 * Ackordnamnen står ovanför systemet, taktstrecken där takterna börjar, och
   fingersättningen (i Nybörjare) står som i tryckta noter: höger hand ovanför,
   vänster under.
-* Datortangenternas bokstäver syns bara på klaviaturen i pianorullen.
+* Datortangenternas bokstäver står på klaviaturen under papperet, som i
+  pianorullen.
 
 ### Grundton, skala och spelsätt
 
-Tre val under Spela-knappen. *Mix* betyder att motorn väljer själv, som förut.
-Valen är filter på det motorn väljer bland: anpassningen fungerar som vanligt,
-bara inom det man valt. De sparas i webbläsaren och kan ändras medan musiken
-går. Då gäller de från nästa varv som inte redan är lagt.
+Tre val på skärmen *Vad vill du spela idag?*: kortet, tonarten och skalan.
+*Mix* betyder att motorn väljer själv, som förut. Valen är filter på det motorn
+väljer bland: anpassningen fungerar som vanligt, bara inom det man valt. De
+sparas i webbläsaren och kan ändras under spelet — paus, *Byt spelsätt* —
+och gäller då från nästa varv som inte redan är lagt.
 
 * **Grundton**: vilken som helst av de tolv. Svarta tangenter mäts redan som
   svårighet, så en tonart med många förtecken syns i nivån.
@@ -257,19 +283,30 @@ Ett fjärde tillkom när motorn väl höll spelaren på rätt nivå:
 Tre tidsskalor, var och en med sin återkoppling.
 
 **Varje anslag.** Tidsfelet, redan rensat från fördröjning, ger *Perfekt*
-(inom 45 ms), *Bra* (inom 100 ms) eller *OK*, som stiger ur tangenten
-tillsammans med gnistor i handens färg — en text per grepp, inte en per ton.
+(inom 45 ms), *Bra* (inom 100 ms) eller *OK*. Bedömningen står i skrivstil
+under kombon uppe till vänster — en per grepp, inte en per ton — och gnistor
+stiger ur tangenten i notens färg. Uppe till höger räknas kvällens Perfekt,
+Bra och OK, med XP under; i Fritt spel ackordtoner, skaltoner och de utanför.
 Kombon räknar träffade toner i rad och ger ×2 vid 10, ×3 vid 25 och ×4 vid 50.
-En miss eller en felton nollar den, tyst. Linjen tonerna faller mot pulserar
-med slagen, starkast på ettan, så att tiden syns och inte bara hörs.
+En miss eller en felton nollar den, tyst. Linjen tonerna faller mot glöder och
+pulserar med slagen, starkast på ettan, så att tiden syns och inte bara hörs.
+Tangenten du håller ned lyser, med ett ljus som stiger upp i fältet.
 
 **Varje varv.** När varvet klingat ut räknas hela varvet, också sista takten
 som motorn inte hann se: tre stjärnor från 97 %, två från 90 %, en från 75 %.
-Under 75 % syns ingenting. Bandet — padda, hi-hat, bas, bastrumma, virvel —
-står som fem ikoner under scenen, och när en ny musiker kommer in slås en
-crash på ettan och scenen säger *Basen kommer in*. Samma crash för ett nytt
-steg i trappan och för en groove man aldrig spelat. Överst står varvets fyra
-takter, och under placeringen *Uppvärmning 2 av 4*.
+Under 75 % syns ingenting. Annars står ett ord i skrivstil mitt på scenen —
+*Perfekt!*, *Snyggt!*, *Bra!* eller *Felfritt!* —, varvets XP, och stjärnor
+för **varje ackord** med samma gränser, så att man ser var det tog emot: C
+★★★, Am ★★★, F ★, G ★★. Ett ackord där man inte hade något att spela får
+inga.
+
+Bandet — padda, hi-hat, bas, bastrumma, virvel — sitter på klubbens scen
+bakom noterna: keyboardisten, basisten och trummisen, som en svag kontur
+innan de kommit in och i neon när de spelar (grönt, blått, lila, hi-hatten i
+guld). Under andrum och när du själv spelar basen lyser de blekt. När en ny
+musiker kommer in slås en crash på ettan och scenen säger *Basen kommer in*.
+Samma crash för ett nytt steg i trappan och för en groove man aldrig spelat.
+Överst står varvets fyra takter, och under placeringen *Uppvärmning 2 av 4*.
 
 Motorns tysta prov är inte tyst längre: det heter **bonusvarv**, har en
 guldram och ger dubbla poäng. För motorn är det en mätning ~1,1 nivåer över
@@ -280,7 +317,7 @@ varv till — det ger ingen text.
 
 * **Nivå** räknas ur XP och går bara uppåt: nivå L kräver 120·(L−1)^1,8 XP, så
   de första kommer fort. Den är inte motorns skattning, som kan sjunka och
-  aldrig ska synas göra det — den kallas *svårighet* under huven.
+  aldrig ska synas göra det — den kallas *svårighet* i statistiken.
 * **XP följer tid och kvalitet, inte antalet toner.** Varje ton väger 12
   delat med varvets antal toner (bedömning 1–3 gånger kombons multiplikator),
   och stjärnorna ger 3, 8 eller 15 gånger 1 + svårighet/8. Räknat per ton gav
@@ -295,15 +332,34 @@ varv till — det ger ingen text.
   två felfria varv, samla 15 stjärnor, klara ett bonusvarv, spela ett varv
   med hela bandet, eller ackordtoner i Fritt spel — det sista för att locka
   in i det spelsätt man kanske inte provat.
-* **Samlingen** visar varje trappa som en stig: spelade steg, behärskade
-  (tre rena varv, en stjärna), och det man inte nått än, låst med streckad
-  kant. Bästa tempo sparas per groove, och ett nytt rekord firas. De
-  progressioner man inte hittat visar bara sin stämning.
+* **Samlingen** är åtta rutor. Fem är utseenden som **låses upp med nivån**,
+  så att det alltid finns något strax framför:
+
+  | | | | | |
+  |---|---|---|---|---|
+  | **Scener** | Jazzklubben (1) | Natten (3) | Neon (6) | Konsertsalen (10) |
+  | **Pianon** | Elfenben (1) | Svart lack (4) | Neon (8) | Guld (14) |
+  | **Nottema** | Händerna (1) | Regnbåge (2) | Is och eld (7) | Månsken (11) |
+  | **Effekter** | Gnistor (1) | Stjärnfall (5) | Noter (9) | Eldflugor (12) |
+  | **Titlar** | Nyfiken (1), Kompare (3), Groovare (6), Bandmedlem (9), Bandledare (13), Jazzkatt (18), Virtuos (25) | | | |
+
+  En ny nivå firar det den låste upp. Utseendet rör aldrig motorn eller
+  bedömningen. Titeln är den högsta man nått, om man inte valt en annan. I
+  Regnbåge och de andra temana blir en missad not grå i stället för röd, så
+  att den inte förväxlas med en röd not.
+
+  **Komp** visar varje trappa som en stig: spelade steg, behärskade (tre rena
+  varv, en stjärna), och det man inte nått än, låst med streckad kant. Bästa
+  tempo sparas per groove, och ett nytt rekord firas. **Progressioner** man
+  inte hittat visar bara sin stämning. **Dolda grejer** är sex saker som inte
+  står någonstans förrän man hittat dem.
 * **Motorns läge sparas per spelsätt.** Den som kommer tillbaka slipper
   placeringen: motorn börjar en nivå under förra skattningen, med osäkerhet
   0,8, och zoomar in därifrån.
 
-Pausen visar passet: speltid, träffar, bästa kombo, XP och det som var nytt.
+Statistiken samlar rekorden (bästa kombo, längsta svit, speltid, träffade
+toner) och det som förut låg *under huven*: motorns skattning, varvets form,
+profilen och loggen.
 
 ---
 
@@ -323,9 +379,22 @@ Tretton moduler i `index.html`, i den ordning de bygger på varandra:
 | 8 | Ljud | Web Audio. Piano, padda, bas, trummor, crash och ett rum — inga samplingar. |
 | 9 | Varvet | Schemaläggning, beslutsfönster, mjuka landningar. |
 | 10 | MIDI-in | Riktiga anslag, från MIDI eller datorns tangentbord, matchade mot väntade toner. |
-| 11 | Bild | Fallande noter och klaviatur, eller notblad, på canvas. |
-| 12 | Spelet | Bedömning, kombo, stjärnor, XP och nivå, mål, svit, uppdrag, samling. |
-| 13 | Gränssnitt | Välkomst, spela/paus, paneler, logg. |
+| 11 | Bild | Scenerna, flygeln och bandet i neon; fallande noter och klaviatur, eller notblad, på canvas. |
+| 12 | Spelet | Bedömning, kombo, stjärnor per varv och ackord, XP och nivå, mål, svit, uppdrag, utseenden, dolda grejer. |
+| 13 | Gränssnitt | Skärmarna: välkommen, välj, spela med paus och dagsresultat, samlingen; inställningar, logg. |
+
+### Bilden ritas, den laddas inte
+
+Allt som syns är canvas och CSS. Scenerna är gradienter, suddiga ljuspunkter,
+hus med slumpvis tända fönster (samma slump varje gång, så bilden står still),
+en sol med ränder och ett rutnät i perspektiv, eller en ridå i veck. Flygeln
+och lampan på startsidan är ett par polygoner med kantljus. Musikerna är
+linjer i en ruta 0..1 som ritas med glöd när de spelar. Korten och rutorna i
+samlingen ritas med samma funktioner i liten skala.
+
+Bakgrunden bakom noterna ritas bara om när något i den ändras — storleken,
+scenen, bandets lager — och läggs sedan ut i varje bildruta som en färdig
+bild, så att glöden inte kostar något medan man spelar.
 
 ### Röstföring är det som gör biblioteket billigt
 
@@ -605,7 +674,7 @@ Sajten hamnar på `https://paokarlsson.github.io/vamp/`.
 ## Filer
 
 ```
-index.html                    hela prototypen: teori, motor, ljud, MIDI, bild, gränssnitt
+index.html                    hela prototypen: teori, motor, ljud, MIDI, bild, spel, gränssnitt
 compose.yaml                  utvecklingsserver med live reload (docker compose up)
 .github/workflows/pages.yml   deploy till GitHub Pages vid push till main
 README.md                     den här filen
