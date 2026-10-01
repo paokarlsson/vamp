@@ -2,382 +2,507 @@
 <html lang="sv">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080b10">
 <title>Vamp</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Music&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Dancing+Script:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Music&display=swap" rel="stylesheet">
 <style>
+  /* Vamp är alltid kväll: en mörk klubb, varmt ljus och guld. Scenen är
+     instrumentet, resten av sidan ramen runt det. */
   :root{
-    /* scenen är alltid mörk — den är instrumentet, inte gränssnittet */
-    --stage:#16242b;
-    --stage-2:#1d3038;
-    --stage-line:#2b4650;
+    color-scheme: dark;
+    --bg:#080b10;
+    --panel:#111821;
+    --panel-2:#17212c;
+    --line:rgba(255,255,255,.09);
+    --line-2:rgba(255,255,255,.17);
+    --text:#ece6da;
+    --muted:#9ba5af;
+    --dim:#5d6772;
+    --gold:#f6c96e;
+    --cyan:#7fe3e6;
     --hand-r:#ffc94d;
     --hand-l:#7aa8ff;
     --miss:#e2607f;
+    --good:#6fe0a0;
     --key:#f3ece0;
-
-    --surface:#faf7f1;
-    --surface-2:#f1ece2;
-    --text:#17242a;
-    --muted:#66757c;
-    --border:#e2dbd0;
-    --accent:#1f6f6a;
-    --good:#2e8b7a;
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --surface:#16242b; --surface-2:#1d3038; --text:#e8eef0;
-      --muted:#8fa5ac; --border:#2b4650; --accent:#63d2c3; --good:#63d2c3;
-    }
-  }
-  :root[data-theme="dark"]{
-    --surface:#16242b; --surface-2:#1d3038; --text:#e8eef0;
-    --muted:#8fa5ac; --border:#2b4650; --accent:#63d2c3; --good:#63d2c3;
+    --padda:#7be08a; --hihat:#f3c04f; --bas:#58a8ff; --trummor:#b77dff;
+    /* för diagrammet under huven */
+    --accent:#7fe3e6; --border:#26313d;
+    --serif:"Playfair Display",Georgia,"Times New Roman",serif;
+    --script:"Dancing Script","Segoe Script","Brush Script MT",cursive;
+    --sans:"IBM Plex Sans","Segoe UI",system-ui,-apple-system,sans-serif;
   }
 
   *{box-sizing:border-box}
   [hidden]{display:none !important}
-  html,body{margin:0;padding:0}
-  body{
-    background:var(--surface); color:var(--text);
-    font-family:"IBM Plex Sans","Segoe UI",system-ui,-apple-system,sans-serif;
-    font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
-  }
-  .wrap{max-width:580px;margin:0 auto;padding:16px 14px 44px}
-
-  .mark{
-    font-family:"Bricolage Grotesque",Georgia,serif;
-    font-weight:800; font-size:42px; line-height:.9;
-    letter-spacing:-.045em; margin:0 0 2px;
-    font-variation-settings:"opsz" 72,"wdth" 92;
-  }
-  .tag{color:var(--muted);font-size:13.5px;margin:0 0 14px;max-width:46ch}
-
-  /* ---------- scenen ---------- */
-  .stage{background:var(--stage);border-radius:16px;overflow:hidden;position:relative}
-  #lane{display:block;width:100%;height:352px;touch-action:none}
-  .readout{
-    display:flex;align-items:center;gap:7px;flex-wrap:wrap;
-    padding:9px 12px;background:var(--stage-2);color:var(--key);
-    font-size:12.5px;border-top:1px solid var(--stage-line);
-  }
-  .chip{background:rgba(243,236,224,.09);border-radius:20px;padding:3px 9px;white-space:nowrap}
-  .chip.prog{background:rgba(255,201,77,.18);color:var(--hand-r);font-weight:500}
-  .chip.two{background:rgba(122,168,255,.18);color:var(--hand-l)}
-  .readout .grow{flex:1}
-  .readout button.icon{
-    display:inline-flex;align-items:center;justify-content:center;
-    width:30px;height:26px;padding:0;border-radius:8px;
-    background:rgba(243,236,224,.09);border:none;color:var(--key);
-  }
-  .readout button.icon:hover{background:rgba(243,236,224,.18)}
-
-  /* Helskärm: bara scenen, noterna så höga som skärmen tillåter. */
-  .stage:fullscreen{display:flex;flex-direction:column;border-radius:0;width:100% !important;margin:0 !important}
-  .stage:-webkit-full-screen{display:flex;flex-direction:column;border-radius:0;width:100% !important;margin:0 !important}
-  .stage:fullscreen .lane-wrap{flex:1;min-height:0}
-  .stage:-webkit-full-screen .lane-wrap{flex:1;min-height:0}
-  .stage:fullscreen #lane{height:100%}
-  .stage:-webkit-full-screen #lane{height:100%}
-  .stage:fullscreen .readout{font-size:14px;padding:10px 16px}
-
-  /* ---------- sidhuvudet: nivå, svit, dagens mål ---------- */
-  .top{display:flex;align-items:flex-end;justify-content:space-between;gap:10px 14px;flex-wrap:wrap;margin-bottom:12px}
-  .top .tag{margin:0}
-  .me{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-  .stat{display:flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);
-        border-radius:20px;padding:5px 11px;font-size:13px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
-  .streak{color:var(--muted)}
-  .streak.lit{color:#e8792b}
-  .goal svg{transform:rotate(-90deg)}
-  .ring-bg{fill:none;stroke:var(--border);stroke-width:3}
-  .ring{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset .6s}
-  .goal.lit .ring{stroke:#e8792b}
-  .lvl{flex-direction:column;align-items:stretch;gap:3px;padding:5px 12px}
-  .xpbar{display:block;width:84px;height:4px;border-radius:2px;background:var(--border);overflow:hidden}
-  .xpbar i{display:block;height:100%;width:0;background:var(--accent);transition:width .4s}
-
-  /* ---------- överlägget på scenen ---------- */
-  .lane-wrap{position:relative}
-  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;
-           background:rgba(22,36,43,.93);color:var(--key);overflow:auto}
-  .ov-in{max-width:470px;width:100%;text-align:center;margin:auto}
-  .ov-in h2{font-family:"Bricolage Grotesque",Georgia,serif;font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0 0 4px}
-  .ov-in p{margin:0 0 12px;font-size:13.5px;color:rgba(243,236,224,.78)}
-  .ov-in p b{color:var(--key)}
-  .ov-stats b{color:var(--hand-r) !important}
-  .choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 10px}
-  .choices button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;
-                  background:rgba(243,236,224,.07);border:1px solid rgba(243,236,224,.16);color:var(--key);padding:9px 11px;border-radius:12px}
-  .choices button:hover,.choices button.cur{border-color:var(--hand-r);background:rgba(255,201,77,.1)}
-  .choices b{font-family:"Bricolage Grotesque",Georgia,serif;font-size:16px}
-  .choices span{font-size:12px;color:rgba(243,236,224,.72);font-weight:400;line-height:1.35}
-  .overlay .alt{font-size:12.5px;margin:0}
-  button.link{background:none;border:none;padding:2px 3px;color:var(--hand-r);text-decoration:underline;text-underline-offset:3px;font-size:inherit;font-weight:500}
-  button.link.cur{color:var(--key);text-decoration:none;font-weight:700}
-  .ov-act{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:6px;flex-wrap:wrap}
-  button.big{display:inline-flex;align-items:center;gap:8px;font-size:16px;padding:12px 26px;border-radius:12px}
-  .overlay button.primary{background:var(--hand-r);border-color:var(--hand-r);color:#16242b;font-weight:600}
-  .sum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 12px}
-  .sum div,.records div{display:flex;flex-direction:column}
-  .sum b{font-family:"Bricolage Grotesque",Georgia,serif;font-size:22px;color:var(--key);font-variant-numeric:tabular-nums}
-  .sum span{font-size:11.5px;color:rgba(243,236,224,.65)}
-  .overlay .news{font-size:12.5px}
-
-  /* ---------- bandet ---------- */
-  .band{display:inline-flex;gap:3px}
-  .band span{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:7px;
-             color:rgba(243,236,224,.22);background:rgba(243,236,224,.04);transition:color .3s,background .3s}
-  .band span.on{color:var(--hand-r);background:rgba(255,201,77,.15)}
-  .band span.rest{color:rgba(255,201,77,.45);background:rgba(243,236,224,.06)}
-
-  /* ---------- keyboard ---------- */
-  .device{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--muted)}
-  .device .grow{flex:1}
-  .dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex:none}
-  .dot.on{background:var(--good)}
-  .check{display:flex;align-items:center;gap:6px;cursor:pointer}
-  .check input{accent-color:var(--accent);margin:0}
-  button.small{font-size:13px;padding:6px 11px;border-radius:8px}
-
-  #caption{
-    min-height:44px;display:flex;align-items:center;
-    padding:11px 14px;margin-top:10px;
-    border-left:3px solid var(--accent);
-    background:var(--surface-2);border-radius:0 9px 9px 0;
-    font-size:14px;
-  }
-  #caption:empty{display:none}
-
-  /* ---------- kontroller ---------- */
-  .controls{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 0}
-  button{
-    font:inherit;font-size:14px;font-weight:500;
-    background:var(--surface-2);color:var(--text);
-    border:1px solid var(--border);border-radius:10px;
-    padding:10px 15px;cursor:pointer;
-  }
-  button:hover{border-color:var(--muted)}
-  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text)}
+  body{font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;font-variant-numeric:lining-nums}
+  button{font:inherit;color:inherit;cursor:pointer}
   button:disabled{opacity:.45;cursor:default}
-  button.transport{display:inline-flex;align-items:center;gap:8px;min-width:118px;justify-content:center}
-  button.transport svg{flex:none}
+  button:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 
-  .picks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 0}
-  .picks label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
-  .picks select{
-    font:inherit;font-size:14px;color:var(--text);background:var(--surface-2);
-    border:1px solid var(--border);border-radius:10px;padding:8px 9px;width:100%;min-width:0;cursor:pointer;
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:999px;padding:11px 22px;
+       font-size:15px;font-weight:600;border:1px solid var(--line-2);background:rgba(255,255,255,.04);
+       transition:transform .15s,box-shadow .2s,background .2s}
+  .btn:hover{background:rgba(255,255,255,.09)}
+  .btn.gold{background:linear-gradient(180deg,#fbdc92,#eeb553);border-color:transparent;color:#1d1408;
+            box-shadow:0 10px 30px -10px rgba(246,190,90,.65)}
+  .btn.gold:hover{transform:translateY(-1px);box-shadow:0 12px 34px -8px rgba(246,190,90,.75)}
+  .btn.ghost{background:rgba(8,10,14,.4);border-color:rgba(245,239,228,.6)}
+  .btn.big{font-size:17px;padding:13px 34px}
+  .btn.small{font-size:13px;padding:7px 14px;font-weight:500;white-space:nowrap}
+  .iconbtn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:36px;height:36px;padding:0;
+           border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+  .iconbtn:hover{background:rgba(255,255,255,.1)}
+  .iconbtn[aria-pressed="true"]{color:var(--gold);border-color:rgba(246,201,110,.45)}
+  .link{background:none;border:none;padding:2px 3px;color:var(--gold);text-decoration:underline;text-underline-offset:3px;font-size:inherit;font-weight:500}
+
+  /* ---------- framstegen: nivå, svit, dagens mål ---------- */
+  .me{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .stat{display:flex;align-items:center;gap:6px;background:rgba(10,13,18,.62);border:1px solid var(--line);backdrop-filter:blur(6px);
+        border-radius:20px;padding:5px 11px;font-size:13px;font-weight:600;white-space:nowrap;font-variant-numeric:lining-nums tabular-nums}
+  .streak{color:var(--muted)}
+  .streak.lit{color:#ff9a4a}
+  .goal svg{transform:rotate(-90deg)}
+  .ring-bg{fill:none;stroke:rgba(255,255,255,.14);stroke-width:3}
+  .ring{fill:none;stroke:var(--gold);stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset .6s}
+  .goal.lit .ring{stroke:var(--good)}
+  .lvl{flex-direction:column;align-items:stretch;gap:3px;padding:5px 12px}
+  .lvl small{font-weight:500;color:var(--muted);margin-left:4px}
+  .xpbar{display:block;width:96px;height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}
+  .xpbar i{display:block;height:100%;width:0;background:var(--gold);transition:width .4s}
+
+  /* ---------- 1. hem ---------- */
+  .home{position:relative;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;overflow:hidden;isolation:isolate}
+  .home>canvas{position:absolute;inset:0;width:100%;height:100%;z-index:-1;display:block}
+  .homenav{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:14px 16px;flex-wrap:wrap}
+  .hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8px 16px 20px;position:relative}
+  .hero>*{position:relative}
+  .hero::before{content:"";position:absolute;left:50%;top:50%;width:min(720px,110vw);height:min(560px,90vh);transform:translate(-50%,-50%);
+                background:radial-gradient(closest-side,rgba(5,6,10,.62),rgba(5,6,10,0));pointer-events:none}
+  @media (min-width:860px){ .hero::before{left:calc(50% + 18vw)} }
+  /* På en smal skärm står flygeln nedtill och texten ovanför den. */
+  @media (max-width:859px) and (orientation:portrait){ .hero{justify-content:flex-start;padding-top:9vh} }
+  @media (min-width:860px){ .hero{padding-left:36vw} }
+  .mark{font-family:var(--serif);font-weight:700;font-size:clamp(70px,11vw,132px);line-height:.95;margin:0;letter-spacing:-.005em;
+        color:#f6f0e4;text-shadow:0 4px 40px rgba(0,0,0,.75)}
+  .hero .tag{font-size:clamp(17px,2.1vw,22px);line-height:1.45;margin:14px 0 30px;color:rgba(246,240,228,.92);text-shadow:0 2px 18px rgba(0,0,0,.85)}
+  .hero .btn{min-width:min(270px,80vw)}
+  .hero .btn + .btn{margin-top:12px}
+  .welcome{margin:18px 0 0;font-size:13.5px;color:rgba(246,240,228,.78);text-shadow:0 1px 10px rgba(0,0,0,.9);max-width:40ch}
+  .welcome b{color:var(--gold);font-weight:600}
+  .quote{text-align:center;padding:0 16px 26px;margin:0;font-size:14.5px;color:rgba(246,240,228,.72);font-style:italic;font-family:var(--serif);text-shadow:0 1px 10px rgba(0,0,0,.9)}
+
+  /* ---------- sidor: välj och samlingen ---------- */
+  .pagebg{min-height:100vh;min-height:100dvh;
+          background:radial-gradient(1200px 500px at 20% -10%,rgba(246,180,90,.10),transparent 60%),
+                     radial-gradient(900px 500px at 100% 0%,rgba(110,120,255,.08),transparent 60%),var(--bg)}
+  .page{max-width:1060px;margin:0 auto;padding:16px 16px 44px}
+  .pagehead{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .pagehead h2{font-family:var(--serif);font-weight:700;font-size:clamp(25px,3.4vw,34px);line-height:1.15;margin:0;flex:1;text-align:center}
+  .pagehead .sp{width:36px;flex:none}
+
+  .newbie{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:-6px 0 16px;font-size:14px;color:var(--muted)}
+  .newbie button{border:1px solid var(--line-2);background:rgba(255,255,255,.04);border-radius:999px;padding:5px 13px;font-size:13.5px}
+  .newbie button.cur{border-color:var(--cyan);color:var(--cyan)}
+
+  .cards{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px}
+  .card{grid-column:span 3;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 0 13px;border-radius:14px;overflow:hidden;
+        background:var(--panel);border:1px solid var(--line);transition:border-color .2s,box-shadow .2s,transform .15s}
+  .card:nth-child(n+5){grid-column:span 4}
+  .card canvas{display:block;width:100%;height:clamp(96px,11vw,128px);background:#0a0d12}
+  .card b{font-family:var(--serif);font-size:18px;font-weight:700;margin:10px 8px 1px;line-height:1.2}
+  .card small{font-size:12.5px;color:var(--muted);margin:0 10px;line-height:1.35}
+  .card em{font-style:normal;font-size:11.5px;color:var(--gold);margin-top:5px;min-height:1em}
+  .card:hover{border-color:var(--line-2);transform:translateY(-2px)}
+  .card.cur{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan),0 0 30px -4px rgba(127,227,230,.45)}
+  @media (max-width:700px){ .card,.card:nth-child(n+5){grid-column:span 6} .card:last-child{grid-column:span 12} .card canvas{height:92px} }
+
+  .pickbar{display:flex;align-items:center;gap:12px 18px;flex-wrap:wrap;margin-top:16px;padding:14px 16px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+  .pickbar label{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+  .pickbar select{font:inherit;font-size:14.5px;color:var(--text);background:var(--panel-2);border:1px solid var(--line-2);border-radius:10px;padding:9px 12px;min-width:150px;cursor:pointer}
+  .pickbar select:disabled{opacity:.5;cursor:default}
+  .pickbar .btn{margin-left:auto;min-width:220px}
+  .pickhint{margin:12px 2px 0;font-size:13.5px;color:var(--muted);text-align:center}
+  @media (max-width:560px){ .pickbar label{flex:1 1 40%;flex-direction:column;align-items:stretch;gap:4px} .pickbar select{min-width:0;width:100%} .pickbar .btn{width:100%;margin-left:0} }
+
+  /* ---------- 3. spela ---------- */
+  .play{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg)}
+  .playbar{display:flex;align-items:center;gap:8px;padding:9px 12px;padding-top:max(9px,env(safe-area-inset-top));border-bottom:1px solid var(--line);background:#0a0e14}
+  .chords{display:flex;align-items:center;min-width:0;overflow:hidden;font-family:var(--serif);font-size:20px;font-weight:700;white-space:nowrap;margin-left:4px}
+  .chords span{padding:0 11px;color:rgba(236,230,218,.5);transition:color .2s,text-shadow .2s}
+  .chords span.on{color:var(--gold);text-shadow:0 0 16px rgba(246,201,110,.55)}
+  .chords i{flex:none;width:1px;height:18px;background:var(--line-2)}
+  .playbar .grow{flex:1}
+  .tex{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;max-width:34%}
+  .tex.two{color:var(--hand-l)}
+  .bpm{font-size:13px;font-weight:600;letter-spacing:.05em;color:var(--text);white-space:nowrap;margin:0 4px}
+  .stage{position:relative;flex:1;min-height:0;overflow:hidden}
+  #lane{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+  #caption{position:absolute;left:50%;top:58px;transform:translateX(-50%);width:max-content;max-width:min(560px,calc(100% - 32px));
+           padding:9px 16px;border-radius:14px;background:rgba(8,11,16,.82);border:1px solid var(--line);font-size:13.5px;text-align:center;
+           pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+  #caption:empty{display:none}
+  .bandbar{display:flex;align-items:center;gap:14px;padding:9px 14px;padding-bottom:max(9px,env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#0a0e14}
+  .playbtn{width:46px;height:46px;flex:none;border-radius:50%;border:none;padding:0;display:inline-flex;align-items:center;justify-content:center;
+           background:linear-gradient(180deg,#fbdc92,#eeb553);color:#1d1408;box-shadow:0 6px 22px -6px rgba(246,190,90,.7)}
+  .playbtn:hover{filter:brightness(1.06)}
+  .meters{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+  #meters{display:block;width:100%;height:24px}
+  .mlabels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;font-size:12px}
+  .mlabels span{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--dim);white-space:nowrap;transition:color .3s}
+  .mlabels span.on{color:var(--c)}
+  .mlabels span.rest{color:var(--c);opacity:.5}
+  .progname{font-size:12.5px;color:var(--muted);text-align:right;max-width:26%;line-height:1.3}
+  .progname b{display:block;color:var(--text);font-weight:600}
+  @media (max-width:640px){
+    .tex,.progname{display:none}
+    .chords{font-size:17px} .chords span{padding:0 7px}
+    .mlabels{font-size:11px;gap:6px} .mlabels svg{display:none}
   }
-  .picks select:hover{border-color:var(--muted)}
-  .picks select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  @media (max-width:420px){ .picks{grid-template-columns:1fr 1fr} .picks label:last-child{grid-column:1/-1} }
+  .play:fullscreen{width:100%;height:100%}
+  .play:-webkit-full-screen{width:100%;height:100%}
 
-  /* ---------- paneler ---------- */
-  .panel{margin-top:18px;border:1px solid var(--border);border-radius:13px;background:var(--surface-2);padding:15px}
-  .panel h2{font-family:"Bricolage Grotesque",Georgia,serif;font-size:18px;font-weight:700;margin:0 0 3px;letter-spacing:-.015em}
-  .panel p.hint{margin:0 0 11px;font-size:12.5px;color:var(--muted);max-width:50ch}
+  /* ---------- pausen: dagsresultat, uppdrag, nivån ---------- */
+  .overlay{position:absolute;inset:0;overflow:auto;display:flex;padding:16px;background:rgba(5,7,10,.74);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+  .ov-in{margin:auto;width:100%;max-width:900px}
+  .ov-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px;align-items:start}
+  @media (max-width:740px){ .ov-grid{grid-template-columns:1fr} }
+  .box{background:linear-gradient(180deg,#131b25,#0d131b);border:1px solid var(--line);border-radius:16px;padding:18px}
+  .box h3{font-family:var(--serif);font-size:19px;font-weight:700;margin:0 0 4px}
+  .result h2{font-family:var(--serif);font-size:36px;font-weight:700;text-align:center;margin:0}
+  .result .sub{text-align:center;color:var(--muted);font-size:13.5px;margin:2px 0 0}
+  .bigstars{display:flex;justify-content:center;gap:10px;margin:10px 0 14px}
+  .facts{list-style:none;margin:0 0 16px;padding:0}
+  .facts li{display:flex;align-items:center;gap:12px;padding:6px 2px;font-size:15px}
+  .facts svg{flex:none;color:var(--gold)}
+  .facts .heart{color:#ff9a4a}
+  .result .btn{width:100%}
+  .result .news{font-size:12.5px;color:var(--muted);margin:-6px 0 14px;text-align:center}
+  .goalrow{display:flex;align-items:center;gap:16px;margin-bottom:6px}
+  .goalrow h3{flex:1;margin:0}
+  .goalrow .min{font-size:15px;font-weight:600;font-variant-numeric:lining-nums tabular-nums}
+  .bigring{position:relative;width:74px;height:74px;flex:none}
+  .bigring svg{transform:rotate(-90deg)}
+  .bigring .rb{fill:none;stroke:rgba(255,255,255,.1);stroke-width:7}
+  .bigring .rf{fill:none;stroke:var(--good);stroke-width:7;stroke-linecap:round}
+  .bigring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:26px}
+  .q{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--line);margin-top:8px;font-size:14px}
+  .q .chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--dim);flex:none;display:flex;align-items:center;justify-content:center;color:#0b1a12}
+  .q.done .chk{background:var(--good);border-color:var(--good)}
+  .q .qt{flex:1;min-width:0}
+  .q .qn{font-size:12px;color:var(--muted);font-variant-numeric:lining-nums tabular-nums;white-space:nowrap}
+  .q .xp{color:var(--gold);font-weight:600;font-size:13px;white-space:nowrap}
+  .q.done .qt{color:var(--muted)}
+  .qbar{display:block;height:3px;border-radius:2px;background:rgba(255,255,255,.09);overflow:hidden;margin-top:5px}
+  .qbar i{display:block;height:100%;background:var(--gold)}
+  .lvlbox{display:flex;align-items:center;gap:16px;margin-top:14px}
+  .lvlbox .bigring .rf{stroke:var(--gold)}
+  .lvlbox .xpwrap{flex:1;min-width:0}
+  .lvlbox .xpwrap b{font-family:var(--serif);font-size:16px}
+  .xpline{height:10px;border-radius:5px;background:rgba(255,255,255,.09);overflow:hidden;margin:7px 0 4px}
+  .xpline i{display:block;height:100%;background:linear-gradient(90deg,#eeb553,#fbdc92);border-radius:5px}
+  .lvlbox small{color:var(--muted);font-size:12.5px;font-variant-numeric:lining-nums tabular-nums}
+  .ov-links{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .ov-plain{text-align:center}
+  .ov-plain h2{font-family:var(--serif);font-size:30px;margin:0 0 6px}
+  .ov-plain p{color:var(--muted);margin:0 0 16px}
+
+  /* ---------- inställningarna ---------- */
+  .drawer{position:absolute;top:0;right:0;bottom:0;width:min(390px,100%);z-index:5;overflow:auto;padding:14px 16px 24px;
+          background:#0e141c;border-left:1px solid var(--line);box-shadow:-24px 0 60px rgba(0,0,0,.55)}
+  .drawer .dh{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .drawer .dh h2{font-family:var(--serif);font-size:22px;margin:0}
+  .set h3{font-family:var(--serif);font-size:17px;font-weight:700;margin:18px 0 6px}
+  .setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+  .setrow small{display:block;color:var(--muted);font-size:12px;line-height:1.35}
+  .tog{flex:none;min-width:70px;border-radius:999px;padding:6px 12px;border:1px solid var(--line-2);background:transparent;font-size:13px;font-weight:600;color:var(--muted)}
+  .tog[aria-pressed="true"]{background:rgba(246,201,110,.14);border-color:var(--gold);color:var(--gold)}
+  .device{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted);padding:6px 0 10px}
+  .device .st{flex:1 1 200px;min-width:0}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--dim);flex:none}
+  .dot.on{background:var(--good);box-shadow:0 0 10px var(--good)}
+  .check{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px;color:var(--text)}
+  .check input{accent-color:var(--gold);margin:0;width:16px;height:16px}
+  .keys-help{font-size:13px;color:var(--muted);margin:6px 0 0;line-height:1.55}
+  .keys-help kbd{font-family:var(--sans);font-size:12px;padding:1px 6px;border-radius:5px;border:1px solid var(--line-2);background:rgba(255,255,255,.05);color:var(--text)}
+  .setnote{font-size:12.5px;color:var(--good);min-height:1em;margin:4px 0 0}
+
+  /* ---------- 4. samlingen, statistiken ---------- */
+  .tabs{display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--panel);border:1px solid var(--line);flex:1;max-width:560px;margin:0 auto}
+  .tabs button{flex:1;border:none;background:transparent;padding:9px 8px;border-radius:9px;color:var(--muted);font-weight:500;font-size:14px}
+  .tabs button.on{background:#1d2a37;color:var(--text);box-shadow:inset 0 0 0 1px var(--line-2)}
+  .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .tile{display:flex;flex-direction:column;align-items:center;gap:0;padding:0 0 10px;border-radius:14px;background:var(--panel);border:1px solid var(--line);overflow:hidden;position:relative}
+  .tile canvas{display:block;width:100%;aspect-ratio:4/3;background:#0a0d12}
+  .tile b{font-size:14px;font-weight:500;margin-top:8px}
+  .tile small{font-size:11.5px;color:var(--muted)}
+  .tile:hover{border-color:var(--line-2)}
+  .tile.cur{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 26px -6px rgba(246,201,110,.5)}
+  .tile.locked canvas{filter:grayscale(1) brightness(.35)}
+  .tile .lock{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;color:var(--muted)}
+  @media (max-width:640px){ .tiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  .detail{margin-top:16px}
+  .detail .ph{margin-bottom:10px}
+  .looks{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .secret{display:flex;gap:12px;align-items:center;padding:12px;border-radius:12px;background:var(--panel);border:1px solid var(--line)}
+  .secret i{font-style:normal;width:38px;height:38px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);font-size:18px}
+  .secret.found i{background:rgba(246,201,110,.16);color:var(--gold)}
+  .secret b{display:block;font-size:14px}
+  .secret span{font-size:12.5px;color:var(--muted)}
+
+  .panel{margin-top:16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:16px}
+  .panel h2{font-family:var(--serif);font-size:19px;font-weight:700;margin:0 0 3px}
+  .panel p.hint{margin:0 0 11px;font-size:12.5px;color:var(--muted);max-width:60ch}
+  .ph{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .ph h2,.ph h3{margin:0}
+  .ph h3{font-family:var(--serif);font-size:16px}
+  .ph.sub{margin-top:16px}
+  .count{font-size:12px;color:var(--muted);font-variant-numeric:lining-nums tabular-nums;text-align:right}
 
   .levels{display:flex;align-items:baseline;gap:18px}
   .lv{display:flex;flex-direction:column}
-  .lv .n{font-family:"Bricolage Grotesque",Georgia,serif;font-size:36px;line-height:1;font-weight:700;font-variant-numeric:tabular-nums}
+  .lv .n{font-family:var(--serif);font-size:36px;line-height:1;font-weight:700;font-variant-numeric:lining-nums tabular-nums}
   .lv .l{font-size:11.5px;color:var(--muted);margin-top:4px}
   .lv.est .n{color:var(--accent)}
   #chart{display:block;width:100%;height:72px;margin-top:10px}
-
   .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:13px}
-  .metric .v{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+  .metric .v{font-size:18px;font-weight:600;font-variant-numeric:lining-nums tabular-nums}
   .metric .k{font-size:11px;color:var(--muted);line-height:1.25}
-
   .rows{margin-top:4px}
   .row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:12.5px}
   .row .name{width:112px;flex:none;color:var(--muted)}
-  .row .track{flex:1;height:7px;border-radius:4px;background:var(--border);overflow:hidden;position:relative}
+  .row .track{flex:1;height:7px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;position:relative}
   .row .track i{display:block;height:100%;background:var(--accent);width:0%}
   .row .track i.weak{background:var(--miss)}
   .row .track i.dim{opacity:.35}
-  .row .val{width:40px;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
-
-  #log{margin-top:18px;border:1px solid var(--border);border-radius:13px;max-height:300px;overflow-y:auto;background:var(--surface)}
-  .entry{display:flex;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border);font-size:13.5px}
+  .row .val{width:40px;text-align:right;font-variant-numeric:lining-nums tabular-nums;color:var(--muted)}
+  #log{margin-top:16px;border:1px solid var(--line);border-radius:14px;max-height:300px;overflow-y:auto;background:#0c1118}
+  .entry{display:flex;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);font-size:13.5px}
   .entry:last-child{border-bottom:none}
-  .entry .t{color:var(--muted);font-variant-numeric:tabular-nums;flex:none;width:40px}
+  .entry .t{color:var(--muted);font-variant-numeric:lining-nums tabular-nums;flex:none;width:40px}
   .entry.up .m{color:var(--good)}
   .entry.down .m{color:var(--miss)}
-  .entry.phase{background:var(--surface-2)}
-  .entry.phase .m{font-family:"Bricolage Grotesque",Georgia,serif;font-weight:700}
+  .entry.phase{background:var(--panel)}
+  .entry.phase .m{font-family:var(--serif);font-weight:700}
+  .note{font-size:12.5px;color:var(--muted);margin-top:18px;max-width:62ch}
+  .records{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .records div{display:flex;flex-direction:column}
+  .records b{font-family:var(--serif);font-size:22px;font-variant-numeric:lining-nums tabular-nums}
+  .records span{font-size:11.5px;color:var(--muted)}
 
-  .note{font-size:12.5px;color:var(--muted);margin-top:18px;max-width:58ch}
-  .note code{font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
-
-  /* ---------- uppdrag och samling ---------- */
-  .ph{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
-  .ph h2,.ph h3{margin:0}
-  .ph h3{font-family:"Bricolage Grotesque",Georgia,serif;font-size:15px}
-  .ph.sub{margin-top:16px}
-  .count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
-  .quest{display:grid;grid-template-columns:1fr 90px 44px;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--border);font-size:13.5px}
-  .quest:first-child{border-top:none}
-  .qbar{height:6px;border-radius:3px;background:var(--border);overflow:hidden}
-  .qbar i{display:block;height:100%;background:var(--accent);transition:width .4s}
-  .qn{text-align:right;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-  .quest.done .qt{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--accent)}
-  .quest.done .qn{color:var(--good);font-weight:600}
   .ladder{margin-top:12px}
-  .lh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px;margin-bottom:5px}
+  .lh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13.5px;margin-bottom:6px}
   .lh span{font-size:11.5px;color:var(--muted)}
-  .ladder ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:5px}
-  .ladder li{display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 9px 3px 3px;border-radius:20px;
-             background:var(--surface);border:1px solid var(--border)}
-  .ladder li i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;flex:none;width:19px;height:19px;border-radius:50%;
-               background:var(--surface-2);border:1px solid var(--border);font-size:10.5px;font-weight:700;color:var(--muted)}
+  .ladder ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+  .ladder li{display:flex;align-items:center;gap:6px;font-size:12.5px;padding:3px 10px 3px 3px;border-radius:20px;background:#0c1118;border:1px solid var(--line)}
+  .ladder li i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;flex:none;width:20px;height:20px;border-radius:50%;
+               background:var(--panel-2);border:1px solid var(--line-2);font-size:10.5px;font-weight:700;color:var(--muted)}
   .ladder li em{font-style:normal;font-size:11px;color:var(--muted)}
-  .ladder li.played i{background:var(--accent);border-color:var(--accent);color:var(--surface)}
-  .ladder li.done i{background:#ffc94d;border-color:#e0a82a;color:#16242b}
+  .ladder li.played i{background:#2a5d58;border-color:#3d8a83;color:#dff}
+  .ladder li.done i{background:var(--gold);border-color:#e0a82a;color:#16242b}
   .ladder li.locked{opacity:.45;border-style:dashed}
-  .ladder li.cur{border-color:var(--accent);box-shadow:0 0 0 2px rgba(46,139,122,.28)}
-  .progs{display:flex;flex-wrap:wrap;gap:5px}
-  .pg{font-size:12px;padding:3px 9px;border-radius:20px;background:var(--surface);border:1px solid var(--border);
-      display:inline-flex;gap:6px;align-items:baseline;color:var(--muted)}
+  .ladder li.cur{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(127,227,230,.25)}
+  .progs{display:flex;flex-wrap:wrap;gap:6px}
+  .pg{font-size:12.5px;padding:3px 10px;border-radius:20px;background:#0c1118;border:1px solid var(--line);display:inline-flex;gap:6px;align-items:baseline;color:var(--muted)}
   .pg b{color:var(--text);font-weight:600}
   .pg i{font-style:normal}
-  .pg.locked{border-style:dashed;opacity:.75}
-  .records{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)}
-  .records b{font-family:"Bricolage Grotesque",Georgia,serif;font-size:18px;font-variant-numeric:tabular-nums}
-  .records span{font-size:11px;color:var(--muted)}
-  .hood{margin-top:18px;border-top:1px solid var(--border)}
-  .hood summary{cursor:pointer;font-family:"Bricolage Grotesque",Georgia,serif;font-weight:700;font-size:16px;padding:12px 2px}
-  .hood summary span{font-family:"IBM Plex Sans",system-ui,sans-serif;font-weight:400;font-size:12.5px;color:var(--muted);margin-left:6px}
-  .hood summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .pg.locked{border-style:dashed;opacity:.7}
 
   @media (max-width:420px){
-    #lane{height:310px}
     .row .name{width:96px}
-    .records,.sum{grid-template-columns:1fr 1fr}
-    .quest{grid-template-columns:1fr 56px 40px}
-    .choices span{font-size:11px}
-    .ov-in h2{font-size:20px}
+    .records{grid-template-columns:1fr 1fr}
   }
+  @media (prefers-reduced-motion:reduce){ *{transition:none !important} }
 </style>
 </head>
 <body>
-<div class="wrap">
 
-<header class="top">
-  <div class="brand">
-    <h1 class="mark">vamp</h1>
-    <p class="tag">Spela med ett band som lyssnar. Det håller dig precis på din nivå, och det låter bättre ju bättre du spelar.</p>
-  </div>
-  <div class="me" aria-label="Dina framsteg">
-    <div class="stat streak" id="p-streak-wrap">
-      <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M8.2 1.2c.4 2.3 3.8 3.7 3.8 7.6A4 4 0 0 1 8 13a4 4 0 0 1-4-4.2c0-1.7.9-2.9 1.8-3.6-.1 1.3.4 2.3 1.3 2.6-.4-2.5.3-4.8 1.1-6.6z" fill="currentColor"/></svg>
-      <b id="p-streak">0</b>
-    </div>
-    <div class="stat goal" id="p-goal-wrap" title="Dagens mål: fem minuter vid pianot">
-      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" class="ring-bg"/><circle cx="10" cy="10" r="7" class="ring" id="p-ring" stroke-dasharray="43.98" stroke-dashoffset="43.98"/></svg>
-      <span id="p-goal">0/5 min</span>
-    </div>
-    <div class="stat lvl" id="p-lvl-wrap">
-      <span id="p-level">Nivå 1</span>
-      <span class="xpbar"><i id="p-xp"></i></span>
-    </div>
-  </div>
-</header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="star-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe39c"/><stop offset="1" stop-color="#eeac43"/></linearGradient></defs></svg>
 
-<div class="stage">
-  <div class="lane-wrap">
-    <canvas id="lane"></canvas>
-    <div class="overlay" id="overlay" hidden></div>
+<!-- 1. Välkommen -->
+<section class="home" id="scr-home">
+  <canvas id="home-bg" aria-hidden="true"></canvas>
+  <nav class="homenav">
+    <div class="me" aria-label="Dina framsteg">
+      <div class="stat lvl" id="p-lvl-wrap">
+        <span><span id="p-level">Nivå 1</span><small id="p-title"></small></span>
+        <span class="xpbar"><i id="p-xp"></i></span>
+      </div>
+      <div class="stat streak" id="p-streak-wrap">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8.2 1.2c.4 2.3 3.8 3.7 3.8 7.6A4 4 0 0 1 8 13a4 4 0 0 1-4-4.2c0-1.7.9-2.9 1.8-3.6-.1 1.3.4 2.3 1.3 2.6-.4-2.5.3-4.8 1.1-6.6z" fill="currentColor"/></svg>
+        <b id="p-streak">0</b>
+      </div>
+      <div class="stat goal" id="p-goal-wrap" title="Dagens mål: fem minuter vid pianot">
+        <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" class="ring-bg"/><circle cx="10" cy="10" r="7" class="ring" id="p-ring" stroke-dasharray="43.98" stroke-dashoffset="43.98"/></svg>
+        <span id="p-goal">0/5 min</span>
+      </div>
+    </div>
+    <button class="iconbtn" data-go="more" aria-label="Samling, statistik och inställningar" title="Samling"><svg width="17" height="17" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM9 9h5v5H9z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
+  </nav>
+  <div class="hero">
+    <h1 class="mark">Vamp</h1>
+    <p class="tag">Lev i musiken.<br>Bli lite bättre, varje dag.</p>
+    <button class="btn gold big" id="btn-start"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9.5-5.5z" fill="currentColor"/></svg><span>Spela</span></button>
+    <button class="btn ghost" id="btn-how">Så funkar det</button>
+    <p class="welcome" id="welcome"></p>
   </div>
-  <div class="readout">
-    <span class="chip prog" id="c-prog">—</span>
-    <span class="chip" id="c-texture">—</span>
-    <span class="chip" id="c-bpm">—</span>
+  <p class="quote">”Samma fyra ackord. Oändliga möjligheter.”</p>
+</section>
+
+<!-- 2. Välj spelsätt och tonart -->
+<section class="pagebg" id="scr-pick" hidden>
+  <div class="page">
+    <header class="pagehead">
+      <button class="iconbtn" id="btn-pick-back" aria-label="Tillbaka"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+      <h2>Vad vill du spela idag?</h2>
+      <span class="sp"></span>
+    </header>
+    <div class="newbie" id="newbie" hidden>
+      <span>Ny här? Hur mycket har du spelat?</span>
+      <button data-exp="kids">Aldrig</button><button data-exp="rhythm">Lite</button><button data-exp="mix">En hel del</button><button data-exp="pro">Mycket</button>
+    </div>
+    <div class="cards" id="cards"></div>
+    <div class="pickbar">
+      <label>Tonart <select id="pick-tonic"></select></label>
+      <label>Skala <select id="pick-scale"></select></label>
+      <button class="btn gold big" id="btn-go">Kör!</button>
+    </div>
+    <p class="pickhint" id="pickhint"></p>
+  </div>
+</section>
+
+<!-- 3. Spela -->
+<section class="play" id="scr-play" hidden>
+  <header class="playbar">
+    <button class="iconbtn" id="btn-menu" aria-label="Paus och meny" title="Paus och meny"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+    <div class="chords" id="chords" aria-label="Ackorden i varvet"></div>
     <span class="grow"></span>
-    <span class="band" id="band" role="img" aria-label="Bandet"></span>
-    <button class="icon" id="btn-fs-play" hidden aria-label="Spela"></button>
-    <button class="icon" id="btn-fs-view" hidden></button>
-    <button class="icon" id="btn-fs" hidden aria-label="Helskärm" title="Helskärm (F)"></button>
+    <span class="tex" id="c-texture"></span>
+    <span class="bpm" id="c-bpm"></span>
+    <button class="iconbtn" id="btn-view" aria-pressed="false"></button>
+    <button class="iconbtn" id="btn-fs" hidden aria-label="Helskärm" title="Helskärm (F)"></button>
+    <button class="iconbtn" id="btn-gear" aria-label="Inställningar" title="Inställningar"><svg width="17" height="17" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 5.3a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M6.9 1.5h2.2l.4 1.8 1.2.6 1.6-1 1.5 1.5-1 1.6.6 1.2 1.8.4v2.2l-1.8.4-.6 1.2 1 1.6-1.5 1.5-1.6-1-1.2.6-.4 1.8H6.9l-.4-1.8-1.2-.6-1.6 1-1.5-1.5 1-1.6-.6-1.2-1.8-.4V6.9l1.8-.4.6-1.2-1-1.6 1.5-1.5 1.6 1 1.2-.6z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button>
+  </header>
+  <div class="stage" id="stage">
+    <canvas id="lane"></canvas>
+    <div id="caption"></div>
+    <div class="overlay" id="overlay" hidden></div>
+    <aside class="drawer" id="drawer" hidden>
+      <div class="dh"><h2>Inställningar</h2><button class="iconbtn" id="btn-drawer-x" aria-label="Stäng"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" stroke="currentColor" stroke-width="1.8"/></svg></button></div>
+      <div id="drawer-host"></div>
+    </aside>
   </div>
-</div>
+  <footer class="bandbar">
+    <button class="playbtn" id="btn-play"></button>
+    <div class="meters">
+      <canvas id="meters" aria-hidden="true"></canvas>
+      <div class="mlabels" id="band" role="img" aria-label="Bandet"></div>
+    </div>
+    <div class="progname" id="c-prog"></div>
+  </footer>
+</section>
 
-<div class="device">
-  <span class="dot" id="midi-dot"></span>
-  <span id="midi-status">Letar efter MIDI-keyboard…</span>
-  <span class="grow"></span>
-  <button class="small" id="btn-midi" hidden>Anslut keyboard</button>
-  <button class="small" id="btn-measure" hidden>Mät keyboardet</button>
-  <label class="check" id="echo-wrap" hidden><input type="checkbox" id="echo" checked> Mina toner i appen</label>
-</div>
+<!-- 4. Samling, statistik och inställningar -->
+<section class="pagebg" id="scr-more" hidden>
+  <div class="page">
+    <header class="pagehead">
+      <button class="iconbtn" id="btn-more-back" aria-label="Tillbaka"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+      <div class="tabs" role="tablist">
+        <button role="tab" data-tab="samling" class="on">Samling</button>
+        <button role="tab" data-tab="stats">Statistik</button>
+        <button role="tab" data-tab="settings">Inställningar</button>
+      </div>
+      <span class="sp"></span>
+    </header>
 
-<div id="caption"></div>
+    <div id="tab-samling">
+      <div class="tiles" id="tiles"></div>
+      <div class="detail" id="detail"></div>
+      <div class="panel">
+        <div class="ph"><h2>Dagens uppdrag</h2><span class="count" id="quests-count"></span></div>
+        <div class="quests-host"></div>
+      </div>
+    </div>
 
-<div class="controls">
-  <button class="primary transport" id="btn-play" disabled></button>
-  <button id="btn-wake" aria-pressed="false" hidden title="Hindrar skärmen från att slockna medan du spelar">Skärmen släcks</button>
-  <button id="btn-view" aria-pressed="false" title="Växla mellan fallande noter och ett notblad">Notblad</button>
-  <button id="btn-sound" aria-pressed="true">Ljud på</button>
-  <button id="btn-reset" title="Glöm nivån i det här spelsättet och gör om proven. XP, svit och samling ligger kvar.">Ny placering</button>
-</div>
+    <div id="tab-stats" hidden>
+      <div class="panel"><div class="records" id="records"></div></div>
+      <div class="panel">
+        <h2>Skattning</h2>
+        <p class="hint">Motorn jämför varje varvs utfall med vad den väntade sig och flyttar sig proportionellt mot sin egen osäkerhet. Det här är svårigheten den håller dig på — inte samma sak som din nivå, som bara går uppåt.</p>
+        <div class="levels">
+          <div class="lv est"><span class="n" id="m-est">—</span><span class="l">skattad svårighet</span></div>
+          <div class="lv"><span class="n" id="m-sigma">—</span><span class="l">osäkerhet</span></div>
+        </div>
+        <canvas id="chart"></canvas>
+        <div class="metrics">
+          <div class="metric"><div class="v" id="m-acc">—</div><div class="k">träffar</div></div>
+          <div class="metric"><div class="v" id="m-sd">—</div><div class="k">timingspridning</div></div>
+          <div class="metric"><div class="v" id="m-rec">—</div><div class="k">miss efter miss</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Varvets form</h2>
+        <p class="hint">Svårigheten räknas ur de faktiska tonerna, inte ur texturens namn. Två varv på samma nivå kan ha helt olika form — det är därför nivå 5 rymmer så mycket.</p>
+        <div class="rows" id="shape"></div>
+      </div>
+      <div class="panel">
+        <h2>Profil</h2>
+        <p class="hint">Nio axlar, var och en med egen osäkerhet. Blekt betyder för lite data för att säga något — motorn lånar då den allmänna nivån tills den vet bättre.</p>
+        <div class="rows" id="axes"></div>
+      </div>
+      <div id="log"></div>
+      <p class="note">Vikterna i kostnadsfunktionen är handsatta och ska kalibreras mot riktig speldata. Progressionerna skrivs som romerska siffror och får sina grepp av röstföringsmotorn, så biblioteket växer med en rad text per progression.</p>
+    </div>
 
-<div class="picks">
-  <label>Grundton<select id="pick-tonic"></select></label>
-  <label>Skala<select id="pick-scale"></select></label>
-  <label>Spelsätt<select id="pick-style"></select></label>
-</div>
+    <div id="tab-settings" hidden>
+      <div class="panel" id="settings-host">
+        <div class="set" id="settings">
+          <h3 style="margin-top:0">Keyboard</h3>
+          <div class="device">
+            <span class="dot" id="midi-dot"></span>
+            <span class="st" id="midi-status">Letar efter MIDI-keyboard…</span>
+            <button class="btn small" id="btn-midi" hidden>Anslut keyboard</button>
+            <button class="btn small" id="btn-measure" hidden>Mät keyboardet</button>
+          </div>
+          <p class="setnote" id="kb-note"></p>
+          <div class="setrow" id="echo-wrap" hidden>
+            <span>Mina toner i appen<small>Stäng av om keyboardet har egna högtalare — då hörs tonen direkt.</small></span>
+            <label class="check"><input type="checkbox" id="echo" checked></label>
+          </div>
+          <p class="keys-help">Utan MIDI spelar datorns tangentbord: <kbd>Z</kbd>–<kbd>M</kbd> är en oktav från C3, <kbd>Q</kbd>–<kbd>P</kbd> fortsätter från C4. Svarta tangenter ligger på raden ovanför.</p>
 
-<div class="panel">
-  <div class="ph"><h2>Dagens uppdrag</h2><span class="count" id="quests-count"></span></div>
-  <div id="quests"></div>
-</div>
+          <h3>Ljud och bild</h3>
+          <div class="setrow"><span>Bandet<small>Kompet. Det du själv spelar hörs alltid.</small></span><button class="tog" id="btn-sound" aria-pressed="true">På</button></div>
+          <div class="setrow"><span>Notblad<small>Noter från höger på ett notsystem, i stället för fallande noter.</small></span><button class="tog" id="btn-view-2" aria-pressed="false">Av</button></div>
+          <div class="setrow" id="wake-row" hidden><span>Skärmen tänd<small>Hindrar skärmen från att slockna medan du spelar.</small></span><button class="tog" id="btn-wake" aria-pressed="false">Av</button></div>
 
-<div class="panel">
-  <div class="ph"><h2>Samlingen</h2><span class="count" id="groove-count"></span></div>
-  <p class="hint">Varje spelsätt är en trappa. Tre bra varv tar dig ett steg upp, tre rena varv i en groove gör den behärskad, och ditt bästa tempo sparas.</p>
-  <div id="grooves"></div>
-  <div class="ph sub"><h3>Progressioner</h3><span class="count" id="prog-count"></span></div>
-  <div class="progs" id="progs"></div>
-  <div class="records" id="records"></div>
-</div>
-
-<details class="hood" id="hood">
-<summary>Under huven <span>motorns skattning, varvets form och loggen</span></summary>
-
-<div class="panel">
-  <h2>Skattning</h2>
-  <p class="hint">Motorn jämför varje varvs utfall med vad den väntade sig och flyttar sig proportionellt mot sin egen osäkerhet. Det här är svårigheten den håller dig på — inte samma sak som din nivå, som bara går uppåt.</p>
-  <div class="levels">
-    <div class="lv est"><span class="n" id="m-est">—</span><span class="l">skattad svårighet</span></div>
-    <div class="lv"><span class="n" id="m-sigma">—</span><span class="l">osäkerhet</span></div>
+          <h3>Nivån</h3>
+          <div class="setrow"><span>Ny placering<small>Glöm nivån i det spelsätt du står i och gör om proven. XP, svit och samling ligger kvar.</small></span><button class="btn small" id="btn-reset">Gör om</button></div>
+          <p class="setnote" id="reset-note"></p>
+        </div>
+      </div>
+    </div>
   </div>
-  <canvas id="chart"></canvas>
-  <div class="metrics">
-    <div class="metric"><div class="v" id="m-acc">—</div><div class="k">träffar</div></div>
-    <div class="metric"><div class="v" id="m-sd">—</div><div class="k">timingspridning</div></div>
-    <div class="metric"><div class="v" id="m-rec">—</div><div class="k">miss efter miss</div></div>
+</section>
+
+<!-- Så funkar det -->
+<div class="overlay" id="how" hidden style="position:fixed;z-index:20">
+  <div class="ov-in" style="max-width:560px">
+    <div class="box">
+      <h3 style="font-size:26px;margin-bottom:10px">Så funkar det</h3>
+      <ul class="facts">
+        <li><svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 12V5l5-1.5V11M7 6.5l6-2v6" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="4.5" cy="12" r="2" fill="currentColor"/><circle cx="11" cy="10.5" r="2" fill="currentColor"/></svg><span>Bandet spelar fyra ackord om och om igen. Musiken stannar aldrig.</span></li>
+        <li><svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 3.5h13v9h-13zM5 3.5v5M8 3.5v5M11 3.5v5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span>Spela tonerna när de når tangenterna — på ett MIDI-keyboard eller datorns tangentbord. Oktaven spelar ingen roll.</span></li>
+        <li><svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 13 6 8l3 3 5-7" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>Vamp lyssnar och lägger nästa varv precis på din nivå, mellan två varv, utan att stanna.</span></li>
+        <li><svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true"><path d="m8 1.6 1.9 4 4.3.5-3.2 3 .9 4.3L8 11.2 4.1 13.4l.9-4.3-3.2-3 4.3-.5z" fill="currentColor"/></svg><span>Spelar du bra växer bandet: padda, hi-hat, bas och trummor kommer in en i taget.</span></li>
+      </ul>
+      <button class="btn gold" id="btn-how-x" style="width:100%">Uppfattat</button>
+    </div>
   </div>
-</div>
-
-<div class="panel">
-  <h2>Varvets form</h2>
-  <p class="hint">Svårigheten räknas ur de faktiska tonerna, inte ur texturens namn. Två varv på samma nivå kan ha helt olika form — det är därför nivå 5 rymmer så mycket.</p>
-  <div class="rows" id="shape"></div>
-</div>
-
-<div class="panel">
-  <h2>Profil</h2>
-  <p class="hint">Nio axlar, var och en med egen osäkerhet. Blekt betyder för lite data för att säga något — motorn lånar då den allmänna nivån tills den vet bättre.</p>
-  <div class="rows" id="axes"></div>
-</div>
-
-<div id="log"></div>
-
-<p class="note">Vikterna i kostnadsfunktionen är handsatta och ska kalibreras mot riktig speldata. Progressionerna skrivs som romerska siffror och får sina grepp av röstföringsmotorn, så biblioteket växer med en rad text per progression.</p>
-</details>
-
 </div>
 
 <script>
@@ -2176,7 +2301,10 @@ function learnKey(note){
   kbSave(kb.name, {played: [Math.min(p[0], note), Math.max(p[1], note)]});
   if (!st.measured && (note < LOW || note > HIGH)) applyRange();
 }
-function say(text, secs){ el("caption").textContent = text; captionUntil = (ctx?ctx.currentTime:0)+secs; }
+function say(text, secs){
+  el("caption").textContent = text; el("kb-note").textContent = text;
+  captionUntil = text ? (ctx?ctx.currentTime:0)+secs : 0;
+}
 function measureStart(){
   if (kb.measuring){ kb.measuring = null; say("", 0); updateDevice(); return; }
   kb.measuring = {};
@@ -2355,8 +2483,8 @@ function keyRect(midi, W){
 /* Utan MIDI-keyboard står datortangenten på varje pianotangent den spelar. */
 function drawTypeLabels(W, black, color, y){
   if (midi.inputs.length) return;
-  lctx.fillStyle = color; lctx.textAlign = "center";
-  lctx.font = `600 ${Math.min(11, W/whites.length*.62).toFixed(1)}px "IBM Plex Sans",system-ui,sans-serif`;
+  lctx.fillStyle = color; lctx.textAlign = "center"; lctx.textBaseline = "alphabetic";
+  lctx.font = `600 ${Math.min(12, W/whites.length*.62).toFixed(1)}px "IBM Plex Sans",system-ui,sans-serif`;
   for (const m in typeLabel){
     if (isBlack(+m) !== black) continue;
     const r = keyRect(+m,W); lctx.fillText(typeLabel[m], r.x+r.w/2, y);
@@ -2373,30 +2501,31 @@ function resizeCanvas(cv){
 }
 let laneSize = {w:340,h:352};
 
-/* Vita tangenter smalare än så här blir svåra att hitta med blicken. Behövs
-   det bryter scenen sig ur kolumnen, upp till hela fönsterbredden. Räcker
-   inte ens den (88 tangenter på en telefon) blir tangenterna smalare, och
-   delen som varvet använder markeras. */
+/* Scenen fyller fönstret mellan raden överst och bandet nederst. Vita
+   tangenter smalare än 16 px blir svåra att hitta med blicken; då markeras
+   delen som varvet använder. */
 const MIN_WHITE = 16;
 function layoutStage(){
-  const stage = lane.closest(".stage"), col = document.querySelector(".device").offsetWidth;
-  if (fsElement() === stage){ stage.style.width = stage.style.marginLeft = ""; laneSize = resizeCanvas(lane); return; }
-  const avail = document.documentElement.clientWidth - 32;
-  const w = view.sheet ? col : Math.max(col, Math.min(avail, whites.length*MIN_WHITE));
-  stage.style.width = w > col ? w+"px" : "";
-  stage.style.marginLeft = w > col ? (col-w)/2+"px" : "";
+  if (el("scr-play").hidden) return;
   laneSize = resizeCanvas(lane);
+  metersSize = resizeCanvas(meters);
+}
+/* Klaviaturen är så hög som tangenterna är breda, ungefär som ett riktigt
+   piano, men tar aldrig mer än en fjärdedel av scenen. */
+function kbHeight(W, H){
+  const h = Math.max(54, Math.min(H*.24, W/whites.length*4.4, 150));
+  return Math.round(view.sheet ? Math.max(46, h*.7) : h);
 }
 
 /* Full styrka så länge tangenten är nere, sedan en kort avklingning — kort
    nog att två anslag på samma tangent i rad syns som två. */
 const FADE = .12;
-function flashColor(f, now){
-  const a = (now < f.end ? 1 : Math.max(0,1-(now-f.end)/FADE))*.92;
-  if (f.ghost) return `rgba(243,236,224,${a*.45})`;
-  if (f.out)   return `rgba(143,165,172,${a*.8})`;
-  if (!f.hit)  return `rgba(226,96,127,${a})`;
-  return f.hand==="L" ? `rgba(122,168,255,${a})` : `rgba(255,201,77,${a})`;
+const flashAlpha = (f, now) => now < f.end ? 1 : Math.max(0, 1-(now-f.end)/FADE);
+function flashRGB(f){
+  if (f.ghost) return "243,236,224";
+  if (f.out)   return "143,165,172";
+  if (!f.hit)  return "226,96,127";
+  return noteRGB(f.hand, f.raw !== undefined ? f.raw : f.midi);
 }
 
 /* Var ett anslag syns: ovanför tangenten i pianorullen, vid noten på
@@ -2404,34 +2533,313 @@ function flashColor(f, now){
 function hitPoint(midi, hand){
   if (view.sheet && view.lay){
     const p = staffPos(midi, view.key);
-    return { x: view.playX, y: view.lay.y(p.dn, hand === "L" ? "L" : "R") };
+    return { x: view.sheetOff.x + view.playX, y: view.sheetOff.y + view.lay.y(p.dn, hand === "L" ? "L" : "R") };
   }
   const r = keyRect(fold(midi), laneSize.w);
-  return { x: r.x + r.w/2, y: laneSize.h - 64 };
+  return { x: r.x + r.w/2, y: (view.laneH || laneSize.h - 64) - 2 };
 }
 
 /* Tangenternas namn, så att man hittar på klaviaturen: C överallt, och
    alla vita i Nybörjare. Där datortangenterna står skrivs inget. */
-function drawKeyNames(W, laneH, kbH){
+function drawKeyNames(W, top, kbH, color){
   if (!midi.inputs.length) return;
   const all = !!style().fingers, ww = W/whites.length;
   if (ww < 11) return;
-  lctx.fillStyle = "rgba(22,36,43,.45)"; lctx.textAlign = "center"; lctx.textBaseline = "alphabetic";
-  lctx.font = `600 ${Math.min(11, ww*.6).toFixed(1)}px "IBM Plex Sans",system-ui,sans-serif`;
+  lctx.fillStyle = color; lctx.textAlign = "center"; lctx.textBaseline = "alphabetic";
+  lctx.font = `600 ${Math.min(12, ww*.6).toFixed(1)}px "IBM Plex Sans",system-ui,sans-serif`;
   for (const m of whites){
     const pc = m % 12;
     if (!all && pc !== 0) continue;
     const r = keyRect(m, W);
-    lctx.fillText(PC_NAMES[pc] + (pc === 0 ? Math.floor(m/12)-1 : ""), r.x + r.w/2, laneH + kbH - 8);
+    lctx.fillText(PC_NAMES[pc] + (pc === 0 ? Math.floor(m/12)-1 : ""), r.x + r.w/2, top + kbH - 9);
   }
   lctx.textAlign = "start";
 }
 
-function drawLane(){
+/* --------------------------------------------------------------------------
+   Scenerna. Allt som syns bakom noterna och på startsidan ritas här, utan
+   en enda bildfil: klubben, natten, neonet och salen, flygeln vid fönstret,
+   och bandet — tre musiker som tänds i neon en i taget när lagren kommer in.
+   Bakgrunden ritas bara om när något i den ändras, och läggs sedan ut i
+   varje bildruta som en färdig bild.
+   -------------------------------------------------------------------------- */
+
+function rng(seed){ let s = seed >>> 0; return ()=> (s = (Math.imul(s, 1103515245) + 12345) >>> 0) / 4294967296; }
+function glowDot(c, x, y, r, rgb, a){
+  if (r <= 0) return;
+  const g = c.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, `rgba(${rgb},${a})`); g.addColorStop(1, `rgba(${rgb},0)`);
+  c.fillStyle = g; c.fillRect(x-r, y-r, r*2, r*2);
+}
+function vgrad(c, y0, y1, stops){
+  const g = c.createLinearGradient(0, y0, 0, y1);
+  for (const [o, col] of stops) g.addColorStop(o, col);
+  return g;
+}
+/* Krukväxter i hörnen, som i en klubb. */
+function plants(c, W, H, col, seed){
+  const r = rng(seed || 11), s = Math.min(W, H);
+  c.fillStyle = col;
+  for (const [bx, dir] of [[0, 1], [W, -1]]) for (let i=0; i<11; i++){
+    const a = -Math.PI/2 + dir*(.05 + r()*1.15), len = s*(.14 + r()*.22);
+    c.save(); c.translate(bx + dir*s*.05, H + s*.02); c.rotate(a + Math.PI/2);
+    c.beginPath(); c.ellipse(0, -len/2, len*.13, len/2, 0, 0, Math.PI*2); c.fill();
+    c.restore();
+  }
+}
+/* En rad hus med tända fönster. `top` är ungefär där taken går. */
+function skyline(c, W, H, top, col, r, lit){
+  const s = Math.min(W, H), ws = Math.max(2, s*.0062), gap = ws*2.1;
+  let x = -r()*s*.05;
+  while (x < W){
+    const bw = s*(.05 + r()*.1), tall = r() < .18 ? 2.4 : 1;
+    const y = top - r()*s*.16*tall;
+    c.fillStyle = col; c.fillRect(x, y, bw, H - y);
+    if (r() < .2) c.fillRect(x + bw*.5 - 1, y - s*.05, 2, s*.05);
+    for (let wy = y + gap; wy < H - gap; wy += gap*1.15)
+      for (let wx = x + gap*.6; wx < x + bw - gap*.8; wx += gap)
+        if (r() < lit){
+          c.fillStyle = `rgba(255,${190 + (r()*50|0)},${110 + (r()*70|0)},${.3 + r()*.55})`;
+          c.fillRect(wx, wy, ws, ws*1.35);
+        }
+    x += bw + s*r()*.012;
+  }
+}
+
+const SCENES = {
+  /* Jazzklubben: varmt ljus, lampor över scenen och suddiga ljuspunkter. */
+  club(c, W, H){
+    c.fillStyle = vgrad(c, 0, H, [[0,"#0b0806"],[.45,"#1c130c"],[.78,"#130d09"],[1,"#060709"]]);
+    c.fillRect(0, 0, W, H);
+    const r = rng(7), s = Math.min(W, H);
+    glowDot(c, W*.5, H*.45, Math.max(W, H)*.62, "255,150,70", .17);
+    const warm = ["255,190,110","255,150,80","255,216,150","235,120,90"];
+    for (let i=0; i<54; i++) glowDot(c, r()*W, r()*H*.75, s*(.012 + r()*.05), warm[i%4], .05 + r()*.15);
+    for (const fx of [.14, .5, .86]){
+      const x = W*fx, y = H*.12, w = Math.max(14, s*.05);
+      c.strokeStyle = "rgba(0,0,0,.55)"; c.lineWidth = 1.5;
+      c.beginPath(); c.moveTo(x, 0); c.lineTo(x, y - w*.5); c.stroke();
+      c.fillStyle = vgrad(c, y, H*.9, [[0,"rgba(255,200,130,.12)"],[1,"rgba(255,200,130,0)"]]);
+      c.beginPath(); c.moveTo(x - w*.45, y); c.lineTo(x + w*.45, y); c.lineTo(x + w*3.4, H*.9); c.lineTo(x - w*3.4, H*.9); c.closePath(); c.fill();
+      glowDot(c, x, y, w*2.6, "255,196,120", .45);
+      c.fillStyle = "#1d140c";
+      c.beginPath(); c.moveTo(x - w*.18, y - w*.5); c.lineTo(x + w*.18, y - w*.5); c.lineTo(x + w*.5, y); c.lineTo(x - w*.5, y); c.closePath(); c.fill();
+      c.fillStyle = "rgba(255,228,175,.95)"; c.fillRect(x - w*.42, y - 1, w*.84, 2);
+    }
+    c.fillStyle = vgrad(c, H*.78, H, [[0,"rgba(0,0,0,0)"],[1,"rgba(0,0,0,.7)"]]); c.fillRect(0, H*.78, W, H*.22);
+    plants(c, W, H, "#080a07", 11);
+  },
+  /* Natten: staden genom ett fönster, med måne och tända fönster. */
+  city(c, W, H){
+    c.fillStyle = vgrad(c, 0, H, [[0,"#060a1a"],[.48,"#141538"],[.74,"#3b2445"],[1,"#120c18"]]);
+    c.fillRect(0, 0, W, H);
+    const r = rng(3), s = Math.min(W, H);
+    for (let i=0; i<140; i++){ c.fillStyle = `rgba(255,255,255,${.15 + r()*.55})`; c.fillRect(r()*W, r()*H*.5, r() < .1 ? 2 : 1, r() < .1 ? 2 : 1); }
+    glowDot(c, W*.82, H*.17, s*.2, "255,240,210", .22);
+    c.fillStyle = "#f3ead6"; c.beginPath(); c.arc(W*.82, H*.17, s*.035, 0, Math.PI*2); c.fill();
+    glowDot(c, W*.55, H*.8, W*.65, "255,130,90", .2);
+    skyline(c, W, H, H*.5, "#211d40", r, .06);
+    skyline(c, W, H, H*.6, "#141230", r, .11);
+    skyline(c, W, H, H*.7, "#08080f", r, .17);
+  },
+  /* Neon: en solnedgång som aldrig tar slut, och ett rutnät mot horisonten. */
+  neon(c, W, H){
+    c.fillStyle = vgrad(c, 0, H, [[0,"#05030d"],[.5,"#190732"],[.66,"#3c0c4a"],[1,"#07030c"]]);
+    c.fillRect(0, 0, W, H);
+    const s = Math.min(W, H), hz = H*.64, R = s*.22, cx = W*.5, cy = hz - R*.3, r = rng(5);
+    for (let i=0; i<90; i++){ c.fillStyle = `rgba(255,220,255,${.15 + r()*.5})`; c.fillRect(r()*W, r()*hz*.7, 1, 1); }
+    glowDot(c, cx, cy, R*2.6, "255,70,170", .32);
+    c.save(); c.beginPath(); c.arc(cx, cy, R, 0, Math.PI*2); c.clip();
+    c.fillStyle = vgrad(c, cy - R, cy + R, [[0,"#ffd76e"],[.5,"#ff7f7a"],[1,"#d43da3"]]); c.fillRect(cx - R, cy - R, R*2, R*2);
+    c.fillStyle = "#2a0940";
+    for (let i=0; i<7; i++) c.fillRect(cx - R, cy + R*(.08 + i*.13), R*2, R*(.018 + i*.016));
+    c.restore();
+    c.fillStyle = "#12062a";
+    c.beginPath(); c.moveTo(0, hz);
+    for (let x=0; x<=W; x+=W/14) c.lineTo(x, hz - s*(.03 + .09*Math.abs(Math.sin(x*.013 + 1.3))));
+    c.lineTo(W, hz); c.closePath(); c.fill();
+    c.fillStyle = "#0a0416"; c.fillRect(0, hz, W, H - hz);
+    c.strokeStyle = "rgba(255,80,210,.5)"; c.lineWidth = 1; c.beginPath();
+    for (let i=-16; i<=16; i++){ c.moveTo(cx + i*W*.02, hz); c.lineTo(cx + i*W*.2, H); }
+    for (let k=1; k<14; k++){ const y = hz + (H - hz)*Math.pow(k/13, 2.1); c.moveTo(0, y); c.lineTo(W, y); }
+    c.stroke();
+    c.fillStyle = vgrad(c, hz - 2, hz + 3, [[0,"rgba(255,120,220,0)"],[.5,"rgba(255,160,230,.9)"],[1,"rgba(255,120,220,0)"]]); c.fillRect(0, hz - 2, W, 5);
+  },
+  /* Konsertsalen: röd ridå, en strålkastare och ett golv av trä. */
+  hall(c, W, H){
+    c.fillStyle = vgrad(c, 0, H, [[0,"#0d0405"],[.6,"#1d0809"],[1,"#090304"]]);
+    c.fillRect(0, 0, W, H);
+    const s = Math.min(W, H);
+    c.fillStyle = vgrad(c, 0, H*.85, [[0,"rgba(255,236,200,.16)"],[1,"rgba(255,236,200,0)"]]);
+    c.beginPath(); c.moveTo(W*.46, 0); c.lineTo(W*.54, 0); c.lineTo(W*.72, H*.85); c.lineTo(W*.28, H*.85); c.closePath(); c.fill();
+    glowDot(c, W*.5, H*.86, W*.3, "255,226,180", .2);
+    for (const side of [0, 1]){
+      const w = W*.2, x0 = side ? W - w : 0, n = Math.max(5, Math.round(w/(s*.035)));
+      for (let i=0; i<n; i++){
+        const fx = x0 + i*w/n, g = c.createLinearGradient(fx, 0, fx + w/n, 0);
+        g.addColorStop(0, "#2a0508"); g.addColorStop(.5, "#7a1018"); g.addColorStop(1, "#2a0508");
+        c.fillStyle = g; c.fillRect(fx, 0, w/n + .5, H*.9);
+      }
+    }
+    const vh = s*.09;
+    c.fillStyle = "#5e0c13"; c.fillRect(0, 0, W, vh*.6);
+    for (let x=0; x<W; x+=vh){ c.beginPath(); c.ellipse(x + vh/2, vh*.6, vh/2, vh*.4, 0, 0, Math.PI); c.fill(); }
+    c.fillStyle = "rgba(255,210,140,.35)"; c.fillRect(0, vh*.6 - 1, W, 1.5);
+    c.fillStyle = vgrad(c, H*.85, H, [[0,"#3a2212"],[1,"#120a05"]]); c.fillRect(0, H*.85, W, H*.15);
+  }
+};
+
+/* Flygeln, från sidan med locket uppställt. Rutan är w bred och ungefär
+   0,9 w hög; (x, y) är vänster kant vid golvet. */
+function grandPiano(c, x, y, w, rim){
+  c.save(); c.translate(x, y - .88*w); c.scale(w, w);
+  const poly = pts => { c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (let i=1; i<pts.length; i++) c.lineTo(pts[i][0], pts[i][1]); c.closePath(); c.fill(); };
+  c.fillStyle = "#040406";
+  c.beginPath(); c.moveTo(.2, .42); c.lineTo(.98, .41); c.quadraticCurveTo(.88, .14, .62, .05); c.closePath(); c.fill();
+  c.lineWidth = .008; c.strokeStyle = "#040406";
+  c.beginPath(); c.moveTo(.68, .42); c.lineTo(.64, .13); c.stroke();
+  c.beginPath(); c.moveTo(.05, .42); c.lineTo(.97, .42); c.quadraticCurveTo(1.01, .42, 1.01, .47); c.lineTo(1.01, .55); c.lineTo(.05, .55); c.closePath(); c.fill();
+  c.fillRect(-.03, .465, .11, .045);
+  poly([[.1, .42], [.21, .42], [.18, .3], [.09, .31]]);
+  for (const lx of [.1, .53, .92]){ poly([[lx - .026, .55], [lx + .026, .55], [lx + .014, .86], [lx - .014, .86]]); c.fillRect(lx - .022, .86, .044, .016); }
+  c.fillRect(.2, .55, .028, .27); c.fillRect(.165, .815, .1, .016);
+  c.strokeStyle = rim; c.lineCap = "round";
+  c.lineWidth = .005; c.beginPath(); c.moveTo(.2, .42); c.lineTo(.62, .05); c.stroke();
+  c.lineWidth = .004; c.beginPath(); c.moveTo(.05, .425); c.lineTo(.97, .425); c.stroke();
+  c.beginPath(); c.moveTo(.09, .31); c.lineTo(.18, .3); c.stroke();
+  c.strokeStyle = "rgba(255,250,240,.55)"; c.beginPath(); c.moveTo(-.03, .468); c.lineTo(.08, .468); c.stroke();
+  c.strokeStyle = rim.replace(/[\d.]+\)$/, ".22)"); c.lineWidth = .004;
+  for (const lx of [.1, .53]){ c.beginPath(); c.moveTo(lx - .024, .56); c.lineTo(lx - .014, .85); c.stroke(); }
+  c.restore();
+}
+
+/* Startsidan: ett mörkt rum, staden i fönstret, en lampa och flygeln. */
+function paintHome(c, W, H){
+  const s = Math.min(W, H), narrow = W < 860;
+  SCENES[look("scene") === "city" || look("scene") === "club" ? "city" : look("scene")](c, W, H);
+  const fl = H*.83;
+  c.fillStyle = "#050508";
+  for (const fx of [.25, .5, .75]) c.fillRect(W*fx - s*.006, 0, s*.012, fl);
+  c.fillRect(0, H*.38, W, s*.008);
+  c.fillStyle = vgrad(c, fl, H, [[0,"#0d0b0c"],[1,"#040405"]]); c.fillRect(0, fl, W, H - fl);
+  c.fillStyle = "rgba(255,190,120,.12)"; c.fillRect(0, fl, W, 1.5);
+  const vg = c.createLinearGradient(0, 0, W, 0);
+  vg.addColorStop(0, "rgba(4,4,7,.82)"); vg.addColorStop(narrow ? .7 : .42, "rgba(4,4,7,.25)"); vg.addColorStop(1, "rgba(4,4,7,.05)");
+  c.fillStyle = vg; c.fillRect(0, 0, W, H);
+  const pw = narrow ? Math.min(W*.7, H*.5) : Math.min(W*.4, H*.82), px = narrow ? -pw*.08 : W*.03;
+  const lx = px + pw*.12, ly = fl - pw*.98;
+  glowDot(c, lx, ly, pw*1.1, "255,165,80", .3);
+  glowDot(c, lx, ly, pw*.28, "255,210,150", .55);
+  c.strokeStyle = "#0b0907"; c.lineWidth = Math.max(2, pw*.012);
+  c.beginPath(); c.moveTo(lx, ly + pw*.05); c.lineTo(lx, fl); c.stroke();
+  c.fillStyle = "#2a1a0d";
+  c.beginPath(); c.moveTo(lx - pw*.07, ly + pw*.06); c.lineTo(lx + pw*.07, ly + pw*.06); c.lineTo(lx + pw*.045, ly - pw*.04); c.lineTo(lx - pw*.045, ly - pw*.04); c.closePath(); c.fill();
+  c.fillStyle = "rgba(255,214,150,.9)"; c.fillRect(lx - pw*.068, ly + pw*.058, pw*.136, 2);
+  glowDot(c, px + pw*.5, fl + s*.01, pw*.6, "255,160,80", .12);
+  grandPiano(c, px + pw*.18, fl + s*.004, pw*.8, "rgba(255,196,130,.6)");
+  if (narrow){ c.fillStyle = "rgba(4,4,7,.35)"; c.fillRect(0, 0, W, H); }
+}
+
+/* --- Bandet i neon --------------------------------------------------------
+   Var och en ritas i en ruta 0..1 med linjer, som en neonskylt. Musikern
+   lyser när hans lager spelar, vilar med blekt ljus, och syns bara som en
+   svag kontur innan han kommit in. */
+function pathKeys(c){
+  c.rect(.02, .5, .56, .07);
+  c.moveTo(.1, .57); c.lineTo(.28, .95); c.moveTo(.28, .57); c.lineTo(.1, .95);
+  c.moveTo(.34, .57); c.lineTo(.52, .95); c.moveTo(.52, .57); c.lineTo(.34, .95);
+  c.moveTo(.83, .2); c.arc(.76, .2, .07, 0, Math.PI*2);
+  c.moveTo(.76, .28); c.quadraticCurveTo(.79, .43, .8, .6);
+  c.moveTo(.77, .34); c.lineTo(.68, .47); c.lineTo(.56, .49);
+  c.moveTo(.8, .6); c.lineTo(.64, .63); c.lineTo(.64, .94);
+  c.moveTo(.73, .64); c.lineTo(.93, .64); c.moveTo(.77, .64); c.lineTo(.75, .95); c.moveTo(.89, .64); c.lineTo(.91, .95);
+}
+function pathBass(c){
+  c.moveTo(.4, .42);
+  c.bezierCurveTo(.55, .42, .56, .58, .49, .62);
+  c.bezierCurveTo(.62, .66, .62, .92, .4, .92);
+  c.bezierCurveTo(.18, .92, .18, .66, .31, .62);
+  c.bezierCurveTo(.24, .58, .25, .42, .4, .42);
+  c.moveTo(.35, .66); c.lineTo(.35, .74); c.moveTo(.45, .66); c.lineTo(.45, .74);
+  c.moveTo(.4, .42); c.lineTo(.43, .07);
+  c.moveTo(.455, .05); c.arc(.435, .05, .02, 0, Math.PI*2);
+  c.moveTo(.4, .92); c.lineTo(.4, .98);
+  c.moveTo(.73, .15); c.arc(.665, .15, .065, 0, Math.PI*2);
+  c.moveTo(.665, .22); c.quadraticCurveTo(.69, .4, .68, .56);
+  c.moveTo(.68, .56); c.lineTo(.62, .97); c.moveTo(.68, .56); c.lineTo(.75, .97);
+  c.moveTo(.66, .29); c.lineTo(.55, .29); c.lineTo(.44, .2);
+  c.moveTo(.67, .31); c.lineTo(.6, .47); c.lineTo(.47, .6);
+}
+function pathDrums(c){
+  c.moveTo(.67, .76); c.arc(.5, .76, .17, 0, Math.PI*2);
+  c.moveTo(.54, .76); c.arc(.5, .76, .04, 0, Math.PI*2);
+  c.moveTo(.49, .53); c.ellipse(.42, .53, .07, .025, 0, 0, Math.PI*2);
+  c.moveTo(.35, .53); c.lineTo(.35, .6); c.moveTo(.49, .53); c.lineTo(.49, .6); c.moveTo(.35, .6); c.quadraticCurveTo(.42, .63, .49, .6);
+  c.moveTo(.33, .62); c.ellipse(.24, .62, .09, .028, 0, 0, Math.PI*2);
+  c.moveTo(.15, .62); c.lineTo(.15, .68); c.moveTo(.33, .62); c.lineTo(.33, .68); c.moveTo(.15, .68); c.quadraticCurveTo(.24, .71, .33, .68);
+  c.moveTo(.24, .7); c.lineTo(.24, .95); c.moveTo(.24, .86); c.lineTo(.18, .95); c.moveTo(.24, .86); c.lineTo(.3, .95);
+  c.moveTo(.85, .64); c.ellipse(.77, .64, .08, .026, 0, 0, Math.PI*2);
+  c.moveTo(.69, .64); c.lineTo(.69, .8); c.moveTo(.85, .64); c.lineTo(.85, .8); c.moveTo(.69, .8); c.quadraticCurveTo(.77, .83, .85, .8);
+  c.moveTo(.73, .3); c.lineTo(.97, .25); c.moveTo(.85, .28); c.lineTo(.87, .95);
+  c.moveTo(.565, .2); c.arc(.5, .2, .065, 0, Math.PI*2);
+  c.moveTo(.5, .27); c.lineTo(.51, .48);
+  c.moveTo(.49, .32); c.lineTo(.38, .42); c.lineTo(.27, .57);
+  c.moveTo(.52, .32); c.lineTo(.63, .4); c.lineTo(.78, .29);
+}
+function pathHat(c){
+  c.moveTo(.03, .43); c.lineTo(.21, .43); c.moveTo(.04, .46); c.lineTo(.2, .46);
+  c.moveTo(.12, .46); c.lineTo(.12, .95); c.moveTo(.12, .86); c.lineTo(.06, .95); c.moveTo(.12, .86); c.lineTo(.18, .95);
+}
+const BAND_RGB = { padda:"123,224,138", hihat:"243,192,79", bas:"88,168,255", trummor:"183,125,255" };
+function figure(c, x, y, h, path, rgb, lvl){
+  c.save(); c.translate(x, y); c.scale(h, h);
+  c.lineCap = "round"; c.lineJoin = "round";
+  c.beginPath(); path(c);
+  if (lvl > 0){
+    c.shadowColor = `rgba(${rgb},${lvl})`; c.shadowBlur = 14;
+    c.strokeStyle = `rgba(${rgb},${.9*lvl})`; c.lineWidth = 3.2/h; c.stroke();
+    c.shadowBlur = 0; c.strokeStyle = `rgba(255,255,255,${.55*lvl})`; c.lineWidth = 1.1/h; c.stroke();
+  } else { c.strokeStyle = "rgba(215,222,235,.1)"; c.lineWidth = 2.4/h; c.stroke(); }
+  c.restore();
+}
+/* Bandet som det låter just nu: lager, andrum, och om du själv spelar basen. */
+function bandNow(now){
+  const cur = state.loops.find(l=>now >= l.t0 && now < l.t1) || state.loops[state.loops.length-1];
+  if (!cur || !state.started) return { L:0, breath:false, own:false };
+  return { L:cur.layers, breath:cur.breath, own: !!TEXTURES[cur.v.texture].ownsBass };
+}
+function drawBand(c, W, x0, y, h, b){
+  const xs = W < 520 ? [.17, .5, .83] : [.22, .5, .78];
+  figure(c, W*xs[0] - h/2, y, h, pathKeys,  BAND_RGB.padda,   b.L >= 1 ? 1 : 0);
+  figure(c, W*xs[1] - h/2, y, h, pathBass,  BAND_RGB.bas,     b.L >= 3 ? (b.own ? .35 : 1) : 0);
+  figure(c, W*xs[2] - h/2, y, h, pathDrums, BAND_RGB.trummor, b.L >= 4 ? (b.breath ? .35 : b.L >= 5 ? 1 : .75) : 0);
+  figure(c, W*xs[2] - h/2, y, h, pathHat,   BAND_RGB.hihat,   b.L >= 2 ? (b.breath ? .35 : 1) : 0);
+}
+
+const backdrop = { cv: document.createElement("canvas"), key:"" };
+function drawBackdrop(W, H, laneH, now){
+  const b = bandNow(now), dpr = Math.min(window.devicePixelRatio||1, 2);
+  const key = [W, H, laneH, dpr, look("scene"), b.L, b.breath, b.own, view.sheet].join("|");
+  if (backdrop.key !== key){
+    backdrop.key = key;
+    const c = backdrop.cv;
+    c.width = Math.max(1, Math.round(W*dpr)); c.height = Math.max(1, Math.round(H*dpr));
+    const g = c.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    SCENES[look("scene")](g, W, H);
+    g.fillStyle = "rgba(4,6,9,.4)"; g.fillRect(0, 0, W, laneH);
+    if (!view.sheet){
+      const h = Math.min(laneH*.44, W*.2, 250);
+      drawBand(g, W, 0, laneH*.5 - h*.5, h, b);
+    }
+  }
+  lctx.drawImage(backdrop.cv, 0, 0, W, H);
+}
+
+/* --- Bildrutan ----------------------------------------------------------- */
+function drawLane(now){
   const {w:W,h:H} = laneSize;
-  const kbH = 62, laneH = H-kbH, look = 2.6, pps = laneH/look;
-  /* det som hörs, inte det som schemalagts — annars ligger bilden före ljudet */
-  const now = ctx ? viewNow() : 0;
+  const kbH = kbHeight(W, H), laneH = H - kbH;
+  view.laneH = laneH;
 
   /* Tonerna appen spelar själv lyser när de hörs, i båda vyerna. */
   for (const loop of state.loops) for (const ev of loop.events)
@@ -2443,8 +2851,18 @@ function drawLane(){
     if (now-flashes[i].end > FADE){ flashes.splice(i,1); i--; }
 
   lctx.clearRect(0,0,W,H);
-  if (view.sheet){ drawSheet(W, H, now); drawHud(W, H, now); drawPaused(W, H); return; }
-  lctx.fillStyle = "#16242b"; lctx.fillRect(0,0,W,H);
+  drawBackdrop(W, H, laneH, now);
+  if (view.sheet) drawSheetCard(W, laneH, now);
+  else drawRoll(W, laneH, now);
+  drawKeyboard(W, laneH, kbH, now);
+  drawJamKeys(W, laneH, kbH, now);
+  drawHud(W, laneH, now);
+  drawPaused(W, H);
+}
+
+/* Pianorullen: noterna faller mot linjen ovanför tangenterna. */
+function drawRoll(W, laneH, now){
+  const ahead = 2.6, pps = laneH/ahead;
 
   /* Smala tangenter: markera delen som varvet använder, så att man hittar rätt. */
   let used = null;
@@ -2456,7 +2874,7 @@ function drawLane(){
     lctx.fillStyle = "rgba(243,236,224,.05)"; lctx.fillRect(used.x, 0, used.w, laneH);
   }
 
-  lctx.strokeStyle = "rgba(43,70,80,.9)"; lctx.lineWidth = 1;
+  lctx.strokeStyle = "rgba(255,236,210,.1)"; lctx.lineWidth = 1;
   for (const loop of state.loops) for (let bar=0;bar<=4;bar++){
     const y = laneH - (loop.t0+bar*loop.bpb*loop.spb-now)*pps;
     if (y>0 && y<laneH){ lctx.beginPath(); lctx.moveTo(0,y); lctx.lineTo(W,y); lctx.stroke(); }
@@ -2465,87 +2883,134 @@ function drawLane(){
 
   const fingers = !!style().fingers;
   for (const loop of state.loops) for (const ev of loop.events){
-    const y = laneH-(ev.t-now)*pps, h = Math.max(7, ev.dur*loop.spb*pps);
+    const y = laneH-(ev.t-now)*pps, h = Math.max(8, ev.dur*loop.spb*pps);
     if (y < 0 || y-h >= laneH) continue;
     const r = keyRect(fold(ev.midi),W);
     const missed = !ev.hit && now > ev.t + loop.win;
-    lctx.fillStyle = ev.ghost ? "rgba(243,236,224,.26)"
-      : missed ? "rgba(226,96,127,.72)"
-      : ev.hand==="L" ? "#7aa8ff" : "#ffc94d";
     /* Noten glider vidare ner i tangenten och kapas vid linjen. */
     const top = y-h, bh = Math.min(y,laneH)-top;
-    if (bh>0){
-      const rad = Math.min(4,r.w/3,bh/2), x=r.x, ww=r.w, yy=top, hh=bh;
-      lctx.beginPath();
-      lctx.moveTo(x+rad,yy);
-      lctx.lineTo(x+ww-rad,yy); lctx.quadraticCurveTo(x+ww,yy,x+ww,yy+rad);
-      lctx.lineTo(x+ww,yy+hh-rad); lctx.quadraticCurveTo(x+ww,yy+hh,x+ww-rad,yy+hh);
-      lctx.lineTo(x+rad,yy+hh); lctx.quadraticCurveTo(x,yy+hh,x,yy+hh-rad);
-      lctx.lineTo(x,yy+rad); lctx.quadraticCurveTo(x,yy,x+rad,yy);
-      lctx.fill();
-      /* Fingret står längst ned i noten, den del som når tangenten först. */
-      if (fingers && ev.finger && !ev.ghost && bh >= 14 && ww >= 9){
-        lctx.fillStyle = "#16242b";
-        lctx.font = `700 ${Math.min(14, ww*.8).toFixed(1)}px "IBM Plex Sans",system-ui,sans-serif`;
-        lctx.textAlign = "center"; lctx.textBaseline = "alphabetic";
-        lctx.fillText(ev.finger, x+ww/2, yy+hh-4);
-      }
+    if (bh <= 0) continue;
+    const x = r.x + 1, ww = r.w - 2, rad = Math.min(5, ww/3, bh/2);
+    if (ev.ghost){
+      lctx.fillStyle = "rgba(243,236,224,.2)"; pathRound(x, top, ww, bh, rad); lctx.fill();
+      continue;
     }
+    /* Missade noter blir röda — eller grå, när nottemat självt har rött i sig. */
+    const rgb = missed ? (looks.notes === "hands" ? "226,96,127" : "128,134,146") : noteRGB(ev.hand, ev.midi), a = missed ? .55 : 1;
+    if (!missed){ lctx.fillStyle = `rgba(${rgb},.16)`; pathRound(x-3, top-3, ww+6, bh+6, rad+3); lctx.fill(); }
+    const g = lctx.createLinearGradient(0, top, 0, top+bh);
+    g.addColorStop(0, `rgba(${rgb},${a*.7})`); g.addColorStop(1, `rgba(${rgb},${a})`);
+    lctx.fillStyle = g; pathRound(x, top, ww, bh, rad); lctx.fill();
+    lctx.fillStyle = `rgba(255,255,255,${a*.6})`;
+    if (bh > 6) lctx.fillRect(x + rad*.6, top + bh - 3, ww - rad*1.2, 2);
+    /* Fingret står längst ned i noten, den del som når tangenten först. */
+    if (fingers && ev.finger && bh >= 16 && ww >= 9){
+      lctx.fillStyle = "rgba(10,12,16,.85)";
+      lctx.font = `700 ${Math.min(15, ww*.8).toFixed(1)}px "IBM Plex Sans",system-ui,sans-serif`;
+      lctx.textAlign = "center"; lctx.textBaseline = "alphabetic";
+      lctx.fillText(ev.finger, x+ww/2, top+bh-6);
+    }
+  }
+
+  /* Ljuset från tangenterna du håller ned. */
+  for (const f of flashes){
+    if (f.ghost) continue;
+    const a = flashAlpha(f, now); if (a <= 0) continue;
+    const r = keyRect(f.midi, W), hh = laneH*.34, rgb = flashRGB(f);
+    const g = lctx.createLinearGradient(0, laneH-hh, 0, laneH);
+    g.addColorStop(0, `rgba(${rgb},0)`); g.addColorStop(1, `rgba(${rgb},${.4*a})`);
+    lctx.fillStyle = g; lctx.fillRect(r.x, laneH-hh, r.w, hh);
   }
 
   /* Linjen pulserar med slagen, starkast på ettan: tiden syns, inte bara
      hörs. Ett bonusvarv har en guldram. */
   const glow = beatGlow(now), cur = state.loops.find(l=>now >= l.t0 && now < l.t1);
-  if (glow > .02){
-    const g = lctx.createLinearGradient(0, laneH-30, 0, laneH);
-    g.addColorStop(0, "rgba(243,236,224,0)"); g.addColorStop(1, `rgba(243,236,224,${.16*glow})`);
-    lctx.fillStyle = g; lctx.fillRect(0, laneH-30, W, 30);
-  }
+  const lg = lctx.createLinearGradient(0, laneH-44, 0, laneH);
+  lg.addColorStop(0, "rgba(255,214,150,0)"); lg.addColorStop(1, `rgba(255,214,150,${.07 + .2*glow})`);
+  lctx.fillStyle = lg; lctx.fillRect(0, laneH-44, W, 44);
   if (cur && cur.bonus){
     lctx.strokeStyle = `rgba(255,201,77,${.35 + .4*glow})`; lctx.lineWidth = 3;
     lctx.strokeRect(1.5, 1.5, W-3, laneH-3);
   }
-  lctx.strokeStyle = `rgba(243,236,224,${.45 + .4*glow})`; lctx.lineWidth = 2;
-  lctx.beginPath(); lctx.moveTo(0,laneH); lctx.lineTo(W,laneH); lctx.stroke();
-  if (used){ lctx.fillStyle = "rgba(255,201,77,.75)"; lctx.fillRect(used.x, laneH-4, used.w, 3); }
+  lctx.save();
+  lctx.shadowColor = "rgba(255,210,140,.9)"; lctx.shadowBlur = 8 + 10*glow;
+  lctx.strokeStyle = `rgba(255,240,215,${.55 + .4*glow})`; lctx.lineWidth = 2;
+  lctx.beginPath(); lctx.moveTo(0,laneH-1); lctx.lineTo(W,laneH-1); lctx.stroke();
+  lctx.restore();
+  if (used){ lctx.fillStyle = "rgba(255,201,77,.75)"; lctx.fillRect(used.x, laneH-5, used.w, 3); }
+}
 
-  /* Klaviaturen ritas i lager så att en vit tangent som lyser aldrig
-     målar över sina svarta grannar. Bara den tryckta tangenten lyser. */
-  const ww = W/whites.length;
-  lctx.fillStyle = "#f3ece0";
-  for (let i=0;i<whites.length;i++) lctx.fillRect(i*ww+.5, laneH+2, ww-1, kbH-4);
+/* Klaviaturen ritas i lager så att en vit tangent som lyser aldrig
+   målar över sina svarta grannar. Bara den tryckta tangenten lyser. */
+function keyShape(x, y, w, h, r){
+  r = Math.max(0, Math.min(r, w/2, h/2));
+  lctx.beginPath(); lctx.moveTo(x, y); lctx.lineTo(x+w, y);
+  lctx.lineTo(x+w, y+h-r); lctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  lctx.lineTo(x+r, y+h); lctx.quadraticCurveTo(x, y+h, x, y+h-r); lctx.closePath();
+}
+function drawKeyboard(W, top, kbH, now){
+  const P = pianoLook(), ww = W/whites.length, bh = kbH*.62;
+  lctx.fillStyle = P.felt; lctx.fillRect(0, top, W, kbH);
+  const wg = lctx.createLinearGradient(0, top, 0, top+kbH);
+  wg.addColorStop(0, P.white[0]); wg.addColorStop(.82, P.white[1]); wg.addColorStop(1, P.white[2]);
+  lctx.fillStyle = wg;
+  for (let i=0;i<whites.length;i++){ keyShape(i*ww+.6, top+1, ww-1.2, kbH-2, Math.min(4, ww*.18)); lctx.fill(); }
+  if (P.edge){ lctx.strokeStyle = P.edge; lctx.lineWidth = 1;
+    for (let i=0;i<whites.length;i++){ keyShape(i*ww+.6, top+1, ww-1.2, kbH-2, Math.min(4, ww*.18)); lctx.stroke(); } }
   for (const f of flashes){
     if (isBlack(f.midi)) continue;
-    const r = keyRect(f.midi,W);
-    lctx.fillStyle = flashColor(f,now); lctx.fillRect(r.x, laneH+2, r.w, kbH-4);
+    const a = flashAlpha(f, now)*(f.ghost ? .45 : f.out ? .75 : .92); if (a <= 0) continue;
+    const r = keyRect(f.midi,W), rgb = flashRGB(f);
+    const g = lctx.createLinearGradient(0, top, 0, top+kbH);
+    g.addColorStop(0, `rgba(${rgb},${a})`); g.addColorStop(1, `rgba(${rgb},${a*.7})`);
+    lctx.fillStyle = g; keyShape(r.x+.1, top+1, r.w-.2, kbH-2, Math.min(4, ww*.18)); lctx.fill();
   }
-  drawTypeLabels(W, false, "rgba(22,36,43,.5)", laneH+kbH-10);
-  drawKeyNames(W, laneH, kbH);
-  lctx.fillStyle = "#1d3038";
+  const sh = lctx.createLinearGradient(0, top, 0, top+10);
+  sh.addColorStop(0, "rgba(0,0,0,.5)"); sh.addColorStop(1, "rgba(0,0,0,0)");
+  lctx.fillStyle = sh; lctx.fillRect(0, top, W, 10);
+  drawTypeLabels(W, false, P.label, top+kbH-9);
+  drawKeyNames(W, top, kbH, P.label);
+  const bg = lctx.createLinearGradient(0, top, 0, top+bh);
+  bg.addColorStop(0, P.black[0]); bg.addColorStop(1, P.black[1]);
   for (let m=LOW;m<=HIGH;m++){ if(!isBlack(m)) continue;
-    const r = keyRect(m,W); lctx.fillRect(r.x, laneH+2, r.w, kbH*.6); }
+    const r = keyRect(m,W);
+    lctx.fillStyle = bg; keyShape(r.x, top, r.w, bh, Math.min(3, r.w*.2)); lctx.fill();
+    lctx.fillStyle = P.bevel; lctx.fillRect(r.x+1.5, top+bh-Math.max(3, bh*.07), r.w-3, Math.max(2, bh*.05));
+  }
   for (const f of flashes){
     if (!isBlack(f.midi)) continue;
+    const a = flashAlpha(f, now)*(f.ghost ? .45 : f.out ? .75 : .95); if (a <= 0) continue;
     const r = keyRect(f.midi,W);
-    lctx.fillStyle = flashColor(f,now); lctx.fillRect(r.x, laneH+2, r.w, kbH*.6);
+    lctx.fillStyle = `rgba(${flashRGB(f)},${a})`; keyShape(r.x, top, r.w, bh, Math.min(3, r.w*.2)); lctx.fill();
   }
-  drawTypeLabels(W, true, "rgba(243,236,224,.65)", laneH+kbH*.6-4);
-  drawJamKeys(W, laneH, kbH, now);
-  drawHud(W, laneH, now);
-  drawPaused(W, laneH);
+  drawTypeLabels(W, true, P.blackLabel, top+bh-6);
+}
+
+/* Notbladet ligger som ett papper på scenen, med klaviaturen under. */
+function drawSheetCard(W, laneH, now){
+  const m = W < 520 ? 8 : 14, top = 50, h = Math.max(90, laneH - top - m);
+  const x = m, w = W - 2*m, y = laneH - m - h;
+  view.sheetOff = {x, y};
+  lctx.save();
+  lctx.shadowColor = "rgba(0,0,0,.6)"; lctx.shadowBlur = 26; lctx.shadowOffsetY = 8;
+  lctx.fillStyle = SHEET.paper; pathRound(x, y, w, h, 12); lctx.fill();
+  lctx.restore();
+  lctx.save(); lctx.translate(x, y); pathRound(0, 0, w, h, 12); lctx.clip();
+  drawSheet(w, h, now);
+  lctx.restore();
 }
 
 /* Pausad: bilden mörknar. Pausade spelaren själv står sammanfattningen
    ovanpå; annars (ljudet stoppat av systemet) en rad här. */
 function drawPaused(W, h){
   if (!(state.started && ctx && ctx.state !== "running")) return;
-  lctx.fillStyle = "rgba(22,36,43,.6)"; lctx.fillRect(0,0,W,h);
+  lctx.fillStyle = "rgba(5,7,10,.55)"; lctx.fillRect(0,0,W,h);
   if (!el("overlay").hidden) return;
-  lctx.fillStyle = "#f3ece0"; lctx.textAlign = "center";
-  lctx.font = '600 16px "IBM Plex Sans",system-ui,sans-serif';
-  lctx.fillText("Pausad", W/2, h/2-4);
-  lctx.font = '400 12.5px "IBM Plex Sans",system-ui,sans-serif';
-  lctx.fillText("Mellanslag eller Fortsätt", W/2, h/2+16);
+  lctx.fillStyle = "#f3ece0"; lctx.textAlign = "center"; lctx.textBaseline = "alphabetic";
+  lctx.font = hudFont(700, 22, true);
+  lctx.fillText("Pausad", W/2, h/2-6);
+  lctx.font = hudFont(400, 13);
+  lctx.fillText("Mellanslag eller spela-knappen", W/2, h/2+16);
   lctx.textAlign = "start";
 }
 
@@ -2560,7 +3025,7 @@ function drawPaused(W, h){
    tonens längd, och en tunn stapel bakom huvudet visar hur länge den hålls.
    -------------------------------------------------------------------------- */
 
-const view = { sheet:false, pps:0 };
+const view = { sheet:false, pps:0, laneH:0, sheetOff:{x:0, y:0} };
 try { view.sheet = localStorage.getItem("vamp.view") === "sheet"; } catch(e){}
 
 /* Durtonarten vars förtecken skalan skrivs med, räknat från grundtonen:
@@ -2856,12 +3321,11 @@ function drawSheet(W, H, now){
 function setView(sheet){
   view.sheet = sheet; view.pps = 0;
   try { localStorage.setItem("vamp.view", sheet ? "sheet" : "roll"); } catch(e){}
-  el("btn-view").textContent = sheet ? "Notblad" : "Pianorulle";
-  el("btn-view").setAttribute("aria-pressed", sheet ? "true" : "false");
-  const f = el("btn-fs-view");
+  const f = el("btn-view");
   f.innerHTML = sheet ? ICON_ROLL : ICON_SHEET;
   f.setAttribute("aria-label", sheet ? "Visa pianorulle" : "Visa notblad");
   f.title = f.getAttribute("aria-label");
+  toggleText(el("btn-view-2"), sheet);
   layoutStage();
 }
 
@@ -2919,7 +3383,7 @@ const yesterday = () => { const d = new Date(); d.setDate(d.getDate()-1); return
    så att den som kommer tillbaka slipper placeringen. */
 const GOAL_SECS = 300;
 const P = { xp:0, streak:0, bestStreak:0, goalDay:null, day:null, secs:0, totalSecs:0, hits:0, bestCombo:0,
-            grooves:{}, progs:{}, onboarded:false, engine:{}, quests:null };
+            grooves:{}, progs:{}, onboarded:false, engine:{}, quests:null, looks:{}, secrets:{}, styles:{} };
 try { Object.assign(P, JSON.parse(localStorage.getItem("vamp.player")) || {}); } catch(e){}
 function saveP(){ try { localStorage.setItem("vamp.player", JSON.stringify(P)); } catch(e){} }
 
@@ -2933,13 +3397,75 @@ const secsToday = () => P.day === today() ? P.secs : 0;
 
 const game = {
   combo:0, comboAt:-9,
-  sess:{ xp:0, hits:0, notes:0, secs:0, bestCombo:0, stars:0, loops:0, news:[] },
-  toasts:[], sparks:[], pops:[], banner:null, trails:[],
+  sess:{ xp:0, hits:0, notes:0, secs:0, bestCombo:0, stars:0, loops:0, news:[], judge:{1:0, 2:0, 3:0}, jam:{chord:0, scale:0, out:0} },
+  toasts:[], sparks:[], banner:null, trails:[], judge:null, intro:null, flawRun:0,
   maxStep:{}, pausedByUser:false, dirty:true
 };
 const fxNow = () => performance.now()/1000;
 const HAND_RGB = { R:"255,201,77", L:"122,168,255" };
 const fmt = n => Math.round(n).toLocaleString("sv-SE");
+
+/* --- Utseendet: det man låser upp -----------------------------------------
+   Scener, pianon, nottema, effekter och titlar. Allt låses upp med nivån,
+   så att det alltid finns något nytt strax framför. Inget av det rör motorn
+   eller bedömningen — bara hur det ser ut. Valen sparas med spelaren. */
+const LOOKS = {
+  scene:   { label:"Scener",   one:"Ny scen",   items:[["club","Jazzklubben",1],["city","Natten",3],["neon","Neon",6],["hall","Konsertsalen",10]] },
+  piano:   { label:"Pianon",   one:"Nytt piano", items:[["ivory","Elfenben",1],["ebony","Svart lack",4],["neon","Neon",8],["gold","Guld",14]] },
+  notes:   { label:"Nottema",  one:"Nytt nottema",items:[["hands","Händerna",1],["rainbow","Regnbåge",2],["fire","Is och eld",7],["moon","Månsken",11]] },
+  effects: { label:"Effekter", one:"Ny effekt", items:[["sparks","Gnistor",1],["stars","Stjärnfall",5],["notes","Noter",9],["fireflies","Eldflugor",12]] },
+  title:   { label:"Titlar",   one:"Ny titel", items:[["t1","Nyfiken",1],["t2","Kompare",3],["t3","Groovare",6],["t4","Bandmedlem",9],["t5","Bandledare",13],["t6","Jazzkatt",18],["t7","Virtuos",25]] }
+};
+const looks = {};
+/* Det valda, om det är upplåst. Titeln är annars den högsta man nått. */
+function refreshLooks(){
+  const L = levelOf(P.xp), mine = P.looks || {};
+  for (const kind in LOOKS){
+    const items = LOOKS[kind].items.filter(x=>x[2] <= L), it = items.find(x=>x[0] === mine[kind]);
+    looks[kind] = it ? it[0] : kind === "title" ? items[items.length-1][0] : items[0][0];
+  }
+}
+const look = kind => looks[kind];
+const lookName = (kind, id) => (LOOKS[kind].items.find(x=>x[0] === (id || looks[kind])) || [])[1];
+function chooseLook(kind, id){
+  P.looks = Object.assign({}, P.looks, {[kind]: id}); saveP(); refreshLooks();
+  backdrop.key = ""; homeBg.key = "";
+}
+const RAINBOW = ["255,92,92","255,140,70","255,196,70","226,230,90","150,226,90","80,214,140","70,206,214","80,160,255","110,122,255","160,100,255","214,100,240","255,100,180"];
+function noteRGB(hand, midi){
+  switch (looks.notes){
+    case "rainbow": return RAINBOW[((midi % 12) + 12) % 12];
+    case "fire":    return hand === "L" ? "110,210,255" : "255,122,80";
+    case "moon":    return hand === "L" ? "160,184,255" : "236,240,255";
+    default:        return HAND_RGB[hand === "L" ? "L" : "R"];
+  }
+}
+const PIANOS = {
+  ivory: { white:["#fbf8f1","#ece5d6","#d4c9b4"], black:["#3a3a40","#09090c"], felt:"#170b0d", bevel:"rgba(255,255,255,.14)", label:"rgba(22,26,32,.5)", blackLabel:"rgba(243,236,224,.72)" },
+  ebony: { white:["#2c2c33","#18181d","#0c0c10"], black:["#f6f1e6","#cdc3ae"], felt:"#000", bevel:"rgba(0,0,0,.2)", label:"rgba(243,236,224,.6)", blackLabel:"rgba(22,26,32,.65)", edge:"rgba(255,255,255,.07)" },
+  neon:  { white:["#121a2c","#0d1322","#0a0e1a"], black:["#2d1849","#120a20"], felt:"#04050a", bevel:"rgba(255,140,240,.4)", label:"rgba(127,227,230,.75)", blackLabel:"rgba(255,160,240,.85)", edge:"rgba(127,227,230,.55)" },
+  gold:  { white:["#fbf8f1","#ece5d6","#d4c9b4"], black:["#f5d27a","#8a6118"], felt:"#1a1206", bevel:"rgba(255,255,255,.4)", label:"rgba(22,26,32,.5)", blackLabel:"rgba(40,26,5,.8)" }
+};
+const pianoLook = () => PIANOS[looks.piano] || PIANOS.ivory;
+
+/* --- Dolda grejer ----------------------------------------------------------
+   Sex saker som inte står någonstans förrän man hittat dem. */
+const SECRETS = [
+  ["night", "☾",  "Nattuggla",     "Ett varv mellan midnatt och fem på morgonen."],
+  ["c100",  "100","Hundra i rad",  "Kombo 100."],
+  ["flaw4", "★",  "Fyra felfria",  "Fyra felfria varv i rad."],
+  ["swing", "♪",  "Swingkatt",     "Tre stjärnor i ett varv i swing."],
+  ["waltz", "¾",  "Vals",          "Tre stjärnor i ett varv i tretakt."],
+  ["all",   "7",  "Allätare",      "Alla sju spelsätten, minst ett varv vardera."]
+];
+function findSecret(id){
+  if (!P.secrets) P.secrets = {};
+  if (P.secrets[id]) return;
+  P.secrets[id] = today();
+  const s = SECRETS.find(x=>x[0] === id);
+  celebrate(`Hittat: ${s[2]}`, s[3], "star");
+  saveP();
+}
 
 /* --- Varje anslag ---------------------------------------------------------
    Tidsfelet är redan rensat från fördröjning, så gränserna gäller spelaren.
@@ -2961,21 +3487,25 @@ function onHit(ev, loop){
   ev.judged = true;
   const j = JUDGE.find(x=>Math.abs(ev.dt) <= x.ms);
   game.combo++;
-  addXp(j.pts * multOf(game.combo) * (loop.bonus ? 2 : 1) * noteWeight(loop));
-  game.sess.hits++; P.hits++;
+  const xp = j.pts * multOf(game.combo) * (loop.bonus ? 2 : 1) * noteWeight(loop);
+  addXp(xp); loop.xp = (loop.xp || 0) + xp;
+  game.sess.hits++; P.hits++; game.sess.judge[j.pts]++;
+  if (game.combo >= 100) findSecret("c100");
   game.sess.bestCombo = Math.max(game.sess.bestCombo, game.combo);
   P.bestCombo = Math.max(P.bestCombo, game.combo);
   quest("combo", game.combo, true);
   if (game.combo === 10 || game.combo === 25 || game.combo === 50 || game.combo % 100 === 0) game.comboAt = fxNow();
   const p = hitPoint(ev.midi, ev.hand);
-  burst(p.x, p.y, HAND_RGB[ev.hand], j.pts === 3 ? 9 : 5);
-  /* en text per grepp, inte en per ton */
+  burst(p.x, p.y, noteRGB(ev.hand, ev.midi), j.pts === 3 ? 10 : 6);
+  /* En bedömning per grepp, inte en per ton. Den står i skrivstil under
+     kombon tills nästa grepp. */
   const key = ev.hand + ev.b.toFixed(3);
   if (!loop.popped[key]){
     loop.popped[key] = true;
-    game.pops.push({ text:j.text, x:p.x, y:p.y, t:fxNow(), rgb: j.pts === 3 ? "255,255,255" : HAND_RGB[ev.hand] });
+    judgeShow(j.pts === 1 ? "OK" : j.text + "!", j.pts === 3 ? "255,214,120" : j.pts === 2 ? "127,227,230" : "236,230,218");
   }
 }
+function judgeShow(text, rgb){ game.judge = { text, rgb, t:fxNow() }; }
 function onMiss(ev){ ev.judged = true; game.sess.notes++; game.combo = 0; }
 function onWrong(){ game.combo = 0; }
 
@@ -2985,11 +3515,18 @@ function judgeMisses(heard){
     if (!ev.ghost && !ev.hit && !ev.judged && heard - timing.lag > ev.t + loop.win) onMiss(ev);
 }
 
+/* Gnistorna har fyra skepnader, en per effekt i samlingen. */
 function burst(x, y, rgb, n){
-  const t = fxNow();
+  const t = fxNow(), kind = looks.effects, R = Math.random;
+  if (kind === "notes") n = Math.ceil(n/3);
+  if (kind === "fireflies") n = Math.ceil(n/2);
   for (let i=0; i<n; i++){
-    const a = -Math.PI/2 + (Math.random()-.5)*2.4, v = 60 + Math.random()*140;
-    game.sparks.push({ x, y, vx:Math.cos(a)*v, vy:Math.sin(a)*v, t, life:.35 + Math.random()*.3, rgb, r:1.4 + Math.random()*2 });
+    const a = -Math.PI/2 + (R()-.5)*2.4, v = 60 + R()*140;
+    const sp = { x, y, vx:Math.cos(a)*v, vy:Math.sin(a)*v, t, life:.35 + R()*.3, rgb, r:1.4 + R()*2, kind, g:260, spin:(R()-.5)*8 };
+    if (kind === "stars"){ sp.r = 3 + R()*3.5; sp.g = 170; sp.life = .5 + R()*.35; }
+    if (kind === "notes"){ sp.vx = (R()-.5)*60; sp.vy = -70 - R()*70; sp.g = 0; sp.life = .9 + R()*.4; sp.r = 12 + R()*7; }
+    if (kind === "fireflies"){ sp.vx = (R()-.5)*80; sp.vy = -25 - R()*50; sp.g = -10; sp.life = 1 + R()*.7; sp.r = 1.6 + R()*1.6; }
+    game.sparks.push(sp);
   }
   if (game.sparks.length > 400) game.sparks.splice(0, game.sparks.length-400);
 }
@@ -3013,6 +3550,7 @@ function jamNote(note, tp){
   const onGrid = Math.abs(pos*2 - Math.round(pos*2))/2*loop.spb < .06;
   const st = loop.jamStats;
   if (good){ st.good++; if (chord){ st.chord++; quest("jam", 1); } } else st.out++;
+  game.sess.jam[chord ? "chord" : good ? "scale" : "out"]++;
   const p = hitPoint(note, note < 60 ? "L" : "R");
   if (good){
     game.combo++;
@@ -3024,8 +3562,9 @@ function jamNote(note, tp){
     const xp = Math.min((chord ? 1 : .5) * (onGrid ? 2 : 1) * multOf(game.combo), 100 - loop.jamXp);
     if (xp > 0){ loop.jamXp += xp; addXp(xp); }
     burst(p.x, p.y, chord ? HAND_RGB.R : "99,210,195", chord ? 7 : 4);
-    if (chord) game.pops.push({ text: onGrid ? "Ackordton, i takt" : "Ackordton", x:p.x, y:p.y, t:fxNow(), rgb:HAND_RGB.R });
-    else if (onGrid) game.pops.push({ text:"I takt", x:p.x, y:p.y, t:fxNow(), rgb:"99,210,195" });
+    if (chord) judgeShow(onGrid ? "Ackordton, i takt!" : "Ackordton!", "255,214,120");
+    else if (onGrid) judgeShow("I takt!", "127,227,230");
+    if (game.combo >= 100) findSecret("c100");
   } else game.combo = 0;
   game.sess.notes++; if (good) game.sess.hits++;
   game.trails.push({ key:note, midi:fold(note), t0:tp, t1:null, rgb: chord ? HAND_RGB.R : good ? "99,210,195" : "243,236,224" });
@@ -3043,7 +3582,13 @@ function addXp(n){
   const was = levelOf(P.xp);
   P.xp += n; game.sess.xp += n; game.dirty = true;
   const now = levelOf(P.xp);
-  if (now > was) celebrate(`Nivå ${now}`, "Du går uppåt", "level");
+  if (now > was){
+    celebrate(`Nivå ${now}`, "Du går uppåt", "level");
+    /* Det nivån låste upp. */
+    for (const kind in LOOKS) for (const [, name, lvl] of LOOKS[kind].items)
+      if (lvl > was && lvl <= now) celebrate(`${LOOKS[kind].one}: ${name}`, "Finns i Samlingen", "new");
+    refreshLooks();
+  }
 }
 
 /* Nästa etta som ännu inte hörts, i ljudklockans tid. */
@@ -3101,7 +3646,10 @@ function showNews(loop){
 function loopEnd(loop){
   loop.ended = true;
   if (loop.jam){
-    if (loop.jamStats.good + loop.jamStats.out > 0){ game.sess.loops++; addTime(loop); if (loop.layers >= 5) quest("band", 1); saveP(); }
+    if (loop.jamStats.good + loop.jamStats.out > 0){
+      game.sess.loops++; addTime(loop); if (loop.layers >= 5) quest("band", 1);
+      playedStyle("jam"); saveP();
+    }
     return;
   }
   const evs = loop.events.filter(e=>!e.ghost), hits = evs.filter(e=>e.hit).length;
@@ -3112,16 +3660,25 @@ function loopEnd(loop){
   const flawless = hits === evs.length && !loop.extras.length;
   game.sess.loops++; game.sess.stars += stars;
   /* Stjärnorna väger mer i svårare varv. */
-  addXp([0,3,8,15][stars] * x2 * (1 + v.level/8));
+  const starXp = [0,3,8,15][stars] * x2 * (1 + v.level/8);
+  addXp(starXp); loop.xp = (loop.xp || 0) + starXp;
   if (stars) quest("stars", stars);
   if (acc >= .94) quest("clean", 1);
   if (flawless) quest("flawless", 1);
   if (loop.layers >= 5) quest("band", 1);
+  if (loop.bonus && acc >= .85){ addXp(30); loop.xp += 30; quest("bonus", 1); }
   if (stars || loop.bonus)
-    game.banner = { stars, t:fxNow(), acc,
-      text: loop.bonus ? (acc >= .85 ? "Bonusvarvet klarat" : "Bonusvarv") :
-            flawless ? "Felfritt" : ["","Bra","Snyggt","Rent varv"][stars] };
-  if (loop.bonus && acc >= .85){ addXp(30); quest("bonus", 1); }
+    game.banner = { stars, t:fxNow(), acc, xp:loop.xp, chords:chordStars(loop),
+      text: loop.bonus ? (acc >= .85 ? "Bonusvarvet klarat!" : "Bonusvarv") :
+            flawless ? "Felfritt!" : ["","Bra!","Snyggt!","Perfekt!"][stars] };
+
+  /* De dolda grejerna. */
+  game.flawRun = flawless ? game.flawRun + 1 : 0;
+  if (game.flawRun >= 4) findSecret("flaw4");
+  if (new Date().getHours() < 5) findSecret("night");
+  if (stars === 3 && v.swing) findSecret("swing");
+  if (stars === 3 && v.meter === 3) findSecret("waltz");
+  playedStyle(loop.style);
 
   const g = P.grooves[v.texture] = P.grooves[v.texture] || { n:0, clean:0, best:0 };
   g.n++;
@@ -3134,6 +3691,24 @@ function loopEnd(loop){
   addTime(loop);
   saveP();
   renderCollection();
+}
+
+/* Stjärnor för varje ackord i varvet, med samma gränser som för hela varvet.
+   Ett ackord där spelaren inte hade något att spela får inga. */
+function chordStars(loop){
+  return loop.v.slots.map(slot=>{
+    const a = loop.t0 + slot.start*loop.spb, b = a + slot.beats*loop.spb;
+    const evs = loop.events.filter(e=>!e.ghost && e.b >= slot.start - 1e-6 && e.b < slot.start + slot.beats - 1e-6);
+    if (!evs.length) return { name:slot.name, stars:null };
+    const hits = evs.filter(e=>e.hit).length, extras = loop.extras.filter(t=>t >= a && t < b).length;
+    const acc = hits/(evs.length + extras*.5);
+    return { name:slot.name, stars: acc >= .97 ? 3 : acc >= .9 ? 2 : acc >= .75 ? 1 : 0 };
+  });
+}
+function playedStyle(id){
+  if (!P.styles) P.styles = {};
+  P.styles[id] = (P.styles[id] || 0) + 1;
+  if (Object.keys(STYLES).every(k=>P.styles[k])) findSecret("all");
 }
 
 /* Dagens mål är tid vid pianot, inte poäng: fem minuter är fem minuter,
@@ -3232,7 +3807,16 @@ function pathRound(x, y, w, h, r){
   lctx.arcTo(x, y+h, x, y, r); lctx.arcTo(x, y, x+w, y, r); lctx.closePath();
 }
 function pill(x, y, w, h, fill){ lctx.fillStyle = fill; pathRound(x, y, w, h, h/2); lctx.fill(); }
-const hudFont = (w, px, display) => `${w} ${px}px ${display ? '"Bricolage Grotesque",Georgia,serif' : '"IBM Plex Sans",system-ui,sans-serif'}`;
+const hudFont = (w, px, display) => `${w} ${px}px ${display ? '"Playfair Display",Georgia,serif' : '"IBM Plex Sans",system-ui,sans-serif'}`;
+const scriptFont = px => `700 ${px}px "Dancing Script","Segoe Script","Brush Script MT",cursive`;
+function starPath(c, x, y, r){
+  c.beginPath();
+  for (let i=0; i<10; i++){
+    const a = -Math.PI/2 + i*Math.PI/5, rr = i % 2 ? r*.45 : r;
+    c.lineTo(x + Math.cos(a)*rr, y + Math.sin(a)*rr);
+  }
+  c.closePath();
+}
 
 /* Hur starkt slaget lyser just nu: 1 precis på slaget, starkast på ettan. */
 function beatGlow(now){
@@ -3243,93 +3827,158 @@ function beatGlow(now){
   return Math.exp(-ph*7) * (Math.floor(beat) % cur.bpb === 0 ? 1 : .55);
 }
 
+/* Ovanpå scenen: kombon uppe till vänster med bedömningen i skrivstil under,
+   räkningen av Perfekt, Bra och OK uppe till höger, varvets fyra takter i
+   mitten. I notbladet ligger allt på en rad ovanför papperet. */
 function drawHud(W, H, now){
-  const t = fxNow(), cur = state.loops.find(l=>now >= l.t0 && now < l.t1);
+  const t = fxNow(), cur = state.loops.find(l=>now >= l.t0 && now < l.t1), sheet = view.sheet;
   lctx.textBaseline = "middle"; lctx.textAlign = "center";
 
-  /* Varvets fyra takter, och vad det är för varv. I notbladet nedtill, där
-     ackordnamnen inte står. */
+  /* Första gången musiken går: tre rader i skrivstil medan bandet räknar in. */
+  const intro = game.intro;
+  if (intro){
+    const age = now - intro.from, dur = intro.to - intro.from;
+    if (age > dur || !state.started) game.intro = null;
+    else if (age > 0){
+      const a = Math.max(0, Math.min(1, age/.45, (dur - age)/.7)), fs = Math.max(26, Math.min(54, W*.05));
+      lctx.save(); lctx.globalAlpha = a;
+      lctx.translate(W/2, sheet ? H*.5 : H*.42); lctx.rotate(-.07);
+      lctx.font = scriptFont(fs); lctx.fillStyle = "#fbf3e2";
+      lctx.shadowColor = "rgba(0,0,0,.9)"; lctx.shadowBlur = 18;
+      ["Lyssna.", "Spela med.", "Musiken stannar aldrig."].forEach((s, i)=>lctx.fillText(s, (i-1)*fs*.8, (i-1)*fs*1.08));
+      lctx.restore();
+    }
+  }
+
+  /* Varvets fyra takter, och vad det är för varv. */
   if (cur && state.started){
-    const gap = 4, sw = Math.max(16, Math.min(38, (W*.32 - gap*3)/4)), tw = sw*4 + gap*3, x0 = (W - tw)/2;
-    const y = view.sheet ? H - 12 : 9, ly = view.sheet ? y - 26 : y + 9;
-    pill(x0-7, y-5, tw+14, 13, "rgba(22,36,43,.55)");
+    const gap = 5, sw = Math.max(16, Math.min(44, (W*.28 - gap*3)/4)), tw = sw*4 + gap*3, x0 = (W - tw)/2, y = 12;
     const pos = (now - cur.t0)/(cur.bpb*cur.spb);
     for (let i=0; i<4; i++){
-      lctx.fillStyle = "rgba(243,236,224,.2)"; lctx.fillRect(x0 + i*(sw+gap), y, sw, 3);
+      lctx.fillStyle = "rgba(255,255,255,.14)"; pathRound(x0 + i*(sw+gap), y, sw, 4, 2); lctx.fill();
       const f = Math.max(0, Math.min(1, pos - i));
-      lctx.fillStyle = cur.bonus ? "#ffc94d" : cur.jam ? "#63d2c3" : "rgba(243,236,224,.9)";
-      if (f > 0) lctx.fillRect(x0 + i*(sw+gap), y, sw*f, 3);
+      lctx.fillStyle = cur.bonus ? "#ffc94d" : cur.jam ? "#7fe3e6" : "rgba(255,236,205,.92)";
+      if (f > 0){ pathRound(x0 + i*(sw+gap), y, Math.max(4, sw*f), 4, 2); lctx.fill(); }
     }
     const label = cur.probe >= 0 ? `Uppvärmning ${cur.probe+1} av ${STYLES[cur.style].probes.length}`
       : cur.bonus ? "Bonusvarv · dubbla poäng" : cur.jam ? "Fritt spel · ackordtonerna lyser" : "";
-    if (label){
+    if (label && !sheet){
       lctx.font = hudFont(600, 11.5);
-      const w = lctx.measureText(label).width + 18;
-      pill((W-w)/2, ly, w, 19, cur.bonus ? "rgba(255,201,77,.92)" : "rgba(22,36,43,.62)");
-      lctx.fillStyle = cur.bonus ? "#16242b" : "#f3ece0"; lctx.fillText(label, W/2, ly+10);
+      const w = lctx.measureText(label).width + 20;
+      pill((W-w)/2, y + 12, w, 20, cur.bonus ? "rgba(255,201,77,.94)" : "rgba(8,11,16,.7)");
+      lctx.fillStyle = cur.bonus ? "#16130b" : "#f3ece0"; lctx.fillText(label, W/2, y + 22.5);
     }
   }
 
-  /* Kombon, uppe till vänster. Den växer till vid 10, 25, 50 och hundratal. */
-  if (game.combo >= 5){
-    const k = Math.max(0, 1 - (t - game.comboAt)/.4), sc = 1 + .4*k, m = multOf(game.combo);
-    lctx.save(); lctx.translate(12, 12); lctx.scale(sc, sc);
-    lctx.font = hudFont(800, 22, true);
-    const nw = lctx.measureText(String(game.combo)).width;
-    lctx.font = hudFont(600, 10.5);
-    const w = Math.max(nw, lctx.measureText("KOMBO").width) + (m > 1 ? 30 : 0) + 18;
-    pill(0, 0, w, 40, "rgba(22,36,43,.6)");
+  if (state.started){
+    /* Kombon. Den växer till vid 10, 25, 50 och hundratal. */
+    const k = Math.max(0, 1 - (t - game.comboAt)/.4), m = multOf(game.combo);
     lctx.textAlign = "left";
-    lctx.fillStyle = "#f3ece0"; lctx.font = hudFont(800, 22, true); lctx.fillText(String(game.combo), 9, 16);
-    lctx.fillStyle = "rgba(243,236,224,.6)"; lctx.font = hudFont(600, 9.5); lctx.fillText("KOMBO", 9, 32);
-    if (m > 1){ lctx.fillStyle = "#ffc94d"; lctx.font = hudFont(800, 15, true); lctx.fillText("×"+m, w-30, 20); }
-    lctx.restore(); lctx.textAlign = "center";
+    lctx.shadowColor = "rgba(0,0,0,.8)"; lctx.shadowBlur = 8;
+    if (sheet){
+      lctx.font = hudFont(500, 12.5); lctx.fillStyle = "rgba(236,230,218,.65)"; lctx.fillText("Kombo", 16, 26);
+      lctx.font = hudFont(600, 20); lctx.fillStyle = "#f6f0e4"; lctx.fillText(String(game.combo), 64, 25);
+      if (m > 1){ const nw = lctx.measureText(String(game.combo)).width; lctx.font = hudFont(700, 14); lctx.fillStyle = "#ffc94d"; lctx.fillText("×"+m, 70 + nw, 26); }
+    } else {
+      lctx.font = hudFont(500, 13); lctx.fillStyle = "rgba(236,230,218,.72)"; lctx.fillText("Kombo", 18, 24);
+      lctx.save(); lctx.translate(17, 54); lctx.scale(1 + .35*k, 1 + .35*k);
+      lctx.font = hudFont(600, 34); lctx.fillStyle = "#f6f0e4"; lctx.fillText(String(game.combo), 0, 0);
+      if (m > 1){
+        const nw = lctx.measureText(String(game.combo)).width;
+        lctx.font = hudFont(700, 16); lctx.fillStyle = "#ffc94d"; lctx.fillText("×"+m, nw + 7, 3);
+      }
+      lctx.restore();
+    }
+
+    /* Perfekt, Bra och OK i kväll — i fritt spel ackordtoner, skaltoner och
+       de utanför. Poängen under. */
+    const jam = cur ? cur.jam : style().jam, j = game.sess.judge, jm = game.sess.jam;
+    const rows = jam ? [["Ackordton", jm.chord], ["Skalton", jm.scale], ["Utanför", jm.out]] : [["Perfekt", j[3]], ["Bra", j[2]], ["OK", j[1]]];
+    if (sheet){
+      lctx.textAlign = "right"; lctx.font = hudFont(500, 12.5); lctx.fillStyle = "rgba(236,230,218,.8)";
+      lctx.fillText(rows.map(r=>`${r[0]} ${fmt(r[1])}`).join("  ·  ") + (game.sess.xp ? `  ·  ${fmt(game.sess.xp)} XP` : ""), W - 16, 26);
+    } else {
+      const xr = W - 16, xl = xr - Math.max(92, Math.min(116, W*.12));
+      lctx.font = hudFont(500, 12.5);
+      rows.forEach(([name, n], i)=>{
+        const y = 22 + i*19;
+        lctx.textAlign = "left"; lctx.fillStyle = "rgba(236,230,218,.68)"; lctx.fillText(name, xl, y);
+        lctx.textAlign = "right"; lctx.fillStyle = "#f6f0e4"; lctx.fillText(fmt(n), xr, y);
+      });
+      if (game.sess.xp > 0){
+        lctx.font = hudFont(600, 12.5); lctx.fillStyle = "#ffc94d";
+        lctx.fillText(`${fmt(game.sess.xp)} XP`, xr, 22 + 3*19 + 3);
+      }
+    }
+    lctx.shadowBlur = 0;
+
+    /* Bedömningen, i skrivstil under kombon. */
+    const jd = game.judge;
+    if (jd && t - jd.t < .85){
+      const age = t - jd.t, a = Math.min(1, (.85 - age)/.3), pop = 1 + .22*Math.max(0, 1 - age/.14);
+      lctx.save(); lctx.globalAlpha = a;
+      if (sheet) lctx.translate(Math.max(120, W*.2), 26); else lctx.translate(20, 100);
+      lctx.rotate(-.1); lctx.scale(pop, pop);
+      lctx.textAlign = "left"; lctx.font = scriptFont(sheet ? 24 : Math.max(28, Math.min(38, W*.04)));
+      lctx.shadowColor = `rgba(${jd.rgb},.95)`; lctx.shadowBlur = 16;
+      lctx.fillStyle = `rgb(${jd.rgb})`; lctx.fillText(jd.text, 0, 0);
+      lctx.restore();
+    }
   }
 
-  /* Poängen i kväll, uppe till höger. */
-  if (state.started && game.sess.xp > 0){
-    const s = `${fmt(game.sess.xp)} XP`;
-    lctx.font = hudFont(700, 12.5);
-    const w = lctx.measureText(s).width + 18;
-    pill(W-w-10, 12, w, 22, "rgba(22,36,43,.6)");
-    lctx.fillStyle = "#f3ece0"; lctx.fillText(s, W-10-w/2, 23);
-  }
-
-  /* gnistor */
+  /* Gnistor, stjärnor, noter eller eldflugor — det som valts i samlingen. */
+  lctx.save(); lctx.globalCompositeOperation = "lighter";
   for (let i=0; i<game.sparks.length; i++){
     const s = game.sparks[i], age = t - s.t;
     if (age > s.life){ game.sparks.splice(i,1); i--; continue; }
-    lctx.fillStyle = `rgba(${s.rgb},${(1-age/s.life)*.95})`;
-    lctx.beginPath(); lctx.arc(s.x + s.vx*age, s.y + s.vy*age + 260*age*age, s.r, 0, Math.PI*2); lctx.fill();
-  }
-  /* bedömningarna stiger och bleknar */
-  lctx.font = hudFont(800, 13, true); lctx.lineWidth = 3; lctx.strokeStyle = "rgba(22,36,43,.85)";
-  for (let i=0; i<game.pops.length; i++){
-    const p = game.pops[i], age = t - p.t;
-    if (age > .75){ game.pops.splice(i,1); i--; continue; }
-    const y = p.y - 18 - age*38, x = Math.max(34, Math.min(W-34, p.x));
-    lctx.globalAlpha = Math.min(1, (1 - age/.75)*1.6);
-    lctx.strokeText(p.text, x, y); lctx.fillStyle = `rgb(${p.rgb})`; lctx.fillText(p.text, x, y);
-  }
-  lctx.globalAlpha = 1;
-
-  /* Varvets resultat: stjärnor, en kort rad, andelen. */
-  const b = game.banner;
-  if (b && t - b.t < 1.8){
-    const age = t - b.t, a = Math.min(1, age/.12, (1.8 - age)/.35), y = H*.46;
-    lctx.globalAlpha = a;
-    lctx.font = hudFont(800, 20, true);
-    const line = `${b.text} · ${Math.round(b.acc*100)} %`, w = Math.max(150, lctx.measureText(line).width + 36);
-    pill((W-w)/2, y-34, w, 64, "rgba(22,36,43,.72)");
-    lctx.font = hudFont(400, 22);
-    for (let i=0; i<3; i++){
-      const pop = i < b.stars ? 1 + .3*Math.max(0, 1 - (age - i*.08)/.25) : 1;
-      lctx.save(); lctx.translate(W/2 + (i-1)*26, y-15); lctx.scale(pop, pop);
-      lctx.fillStyle = i < b.stars ? "#ffc94d" : "rgba(243,236,224,.22)"; lctx.fillText("★", 0, 0);
-      lctx.restore();
+    const x = s.x + s.vx*age, y = s.y + s.vy*age + s.g*age*age, a = (1 - age/s.life);
+    if (s.kind === "stars"){
+      lctx.fillStyle = `rgba(${s.rgb},${a})`;
+      lctx.save(); lctx.translate(x, y); lctx.rotate(s.spin*age); starPath(lctx, 0, 0, s.r); lctx.fill(); lctx.restore();
+    } else if (s.kind === "notes"){
+      lctx.fillStyle = `rgba(${s.rgb},${a})`; lctx.font = `${s.r.toFixed(0)}px ${MUSIC_FONT}`;
+      lctx.textAlign = "center"; lctx.fillText(s.spin > 0 ? "♪" : "♫", x, y);
+    } else if (s.kind === "fireflies"){
+      const fl = .55 + .45*Math.sin(age*18 + s.spin*5);
+      glowDot(lctx, x, y, s.r*5, s.rgb, a*fl*.5);
+      lctx.fillStyle = `rgba(255,255,230,${a*fl})`; lctx.beginPath(); lctx.arc(x, y, s.r*.7, 0, Math.PI*2); lctx.fill();
+    } else {
+      lctx.fillStyle = `rgba(${s.rgb},${a*.95})`;
+      lctx.beginPath(); lctx.arc(x, y, s.r, 0, Math.PI*2); lctx.fill();
     }
-    lctx.fillStyle = "#f3ece0"; lctx.font = hudFont(700, 15, true); lctx.fillText(line, W/2, y+13);
-    lctx.globalAlpha = 1;
+  }
+  lctx.restore();
+
+  /* Varvets resultat: ett ord i skrivstil, XP, och stjärnor för varje ackord. */
+  const b = game.banner;
+  if (b && t - b.t < 2.3){
+    const age = t - b.t, a = Math.min(1, age/.14, (2.3 - age)/.4), cy = H*.42;
+    lctx.save(); lctx.globalAlpha = a;
+    glowDot(lctx, W/2, cy + 10, Math.min(W*.42, H*.55), "0,0,0", .6);
+    lctx.textAlign = "center";
+    const pop = 1 + .2*Math.max(0, 1 - age/.2), fs = Math.max(38, Math.min(66, W*.065));
+    lctx.save(); lctx.translate(W/2, cy - fs*.3); lctx.rotate(-.05); lctx.scale(pop, pop);
+    lctx.font = scriptFont(fs); lctx.shadowColor = "rgba(255,186,80,.95)"; lctx.shadowBlur = 24;
+    lctx.fillStyle = "#ffdc92"; lctx.fillText(b.text, 0, 0);
+    lctx.restore();
+    if (b.xp >= 1){
+      lctx.font = scriptFont(Math.round(fs*.48)); lctx.shadowColor = "rgba(255,186,80,.7)"; lctx.shadowBlur = 12;
+      lctx.fillStyle = "#fbe7bd"; lctx.fillText(`+${fmt(b.xp)} XP`, W/2 + fs*.25, cy + fs*.42);
+    }
+    lctx.shadowBlur = 0;
+    const ch = (b.chords || []).slice(0, 8);
+    if (ch.length > 1 && H > 220){
+      const cw = Math.min(110, (W - 40)/ch.length), x0 = W/2 - cw*(ch.length-1)/2, y = cy + fs*.95;
+      ch.forEach((c, i)=>{
+        const x = x0 + i*cw;
+        lctx.font = hudFont(700, 17, true); lctx.fillStyle = "#f6f0e4"; lctx.fillText(c.name, x, y);
+        for (let k=0; k<3; k++){
+          lctx.fillStyle = c.stars === null ? "rgba(255,255,255,.08)" : k < c.stars ? "#ffc94d" : "rgba(255,255,255,.2)";
+          starPath(lctx, x + (k-1)*15, y + 22, 6.5); lctx.fill();
+        }
+      });
+    }
+    lctx.restore();
   }
 
   /* Firanden, en i taget, från den etta de hör till. */
@@ -3339,17 +3988,17 @@ function drawHud(W, H, now){
     const age = t - q.shown;
     if (age > 2.4) game.toasts.shift();
     else {
-      const a = Math.min(1, age/.15, (2.4 - age)/.4), y = Math.max(66, H*.2) + (1-Math.min(1, age/.2))*10;
-      const color = { level:"#ffc94d", goal:"#ff9f5a", record:"#ff8fb1", star:"#ffc94d", quest:"#63d2c3", band:"#7aa8ff", step:"#63d2c3", new:"#f3ece0" }[q.kind] || "#f3ece0";
-      lctx.globalAlpha = a;
-      lctx.font = hudFont(800, 17, true);
+      const a = Math.min(1, age/.15, (2.4 - age)/.4), y = (sheet ? 82 : Math.max(96, H*.22)) + (1-Math.min(1, age/.2))*10;
+      const color = { level:"#ffc94d", goal:"#6fe0a0", record:"#ff8fb1", star:"#ffc94d", quest:"#7fe3e6", band:"#7aa8ff", step:"#7fe3e6", new:"#f3ece0" }[q.kind] || "#f3ece0";
+      lctx.globalAlpha = a; lctx.textAlign = "center";
+      lctx.font = hudFont(700, 19, true);
       const tw = lctx.measureText(q.text).width;
-      lctx.font = hudFont(500, 11.5);
-      const w = Math.max(tw, lctx.measureText(q.sub || "").width) + 40;
-      pill((W-w)/2, y-24, w, 48, "rgba(22,36,43,.82)");
-      lctx.fillStyle = color; lctx.fillRect((W-w)/2 + 16, y+18, w-32, 2);
-      lctx.font = hudFont(800, 17, true); lctx.fillStyle = color; lctx.fillText(q.text, W/2, y-7);
-      lctx.font = hudFont(500, 11.5); lctx.fillStyle = "rgba(243,236,224,.75)"; lctx.fillText(q.sub || "", W/2, y+10);
+      lctx.font = hudFont(500, 12);
+      const w = Math.max(tw, lctx.measureText(q.sub || "").width) + 44;
+      lctx.fillStyle = "rgba(8,11,16,.88)"; pathRound((W-w)/2, y-27, w, 54, 16); lctx.fill();
+      lctx.strokeStyle = color; lctx.globalAlpha = a*.5; lctx.lineWidth = 1; lctx.stroke(); lctx.globalAlpha = a;
+      lctx.font = hudFont(700, 19, true); lctx.fillStyle = color; lctx.fillText(q.text, W/2, y-8);
+      lctx.font = hudFont(500, 12); lctx.fillStyle = "rgba(243,236,224,.75)"; lctx.fillText(q.sub || "", W/2, y+12);
       lctx.globalAlpha = 1;
     }
   }
@@ -3399,7 +4048,7 @@ function drawJamKeys(W, laneH, kbH, now){
   for (let m=LOW; m<=HIGH; m++){
     const pc = ((m%12)+12)%12, chord = slot.pcs.indexOf(pc) >= 0;
     if (!chord && scale.indexOf(pc) < 0) continue;
-    const r = keyRect(m, W), y = isBlack(m) ? laneH + kbH*.6 - 9 : laneH + kbH - 22;
+    const r = keyRect(m, W), y = isBlack(m) ? laneH + kbH*.62 - 10 : laneH + kbH*.62 + (kbH*.38)*.5;
     lctx.fillStyle = chord ? "#ffc94d" : isBlack(m) ? "rgba(99,210,195,.9)" : "rgba(31,111,106,.7)";
     lctx.beginPath(); lctx.arc(r.x + r.w/2, y, Math.min(chord ? 4.5 : 3, r.w/3), 0, Math.PI*2); lctx.fill();
   }
@@ -3469,55 +4118,402 @@ function updatePanels(acc, sd, rec, v){
   drawChart();
 }
 
-function updateChips(loop){
-  const v = loop.v;
-  const p = LIBRARY.find(x=>x.id===v.prog);
-  el("c-prog").textContent = p.name+" i "+keyName(v.tonic, loop.scale);
-  el("c-texture").textContent = TEXTURES[v.texture].label +
-    (loop.step >= 0 ? ` · steg ${loop.step+1}/${loop.steps}` : "");
-  el("c-bpm").textContent = v.bpm+" bpm"+(v.meter===3?" · 3/4":"")+(v.swing?" · swing":"");
-  el("c-texture").className = "chip"+(v.shape.independence>0?" two":"");
-  renderBand(loop);
+/* --- Ikoner ---------------------------------------------------------------- */
+const svg = (w, body, vb) => `<svg width="${w}" height="${w}" viewBox="${vb || "0 0 16 16"}" aria-hidden="true">${body}</svg>`;
+const ICON_PLAY   = svg(18, '<path d="M4.5 2.5v11l9.5-5.5z" fill="currentColor"/>');
+const ICON_PAUSE  = svg(18, '<path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z" fill="currentColor"/>');
+const ICON_FS_IN  = svg(15, '<path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.8"/>');
+const ICON_FS_OUT = svg(15, '<path d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4" fill="none" stroke="currentColor" stroke-width="1.8"/>');
+const ICON_SHEET  = svg(16, '<path d="M1 3h14M1 6h14M1 9h14M1 12h14" stroke="currentColor" stroke-width="1.2"/><ellipse cx="10" cy="10.5" rx="2.2" ry="1.6" fill="currentColor"/>');
+const ICON_ROLL   = svg(16, '<path d="M3 2h3v6H3zM10 4h3v6h-3z" fill="currentColor"/><path d="M1 13h14" stroke="currentColor" stroke-width="1.8"/>');
+const ICON_CLOCK  = svg(20, '<circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.5V8l2.4 1.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>');
+const ICON_BARS   = svg(20, '<path d="M2.5 14V9.5M6.2 14V6.5M9.8 14V8M13.5 14V3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>');
+const ICON_STAR   = svg(20, '<path d="m8 1.6 1.9 4 4.3.5-3.2 3 .9 4.3L8 11.2 4.1 13.4l.9-4.3-3.2-3 4.3-.5z" fill="currentColor"/>');
+const ICON_HEART  = svg(20, '<path d="M8 14s-5.5-3.3-5.5-7.2A3 3 0 0 1 8 5a3 3 0 0 1 5.5 1.8C13.5 10.7 8 14 8 14z" fill="currentColor"/>');
+const ICON_CHECK  = svg(13, '<path d="m3 8.5 3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>');
+const ICON_LOCK   = svg(13, '<rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/>');
+const ICON_PARTY  = svg(30, '<path d="M3 21 8.5 6.5l9 9z" fill="#f6c96e"/><path d="M8.5 6.5l9 9" stroke="#b97d22" stroke-width="1.2"/><circle cx="17" cy="4" r="1.3" fill="#7fe3e6"/><circle cx="21" cy="9" r="1.1" fill="#ff8fb1"/><circle cx="12.5" cy="2.5" r="1" fill="#6fe0a0"/><path d="M14 8c1-3 3-4 5-4M16 11c2-1 4-1 5 1" fill="none" stroke="#f6c96e" stroke-width="1.3" stroke-linecap="round"/>', "0 0 24 24");
+const starSvg = (on, w) => `<svg width="${w}" height="${w}" viewBox="0 0 16 16" aria-hidden="true"${on ? ' style="filter:drop-shadow(0 0 8px rgba(246,190,90,.55))"' : ""}>` +
+  `<path d="m8 1.2 2.1 4.4 4.8.6-3.5 3.3.9 4.7L8 11.9l-4.3 2.3.9-4.7L1.1 6.2l4.8-.6z" fill="${on ? "url(#star-gold)" : "rgba(255,255,255,.12)"}"/></svg>`;
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+function toggleText(b, on){ if (!b) return; b.textContent = on ? "På" : "Av"; b.setAttribute("aria-pressed", on ? "true" : "false"); }
+function ringSvg(frac, size, cls){
+  const r = size/2 - 5, c = 2*Math.PI*r;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true"><circle cx="${size/2}" cy="${size/2}" r="${r}" class="rb"/>` +
+         `<circle cx="${size/2}" cy="${size/2}" r="${r}" class="rf ${cls||""}" stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${(c*(1-Math.min(1, frac))).toFixed(2)}"/></svg>`;
 }
 
-/* Bandet: fem musiker som kommer in ett i taget, ett per bra varv. I ett
-   andrumsvarv vilar trummorna. Spelar du själv basen vilar bandets bas. */
-const BAND = [
-  ["Padda",     '<path d="M2 3.5h12v9H2zM5.5 3.5v5.5M8 3.5v5.5M10.5 3.5v5.5" fill="none" stroke="currentColor" stroke-width="1.4"/>'],
-  ["Hi-hat",    '<path d="M2 6.5h12M3.5 9h9M8 6.5V14M8 4v2.5" fill="none" stroke="currentColor" stroke-width="1.5"/>'],
-  ["Bas",       '<path d="M2 9.5c1.5-4 3-4 4.5 0s3 4 4.5 0 2-3 3-2" fill="none" stroke="currentColor" stroke-width="1.6"/>'],
-  ["Bastrumma", '<circle cx="8" cy="8.5" r="5.2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8.5" r="1.4" fill="currentColor"/>'],
-  ["Virvel",    '<ellipse cx="8" cy="5.5" rx="5.8" ry="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.2 5.5v5c0 1.1 2.6 2 5.8 2s5.8-.9 5.8-2v-5" fill="none" stroke="currentColor" stroke-width="1.4"/>']
+/* --- Skärmarna --------------------------------------------------------------
+   Fyra skärmar: välkommen, välj, spela och samlingen. Musiken går bara på
+   spelskärmen; den som lämnar den pausar, och kommer tillbaka till samma
+   ställe i varvet. */
+const SCREENS = { home:"scr-home", pick:"scr-pick", play:"scr-play", more:"scr-more" };
+let screen = null, moreBack = "home";
+function go(name){
+  if (screen === "play" && name !== "play" && state.started && ctx && ctx.state === "running"){ game.pausedByUser = true; ctx.suspend(); }
+  if (name !== "play" && fsElement()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  if (name === "more" && screen !== "more") moreBack = screen || "home";
+  for (const k in SCREENS) el(SCREENS[k]).hidden = k !== name;
+  screen = name;
+  closeDrawer(); el("how").hidden = true;
+  if (name === "home") renderHome();
+  if (name === "pick") renderPick();
+  if (name === "more") showTab(tab);
+  if (name === "play") layoutStage();
+  window.scrollTo(0, 0);
+}
+
+/* --- 1. Välkommen ----------------------------------------------------------- */
+const homeBg = { key:"" };
+function renderHome(){
+  const cv = el("home-bg"), r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio||1, 2);
+  const key = [Math.round(r.width), Math.round(r.height), dpr, look("scene")].join("|");
+  if (homeBg.key !== key){ homeBg.key = key; const s = resizeCanvas(cv); paintHome(cv.getContext("2d"), s.w, s.h); }
+  el("btn-start").querySelector("span").textContent = state.started ? "Fortsätt" : "Spela";
+  const L = levelOf(P.xp), s = streakNow(), mins = Math.min(GOAL_SECS/60, Math.floor(secsToday()/60));
+  el("welcome").innerHTML = !P.onboarded ? "" : state.started
+    ? `Pausad i <b>${style().label}</b>. Musiken väntar där du lämnade den.`
+    : `Välkommen tillbaka. <b>Nivå ${L}</b> · ${s ? plural(s, "dag", "dagar") + " i rad" : "ingen svit just nu"} · ${mins} av ${GOAL_SECS/60} minuter i dag`;
+  renderMe();
+}
+el("btn-start").addEventListener("click", ()=>{
+  if (!state.started){ go("pick"); return; }
+  go("play");
+  if (ctx && ctx.state !== "running") togglePlay();
+});
+el("btn-how").addEventListener("click", ()=>{ el("how").hidden = false; el("btn-how-x").focus(); });
+el("btn-how-x").addEventListener("click", ()=>{ el("how").hidden = true; });
+el("how").addEventListener("click", e=>{ if (e.target === el("how")) el("how").hidden = true; });
+document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click", ()=>go(b.dataset.go)));
+
+/* --- 2. Välj spelsätt och tonart --------------------------------------------- */
+const CARDS = [
+  ["kids",   "Vita tangenter med fingersättning"],
+  ["rhythm", "Stadigt komp, stor känsla"],
+  ["broken", "Låt det rulla"],
+  ["pro",    "Stride, walking bass, ballad …"],
+  ["jazz",   "Sjuackord och swing"],
+  ["jam",    "Improvisation över komp"],
+  ["mix",    "Lite av allt"]
 ];
+let picked = prefs.style;
+function cardNote(id){
+  const st = STYLES[id], saved = P.engine[id];
+  if (st.jam || !saved) return "";
+  if (st.ladder) return `Steg ${Math.min(saved.step || 0, st.textures.length-1) + 1} av ${st.textures.length}`;
+  return `Svårighet ${saved.est.toFixed(1)}`;
+}
+function pickHint(){
+  const st = STYLES[picked], saved = P.engine[picked];
+  if (st.jam) return "Inga toner att träffa: bandet spelar, du hittar på. Ackordtonerna lyser.";
+  if (saved && saved.est) return `${st.label}: du börjar strax under där du slutade, med ett varvs uppvärmning.`;
+  return `${st.label}: ${st.probes.length} korta prov först, sedan håller Vamp dig precis på din nivå.`;
+}
+function renderPick(){
+  el("newbie").hidden = !!P.onboarded;
+  el("cards").innerHTML = CARDS.map(([id, sub])=>
+    `<button class="card${id === picked ? " cur" : ""}" data-style="${id}" aria-pressed="${id === picked}">` +
+    `<canvas data-thumb="${id}"></canvas><b>${STYLES[id].label}</b><small>${sub}</small><em>${cardNote(id)}</em></button>`).join("");
+  el("cards").querySelectorAll("canvas").forEach(cv=>{ const s = resizeCanvas(cv); paintThumb(cv.dataset.thumb, cv.getContext("2d"), s.w, s.h); });
+  el("newbie").querySelectorAll("button").forEach(b=>b.classList.toggle("cur", b.dataset.exp === picked));
+  el("pickhint").textContent = pickHint();
+  syncPicks();
+}
+function pick(id){
+  picked = id;
+  el("cards").querySelectorAll(".card").forEach(c=>{ c.classList.toggle("cur", c.dataset.style === id); c.setAttribute("aria-pressed", c.dataset.style === id); });
+  el("newbie").querySelectorAll("button").forEach(b=>b.classList.toggle("cur", b.dataset.exp === id));
+  el("pickhint").textContent = pickHint();
+  syncPicks();
+}
+el("cards").addEventListener("click", e=>{ const c = e.target.closest(".card"); if (c) pick(c.dataset.style); });
+el("cards").addEventListener("dblclick", e=>{ const c = e.target.closest(".card"); if (c) chooseStyle(c.dataset.style); });
+el("newbie").addEventListener("click", e=>{ const b = e.target.closest("button"); if (b) pick(b.dataset.exp); });
+el("btn-go").addEventListener("click", ()=>chooseStyle(picked));
+el("btn-pick-back").addEventListener("click", ()=>go(state.started ? "play" : "home"));
+
+function chooseStyle(id){
+  if (prefs.style !== id) setPref("style", id);
+  P.onboarded = true; saveP();
+  go("play");
+  if (!state.started){ begin(); return; }
+  hideOverlay();
+  if (ctx.state !== "running"){ game.pausedByUser = false; ctx.resume(); }
+}
+
+/* Små bilder på korten och i samlingen, ritade som allt annat. */
+function roundRect(c, x, y, w, h, r){
+  r = Math.max(0, Math.min(r, w/2, h/2));
+  c.beginPath(); c.moveTo(x+r, y);
+  c.arcTo(x+w, y, x+w, y+h, r); c.arcTo(x+w, y+h, x, y+h, r);
+  c.arcTo(x, y+h, x, y, r); c.arcTo(x, y, x+w, y, r); c.closePath();
+}
+function miniKeys(c, x, y, W, H, P, n){
+  const ww = W/n, BL = [1,1,0,1,1,1,0];
+  c.fillStyle = P.felt; c.fillRect(x, y, W, H);
+  const g = c.createLinearGradient(0, y, 0, y+H);
+  g.addColorStop(0, P.white[0]); g.addColorStop(.85, P.white[1]); g.addColorStop(1, P.white[2]);
+  c.fillStyle = g;
+  for (let i=0; i<n; i++) c.fillRect(x + i*ww + .6, y + 1, ww - 1.2, H - 2);
+  if (P.edge){ c.strokeStyle = P.edge; for (let i=0; i<n; i++) c.strokeRect(x + i*ww + .6, y + 1, ww - 1.2, H - 2); }
+  const bg = c.createLinearGradient(0, y, 0, y + H*.62);
+  bg.addColorStop(0, P.black[0]); bg.addColorStop(1, P.black[1]);
+  c.fillStyle = bg;
+  for (let i=0; i<n-1; i++) if (BL[i % 7]) c.fillRect(x + (i+1)*ww - ww*.31, y, ww*.62, H*.62);
+}
+function noteBars(c, W, H, rgbOf){
+  const r = rng(21), n = 9, w = W/n;
+  for (let i=0; i<n; i++){
+    const midi = 60 + [0,4,7,2,5,9,11,4,7][i], hand = i < 3 ? "L" : "R", rgb = rgbOf(hand, midi);
+    const h = H*(.18 + r()*.3), y = H*(.08 + r()*.35);
+    glowDot(c, i*w + w/2, y + h/2, w*1.2, rgb, .25);
+    c.fillStyle = `rgba(${rgb},.95)`; roundRect(c, i*w + w*.22, y, w*.56, h, 4); c.fill();
+  }
+}
+function scatter(c, W, H, kind){
+  const r = rng(kind.length*7 + 3), rgbs = ["255,214,120","255,201,77","127,227,230"];
+  c.save(); c.globalCompositeOperation = "lighter";
+  for (let i=0; i<26; i++){
+    const x = W*(.15 + r()*.7), y = H*(.15 + r()*.7), rgb = rgbs[i % 3], s = .6 + r()*.8;
+    if (kind === "stars"){ c.fillStyle = `rgba(${rgb},.9)`; starPath(c, x, y, 5*s); c.fill(); }
+    else if (kind === "notes"){ c.fillStyle = `rgba(${rgb},.9)`; c.font = `${Math.round(16*s)}px ${MUSIC_FONT}`; c.fillText(i % 2 ? "♪" : "♫", x, y); }
+    else if (kind === "fireflies"){ glowDot(c, x, y, 12*s, rgb, .45); c.fillStyle = "rgba(255,255,230,.95)"; c.beginPath(); c.arc(x, y, 1.6*s, 0, Math.PI*2); c.fill(); }
+    else { glowDot(c, x, y, 6*s, rgb, .7); c.fillStyle = `rgba(${rgb},1)`; c.beginPath(); c.arc(x, y, 1.8*s, 0, Math.PI*2); c.fill(); }
+  }
+  c.restore();
+}
+function scriptText(c, W, H, text, px){
+  c.save(); c.translate(W/2, H/2); c.rotate(-.06);
+  c.font = scriptFont(px); c.textAlign = "center"; c.textBaseline = "middle";
+  c.shadowColor = "rgba(255,186,80,.9)"; c.shadowBlur = 16; c.fillStyle = "#ffdc92"; c.fillText(text, 0, 0);
+  c.restore();
+}
+function darkBg(c, W, H, warm){
+  c.fillStyle = vgrad(c, 0, H, warm ? [[0,"#16100b"],[1,"#07080b"]] : [[0,"#0d1220"],[1,"#06070c"]]);
+  c.fillRect(0, 0, W, H);
+}
+const handRGB = theme => (hand, midi) => { const was = looks.notes; looks.notes = theme; const v = noteRGB(hand, midi); looks.notes = was; return v; };
+function paintThumb(id, c, W, H){
+  c.clearRect(0, 0, W, H);
+  const [kind, val] = id.split(":");
+  if (kind === "scene"){ SCENES[val](c, W, H); return; }
+  if (kind === "piano"){ darkBg(c, W, H, true); glowDot(c, W/2, H*.3, W*.6, "255,170,90", .25); miniKeys(c, 0, H*.42, W, H*.58, PIANOS[val], 9); return; }
+  if (kind === "notes"){ darkBg(c, W, H); noteBars(c, W, H*.92, handRGB(val)); return; }
+  if (kind === "effects"){ darkBg(c, W, H); scatter(c, W, H, val); return; }
+  if (kind === "title"){ darkBg(c, W, H, true); glowDot(c, W/2, H/2, W*.5, "255,170,90", .18); scriptText(c, W, H, lookName("title", val), Math.min(34, W*.16)); return; }
+  switch (id){
+    case "kids": {
+      c.fillStyle = vgrad(c, 0, H, [[0,"#2a1a0e"],[1,"#0b0805"]]); c.fillRect(0, 0, W, H);
+      miniKeys(c, -W*.05, H*.18, W*1.1, H*.95, PIANOS.ivory, 8);
+      glowDot(c, W*.3, 0, W*.7, "255,190,110", .35);
+      c.font = `700 ${Math.round(H*.13)}px "IBM Plex Sans",system-ui,sans-serif`; c.textAlign = "center"; c.fillStyle = "rgba(184,120,30,.85)";
+      [1,3,5].forEach((f, i)=>c.fillText(String(f), -W*.05 + (W*1.1/8)*([0,2,4][i] + .5), H*.88));
+      return;
+    }
+    case "rhythm": {
+      darkBg(c, W, H, true);
+      const r = rng(4);
+      for (let i=0; i<7; i++){
+        const x = W*(.12 + i*.12), h = H*(.25 + r()*.45), y = H*.85 - h;
+        glowDot(c, x, y + h/2, W*.12, "255,190,80", .35);
+        c.fillStyle = vgrad(c, y, y + h, [[0,"rgba(255,214,120,.5)"],[1,"rgba(255,226,160,1)"]]);
+        roundRect(c, x - W*.02, y, W*.04, h, 3); c.fill();
+      }
+      c.fillStyle = "rgba(255,236,200,.8)"; c.fillRect(0, H*.86, W, 2);
+      glowDot(c, W*.5, H*.86, W*.6, "255,200,120", .2);
+      return;
+    }
+    case "broken": {
+      darkBg(c, W, H);
+      c.save(); c.globalCompositeOperation = "lighter"; c.lineCap = "round";
+      for (const [rgb, ph, amp, lw] of [["150,110,255", 0, .26, 3], ["90,170,255", 1.2, .2, 2], ["220,120,255", 2.4, .16, 1.5]]){
+        c.strokeStyle = `rgba(${rgb},.85)`; c.lineWidth = lw; c.shadowColor = `rgba(${rgb},1)`; c.shadowBlur = 10;
+        c.beginPath();
+        for (let x=0; x<=W; x+=3){ const y = H*.55 + Math.sin(x/W*Math.PI*2.4 + ph)*H*amp*(.4 + x/W*.8); x ? c.lineTo(x, y) : c.moveTo(x, y); }
+        c.stroke();
+      }
+      c.restore(); return;
+    }
+    case "pro": {
+      SCENES.club(c, W, H);
+      const r = rng(9), n = 14, bw = W/n;
+      for (let i=0; i<n; i++){
+        const h = H*(.15 + r()*.55);
+        c.fillStyle = vgrad(c, H - h, H, [[0,"rgba(255,206,110,.95)"],[1,"rgba(230,130,40,.6)"]]);
+        c.fillRect(i*bw + bw*.22, H - h, bw*.56, h);
+      }
+      return;
+    }
+    case "jazz": {
+      SCENES.club(c, W, H);
+      c.fillStyle = "rgba(0,0,0,.35)"; c.fillRect(0, 0, W, H);
+      const h = H*.82, y = H*.12;
+      figure(c, W*.3 - h/2, y, h, pathBass, BAND_RGB.bas, .85);
+      figure(c, W*.7 - h/2, y, h, pathDrums, BAND_RGB.trummor, .85);
+      figure(c, W*.7 - h/2, y, h, pathHat, BAND_RGB.hihat, .85);
+      return;
+    }
+    case "jam": {
+      c.fillStyle = vgrad(c, 0, H, [[0,"#050818"],[1,"#0b0a24"]]); c.fillRect(0, 0, W, H);
+      const r = rng(13);
+      glowDot(c, W*.6, H*.35, W*.5, "90,120,255", .35); glowDot(c, W*.35, H*.55, W*.35, "180,90,255", .25);
+      for (let i=0; i<90; i++){ c.fillStyle = `rgba(200,220,255,${.2 + r()*.7})`; c.fillRect(r()*W, r()*H*.8, r() < .15 ? 2 : 1, r() < .15 ? 2 : 1); }
+      miniKeys(c, 0, H*.7, W, H*.3, PIANOS.neon, 14);
+      glowDot(c, W/2, H*.7, W*.5, "127,227,230", .3);
+      c.fillStyle = "rgba(160,240,245,.9)"; c.fillRect(0, H*.7 - 1, W, 2);
+      return;
+    }
+    case "mix": { SCENES.city(c, W, H); return; }
+    case "grooves": {
+      SCENES.club(c, W, H); c.fillStyle = "rgba(0,0,0,.4)"; c.fillRect(0, 0, W, H);
+      const h = H*.84; figure(c, W/2 - h/2, H*.1, h, pathKeys, BAND_RGB.padda, .9); return;
+    }
+    case "progs": {
+      darkBg(c, W, H, true); glowDot(c, W/2, H/2, W*.5, "255,170,90", .18);
+      c.font = `700 ${Math.round(Math.min(26, W*.11))}px "Playfair Display",Georgia,serif`; c.textAlign = "center"; c.textBaseline = "middle";
+      c.fillStyle = "#f6c96e"; c.fillText("I · V · vi · IV", W/2, H*.5);
+      c.strokeStyle = "rgba(246,201,110,.3)"; c.lineWidth = 1;
+      for (let i=0; i<5; i++){ const y = H*.22 + i*H*.035; c.beginPath(); c.moveTo(W*.1, y); c.lineTo(W*.9, y); c.stroke(); }
+      for (let i=0; i<5; i++){ const y = H*.66 + i*H*.035; c.beginPath(); c.moveTo(W*.1, y); c.lineTo(W*.9, y); c.stroke(); }
+      return;
+    }
+    case "secrets": {
+      darkBg(c, W, H); glowDot(c, W/2, H/2, W*.4, "127,227,230", .12);
+      c.font = `700 ${Math.round(H*.45)}px "Playfair Display",Georgia,serif`; c.textAlign = "center"; c.textBaseline = "middle";
+      c.fillStyle = "rgba(236,230,218,.55)"; c.fillText("?", W/2, H*.52); return;
+    }
+  }
+}
+
+/* Grundton och skala. Ett spelsätt med egna progressioner bestämmer dem
+   själv. Ändras de medan musiken går gäller de från nästa varv som inte
+   redan är lagt — musiken stannar aldrig. */
+function fillPick(id, items, value){
+  const sel = el(id);
+  sel.innerHTML = items.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+  sel.value = String(value);
+}
+fillPick("pick-tonic", [["mix","Mix"]].concat(PC_NAMES.map((n,i)=>[i,n])), prefs.tonic);
+fillPick("pick-scale", [["mix","Mix"]].concat(Object.keys(SCALES).map(k=>[k,SCALES[k].label])), prefs.scale);
+function syncPicks(){
+  const id = screen === "pick" ? picked : prefs.style, off = !!STYLES[id].white;
+  ["pick-tonic","pick-scale"].forEach(s=>{
+    el(s).disabled = off;
+    el(s).title = off ? `${STYLES[id].label} spelar bara på vita tangenter.` : "";
+  });
+}
+function setPref(key, value){
+  const was = prefs[key], newStyle = key === "style" && value !== was;
+  if (newStyle && state.started) saveEngine();     /* det gamla spelsättet minns var det var */
+  prefs[key] = value;
+  if (key === "style") picked = value;
+  try { localStorage.setItem("vamp.prefs", JSON.stringify(prefs)); } catch(e){}
+  syncPicks();
+  if (!state.started) return;
+  if (newStyle){
+    const how = enterStyle(false);
+    if (how === "placement") log(`${style().label}: placering från nästa varv.`, "phase");
+    else if (how === "resume") log(`${style().label}: där du slutade, svårighet ${engine.est.toFixed(1)}.`, "phase");
+    renderCollection();
+  }
+  log(`Från nästa varv: ` + (style().jam ? `fritt spel, ${el("pick-tonic").selectedOptions[0].text} · ${el("pick-scale").selectedOptions[0].text}.` :
+    fixedKeys() ? style().label + ", vita tangenter." :
+    `${el("pick-tonic").selectedOptions[0].text} · ${el("pick-scale").selectedOptions[0].text} · ${style().label}.`));
+}
+el("pick-tonic").addEventListener("change", e=>setPref("tonic", e.target.value === "mix" ? "mix" : Number(e.target.value)));
+el("pick-scale").addEventListener("change", e=>setPref("scale", e.target.value));
+
+/* --- 3. Spela ----------------------------------------------------------------
+   Ackorden överst, med det som klingar i guld. Bandet nederst: fyra mätare
+   som rör sig med musiken när deras lager spelar. */
+let chordIdx = -1, chipsFor = null;
+function updateChips(loop){
+  const v = loop.v, p = progOf(v.prog);
+  el("chords").innerHTML = v.slots.map((s, i)=>(i ? "<i></i>" : "") + `<span>${s.name}</span>`).join("");
+  chordIdx = -1;
+  el("c-texture").textContent = loop.jam ? "Fritt spel" : TEXTURES[v.texture].label + (loop.step >= 0 ? ` · steg ${loop.step+1}/${loop.steps}` : "");
+  el("c-texture").className = "tex" + (v.shape.independence > 0 ? " two" : "");
+  el("c-bpm").textContent = v.bpm + " BPM" + (v.meter === 3 ? " · 3/4" : "") + (v.swing ? " · swing" : "");
+  el("c-prog").innerHTML = `<b>${p.name}</b>${keyName(v.tonic, loop.scale)} · ${p.mood}`;
+  renderBand(loop);
+}
+function updateChord(now){
+  const cur = state.loops.find(l=>now >= l.t0 && now < l.t1);
+  if (!cur || cur !== state.shown) return;
+  const pos = (now - cur.t0)/cur.spb;
+  const i = cur.v.slots.findIndex(s=>pos >= s.start && pos < s.start + s.beats);
+  if (i === chordIdx) return;
+  chordIdx = i;
+  el("chords").querySelectorAll("span").forEach((s, k)=>s.classList.toggle("on", k === i));
+}
+
+const GROUPS = [
+  ["Padda",   "padda",   1, '<path d="M2 3.5h12v9H2zM5.5 3.5v5.5M8 3.5v5.5M10.5 3.5v5.5" fill="none" stroke="currentColor" stroke-width="1.4"/>'],
+  ["Hi-hat",  "hihat",   2, '<path d="M2 6.5h12M3.5 9h9M8 6.5V14M8 4v2.5" fill="none" stroke="currentColor" stroke-width="1.5"/>'],
+  ["Bas",     "bas",     3, '<path d="M2 9.5c1.5-4 3-4 4.5 0s3 4 4.5 0 2-3 3-2" fill="none" stroke="currentColor" stroke-width="1.6"/>'],
+  ["Trummor", "trummor", 4, '<circle cx="8" cy="8.5" r="5.2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8.5" r="1.4" fill="currentColor"/>']
+];
+/* Bandet: padda, hi-hat, bas och trummor (bastrumma, sedan virvel), ett lager
+   per bra varv. I ett andrumsvarv vilar trummorna. Spelar du själv basen
+   vilar bandets bas. */
+function bandRest(key, loop){
+  return !!loop && ((loop.breath && (key === "hihat" || key === "trummor")) || (key === "bas" && TEXTURES[loop.v.texture].ownsBass));
+}
 function renderBand(loop){
-  const L = loop ? loop.layers : 0, own = loop && TEXTURES[loop.v.texture].ownsBass;
-  el("band").innerHTML = BAND.map(([name, path], i)=>{
-    const on = i < L, rest = on && ((loop.breath && i !== 0 && i !== 2) || (own && i === 2));
-    return `<span class="${on ? (rest ? "on rest" : "on") : ""}" title="${name}${!on ? " — inte inne än" : rest ? " — vilar" : ""}">` +
-           `<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">${path}</svg></span>`;
+  const L = loop ? loop.layers : 0;
+  el("band").innerHTML = GROUPS.map(([name, key, n, path])=>{
+    const on = L >= n, rest = on && bandRest(key, loop);
+    return `<span class="${on ? (rest ? "rest" : "on") : ""}" style="--c:var(--${key})" title="${name}${!on ? " — inte inne än" : rest ? " — vilar" : ""}">${svg(14, path)}${name}</span>`;
   }).join("");
   el("band").setAttribute("aria-label", `Bandet: ${L} av 5` + (loop && loop.breath ? ", trummorna vilar" : ""));
 }
+const meters = el("meters"), mctx = meters.getContext("2d");
+let metersSize = {w:300, h:24};
+function drawMeters(now){
+  const {w:W, h:H} = metersSize;
+  mctx.clearRect(0, 0, W, H);
+  const cur = state.loops.find(l=>now >= l.t0 && now < l.t1), L = cur ? cur.layers : 0;
+  const running = !!ctx && ctx.state === "running" && !!cur, t = fxNow();
+  const gap = W < 400 ? 6 : 12, gw = (W - gap*3)/4, bw = 3, bg = 2, n = Math.max(4, Math.floor((gw + bg)/(bw + bg)));
+  const beat = cur ? (now - cur.t0)/cur.spb : 0, ph = x => x - Math.floor(x);
+  GROUPS.forEach(([, key, need], g)=>{
+    const on = L >= need, rest = on && bandRest(key, cur), rgb = BAND_RGB[key];
+    const env = !running || !on || rest ? 0
+      : key === "padda" ? .7 + .15*Math.sin(t*2.1)
+      : key === "hihat" ? Math.exp(-ph(beat*2)*6)
+      : key === "bas" ? Math.exp(-ph(beat)*3.5)
+      : Math.exp(-ph(beat)*5)*(Math.floor(beat) % 2 ? .8 : 1);
+    const x0 = g*(gw + gap) + (gw - (n*(bw + bg) - bg))/2;
+    for (let i=0; i<n; i++){
+      const shape = .45 + .55*Math.abs(Math.sin(i*1.7 + g*2.3 + (running ? t*1.3 : 0)));
+      const h = on ? Math.max(3, H*(.22 + .78*env*shape)) : 3;
+      mctx.fillStyle = !on ? "rgba(255,255,255,.1)" : rest ? `rgba(${rgb},.32)` : `rgba(${rgb},${.55 + .45*env})`;
+      mctx.fillRect(x0 + i*(bw + bg), (H - h)/2, bw, h);
+    }
+  });
+}
 
 function frame(){
-  drawLane();
+  const now = ctx ? viewNow() : 0;
+  if (screen === "play"){ drawLane(now); drawMeters(now); updateChord(now); }
+  if (!state.shown && state.loops.length && chipsFor !== state.loops[0]){ chipsFor = state.loops[0]; updateChips(chipsFor); }
   if (ctx && state.loops.length){
-    const now = ctx.currentTime;
+    const t = ctx.currentTime;
     const newest = state.loops[state.loops.length-1];
-    if (state.running && !newest.committed && now >= newest.commitAt){
+    if (state.running && !newest.committed && t >= newest.commitAt){
       commitLoop(newest);
     }
     for (const loop of state.loops)
-      if (now>=loop.t0 && now<loop.t1 && state.shown!==loop){ state.shown=loop; updateChips(loop); announceLoop(loop); showNews(loop); }
+      if (t>=loop.t0 && t<loop.t1 && state.shown!==loop){ state.shown=loop; updateChips(loop); announceLoop(loop); showNews(loop); }
     /* Missar och varvens slut avgörs mot det som hörs. */
     const heard = audioClock.now;
     if (state.running && ctx.state === "running") judgeMisses(heard);
     for (const loop of state.loops)
       if (!loop.ended && heard >= loop.t1 + loop.win + Math.max(0, timing.lag)) loopEnd(loop);
-    while (state.loops.length>2 && state.loops[0].t1 < now-.5 && state.loops[0].ended) state.loops.shift();
-    if (captionUntil && now>captionUntil){ el("caption").textContent=""; captionUntil=0; }
+    while (state.loops.length>2 && state.loops[0].t1 < t-.5 && state.loops[0].ended) state.loops.shift();
+    if (captionUntil && t>captionUntil){ say("", 0); captionUntil=0; }
   }
-  if (game.dirty){ game.dirty = false; renderMe(); }
+  if (game.dirty){ game.dirty = false; renderMe(); renderQuests(); }
   requestAnimationFrame(frame);
 }
 
@@ -3541,7 +4537,7 @@ function begin(){
      Det går inte att räkna bort — men har keyboardet egna högtalare
      behövs de inte alls. */
   if (midi.inputs.length && midi.echo && latency() > .04)
-    el("caption").textContent = `Ljudet ut har ${Math.round(latency()*1000)} ms fördröjning, så dina toner i appen kommer efter tangenten. Har keyboardet egna högtalare: slå av "Mina toner i appen".`;
+    el("caption").textContent = `Ljudet ut har ${Math.round(latency()*1000)} ms fördröjning, så dina toner i appen kommer efter tangenten. Har keyboardet egna högtalare: slå av "Mina toner i appen" under inställningarna.`;
   if (style().fingers) el("caption").textContent += (view.sheet ? " Siffran vid noten" : " Siffran på noten") + " är fingret: 1 är tummen, 5 är lillfingret.";
   captionUntil = ctx.currentTime+10;
   updateTransport();
@@ -3557,6 +4553,7 @@ function begin(){
   let t0 = ctx.currentTime+.3;
   for (let k=0;k<first.meter;k++) tick(t0+k*spb, k===0);
   t0 += first.meter*spb;
+  game.intro = { from: ctx.currentTime - latency(), to: t0 };
   scheduleLoop(t0, first);
   renderCollection();
 }
@@ -3570,79 +4567,70 @@ function togglePlay(){
   if (ctx.state === "running"){ game.pausedByUser = true; ctx.suspend(); }
   else { game.pausedByUser = false; hideOverlay(); ctx.resume(); }
 }
+el("btn-play").addEventListener("click", togglePlay);
+el("btn-menu").addEventListener("click", ()=>{
+  if (state.started && ctx && ctx.state === "running") togglePlay();
+  else go("home");
+});
 
-/* --- Överlägget på scenen: välkommen, spelsätt och paus ------------------- */
+/* --- Pausen: dagsresultatet, dagens uppdrag och nivån --------------------- */
 let overlayMode = null;
-function showOverlay(mode, html){ const o = el("overlay"); o.innerHTML = html; o.hidden = false; overlayMode = mode; }
+function showOverlay(mode, html){ const o = el("overlay"); o.innerHTML = html; o.hidden = false; overlayMode = mode; o.scrollTop = 0; }
 function hideOverlay(){ el("overlay").hidden = true; overlayMode = null; }
-const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
-function showWelcome(){
-  if (!P.onboarded) return showChoices(true);
-  const L = levelOf(P.xp), s = streakNow(), mins = Math.floor(secsToday()/60);
-  const saved = !style().jam && P.engine[prefs.style];
-  const where = style().jam ? "Bandet spelar, du hittar på." : saved ? "Du börjar strax under där du slutade."
-    : `Vi börjar med ${style().probes.length} korta prov.`;
-  showOverlay("welcome", `<div class="ov-in">
-    <h2>Välkommen tillbaka</h2>
-    <p class="ov-stats"><b>Nivå ${L}</b> · ${s ? plural(s, "dag", "dagar") + " i rad" : "ingen svit just nu"} · ${Math.min(mins, GOAL_SECS/60)} av ${GOAL_SECS/60} minuter i dag</p>
-    <p><b>${style().label}.</b> ${where}</p>
-    <div class="ov-act"><button class="primary big" data-act="play">${ICON_PLAY}<span>Spela</span></button>
-      <button class="link" data-act="choose">Byt spelsätt</button></div>
-  </div>`);
+function goalBox(){
+  const secs = secsToday(), f = Math.min(1, secs/GOAL_SECS), mins = Math.min(GOAL_SECS/60, Math.floor(secs/60));
+  return `<div class="goalrow"><div class="bigring">${ringSvg(f, 74)}</div><h3>Dagens mål</h3>` +
+    `${f >= 1 ? ICON_PARTY : ""}<span class="min">${mins} / ${GOAL_SECS/60} min</span></div>` +
+    `<h3 style="margin-top:14px">Tre uppdrag</h3><div class="quests-host"></div>`;
 }
-const CHOICES = [
-  ["kids",   "Aldrig",     "En ton i taget på vita tangenter, med fingrarna utskrivna."],
-  ["rhythm", "Lite",       "Du hittar ackorden. Nu kommer rytmen och andra handen."],
-  ["mix",    "En hel del", "Två händer. Motorn blandar allt och hittar din nivå."],
-  ["pro",    "Mycket",     "Synkoper, stride, walking bass och sextondelar, upp till 132 bpm."]
-];
-function showChoices(first){
-  showOverlay("choose", `<div class="ov-in">
-    <h2>${first ? "Hur mycket har du spelat?" : "Vad vill du spela?"}</h2>
-    <p>${first ? "Vamp anpassar sig efter dig medan du spelar. Välj bara var vi börjar." : "Varje spelsätt minns sin egen nivå."}</p>
-    <div class="choices">${CHOICES.map(([id, t, d])=>
-      `<button data-style="${id}"${!first && prefs.style === id ? ' class="cur"' : ""}><b>${first ? t : STYLES[id].label}</b><span>${d}</span></button>`).join("")}</div>
-    <p class="alt">Eller: ${["broken","jazz","jam"].map(id=>`<button class="link${!first && prefs.style === id ? " cur" : ""}" data-style="${id}">${STYLES[id].label}</button>`).join(" · ")}</p>
-  </div>`);
+function levelBox(){
+  const L = levelOf(P.xp), a = xpFor(L), b = xpFor(L+1), f = (P.xp - a)/(b - a);
+  return `<div class="bigring">${ringSvg(f, 74)}<b>${L}</b></div><div class="xpwrap"><b>${lookName("title")}</b>` +
+    `<div class="xpline"><i style="width:${(f*100).toFixed(1)}%"></i></div><small>${fmt(P.xp - a)} / ${fmt(b - a)} XP till nivå ${L+1}</small></div>`;
 }
 function showPause(){
-  const s = game.sess, acc = s.notes ? Math.round(s.hits/s.notes*100) : 0;
-  const time = Math.floor(s.secs/60) + ":" + String(Math.round(s.secs % 60)).padStart(2, "0");
-  showOverlay("pause", `<div class="ov-in">
-    <h2>Paus</h2>
-    ${s.loops ? `<div class="sum">
-      <div><b>${time}</b><span>speltid</span></div>
-      <div><b>${fmt(s.hits)}</b><span>träffar · ${acc} %</span></div>
-      <div><b>${s.bestCombo}</b><span>bästa kombo</span></div>
-      <div><b>+${fmt(s.xp)}</b><span>XP</span></div>
-    </div>
-    ${s.news.length ? `<p class="news"><b>Nytt den här gången:</b> ${s.news.slice(-6).join(" · ")}</p>` : ""}`
-    : "<p>Musiken väntar där du lämnade den.</p>"}
-    <div class="ov-act"><button class="primary big" data-act="play">${ICON_PLAY}<span>Fortsätt</span></button>
-      <button class="link" data-act="choose">Byt spelsätt</button></div>
+  const s = game.sess, j = s.judge, judged = j[1] + j[2] + j[3], jamN = s.jam.chord + s.jam.scale + s.jam.out;
+  const acc = s.notes ? s.hits/s.notes : 0, stars = acc >= .97 ? 3 : acc >= .9 ? 2 : acc >= .75 ? 1 : 0;
+  const time = Math.floor(s.secs/60) + ":" + String(Math.round(s.secs % 60)).padStart(2, "0"), streak = streakNow();
+  const quality = judged ? `${Math.round((j[3] + j[2])/Math.max(1, s.notes)*100)} % av anslagen Bra eller bättre`
+    : jamN ? `${Math.round((s.jam.chord + s.jam.scale)/jamN*100)} % av tonerna i skalan` : "Inga anslag än";
+  const result = s.loops ? `<div class="box result">
+      <h2>${["Bra jobbat!", "Bra!", "Snyggt!", "Perfekt!"][stars]}</h2>
+      <p class="sub">Dagsresultat · ${style().label}</p>
+      <div class="bigstars">${[0,1,2].map(i=>starSvg(i < stars, 46)).join("")}</div>
+      <ul class="facts">
+        <li>${ICON_CLOCK}<span>${plural(s.loops, "varv", "varv")} · ${time}</span></li>
+        <li>${ICON_BARS}<span>${quality}</span></li>
+        <li>${ICON_STAR}<span>+${fmt(s.xp)} XP · bästa kombo ${s.bestCombo}</span></li>
+        <li><span class="heart">${ICON_HEART}</span><span>${streak ? `Svit: ${plural(streak, "dag", "dagar")}` : "Svit: ingen än — fem minuter i dag startar en"}</span></li>
+      </ul>
+      ${s.news.length ? `<p class="news">Nytt: ${s.news.slice(-5).join(" · ")}</p>` : ""}
+      <button class="btn gold big" data-act="play">${ICON_PLAY}<span>Fortsätt</span></button>
+    </div>` : `<div class="box result ov-plain">
+      <h2>Paus</h2><p>Musiken väntar där du lämnade den.</p>
+      <button class="btn gold big" data-act="play">${ICON_PLAY}<span>Fortsätt</span></button>
+    </div>`;
+  showOverlay("pause", `<div class="ov-in"><div class="ov-grid">${result}
+    <div><div class="box">${goalBox()}</div><div class="box lvlbox">${levelBox()}</div></div></div>
+    <div class="ov-links"><button class="btn small" data-act="choose">Byt spelsätt</button><button class="btn small" data-act="more">Samling</button><button class="btn small" data-act="home">Hem</button></div>
   </div>`);
-}
-function chooseStyle(id){
-  el("pick-style").value = id;
-  setPref("style", id);
-  P.onboarded = true; saveP();
-  if (!state.started){ begin(); return; }
-  hideOverlay();
-  if (ctx.state !== "running"){ game.pausedByUser = false; ctx.resume(); }
+  renderQuests();
 }
 el("overlay").addEventListener("click", e=>{
   const b = e.target.closest("button"); if (!b) return;
-  if (b.dataset.style) chooseStyle(b.dataset.style);
-  else if (b.dataset.act === "play") togglePlay();
-  else if (b.dataset.act === "choose") showChoices(false);
+  if (b.dataset.act === "play") togglePlay();
+  else if (b.dataset.act === "choose") go("pick");
+  else if (b.dataset.act === "more") go("more");
+  else if (b.dataset.act === "home") go("home");
 });
 
-/* --- Sidhuvudet, uppdragen och samlingen ---------------------------------- */
+/* --- Framstegen och uppdragen --------------------------------------------- */
 const RING = 2*Math.PI*7;
 function renderMe(){
   const L = levelOf(P.xp), a = xpFor(L), b = xpFor(L+1);
   el("p-level").textContent = `Nivå ${L}`;
+  el("p-title").textContent = lookName("title");
   el("p-xp").style.width = ((P.xp - a)/(b - a)*100).toFixed(1) + "%";
   el("p-lvl-wrap").title = `${fmt(P.xp)} XP · ${fmt(b - P.xp)} kvar till nivå ${L+1}`;
   const s = streakNow(), done = P.goalDay === today();
@@ -3654,21 +4642,92 @@ function renderMe(){
   el("p-ring").style.strokeDashoffset = (RING*(1-f)).toFixed(2);
   el("p-goal").textContent = f >= 1 ? "Klart" : `${Math.floor(secs/60)}/${GOAL_SECS/60} min`;
   el("p-goal-wrap").classList.toggle("lit", f >= 1);
-  renderQuests();
 }
 function renderQuests(){
   const list = questsToday();
-  el("quests").innerHTML = list.map(q=>`<div class="quest${q.done ? " done" : ""}">
-    <span class="qt">${QUESTS[q.id].text(q.need)}</span>
-    <span class="qbar"><i style="width:${(q.n/q.need*100).toFixed(0)}%"></i></span>
-    <span class="qn">${q.done ? "Klart" : `${q.n}/${q.need}`}</span></div>`).join("");
-  el("quests-count").textContent = `${list.filter(q=>q.done).length} av ${list.length} · +40 XP styck`;
+  const html = list.map(q=>`<div class="q${q.done ? " done" : ""}">
+    <span class="chk">${q.done ? ICON_CHECK : ""}</span>
+    <span class="qt">${QUESTS[q.id].text(q.need)}${q.done ? "" : `<span class="qbar"><i style="width:${(q.n/q.need*100).toFixed(0)}%"></i></span>`}</span>
+    ${q.done ? "" : `<span class="qn">${q.n}/${q.need}</span>`}<span class="xp">+40 XP</span></div>`).join("");
+  document.querySelectorAll(".quests-host").forEach(h=>{ h.innerHTML = html; });
+  el("quests-count").textContent = `${list.filter(q=>q.done).length} av ${list.length} klara`;
 }
+
+/* --- 4. Samlingen, statistiken och inställningarna -------------------------- */
+let tab = "samling", openTile = null;
+const TABS = { samling:"tab-samling", stats:"tab-stats", settings:"tab-settings" };
+function showTab(name){
+  tab = name;
+  document.querySelectorAll(".tabs button").forEach(b=>{ b.classList.toggle("on", b.dataset.tab === name); b.setAttribute("aria-selected", b.dataset.tab === name); });
+  for (const k in TABS) el(TABS[k]).hidden = k !== name;
+  if (name === "samling") renderSamling();
+  if (name === "stats"){ renderCollection(); chartSize = resizeCanvas(chart); drawChart(); }
+  if (name === "settings") el("settings-host").appendChild(el("settings"));
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click", ()=>showTab(b.dataset.tab)));
+el("btn-more-back").addEventListener("click", ()=>go(moreBack === "more" ? "home" : moreBack));
+
+const TILES = [["piano","Pianon"],["scene","Scener"],["notes","Nottema"],["effects","Effekter"],
+               ["grooves","Komp"],["progs","Progressioner"],["title","Titlar"],["secrets","Dolda grejer"]];
+const unlocked = kind => LOOKS[kind].items.filter(x=>x[2] <= levelOf(P.xp)).length;
+function tileCount(id){
+  if (LOOKS[id]) return `${unlocked(id)} av ${LOOKS[id].items.length}`;
+  if (id === "grooves") return `${TEXTURE_IDS.filter(t=>P.grooves[t] && P.grooves[t].n).length} av ${TEXTURE_IDS.length} spelade`;
+  if (id === "progs") return `${LIBRARY.filter(p=>P.progs[p.id] !== undefined).length} av ${LIBRARY.length} hittade`;
+  return `${SECRETS.filter(s=>(P.secrets || {})[s[0]]).length} av ${SECRETS.length} hittade`;
+}
+function paintAll(root){
+  root.querySelectorAll("canvas[data-tt]").forEach(cv=>{ const s = resizeCanvas(cv); paintThumb(cv.dataset.tt, cv.getContext("2d"), s.w, s.h); });
+}
+function renderSamling(){
+  el("tiles").innerHTML = TILES.map(([id, label])=>{
+    const thumb = LOOKS[id] ? `${id}:${look(id)}` : id;
+    return `<button class="tile${openTile === id ? " cur" : ""}" data-tile="${id}" aria-expanded="${openTile === id}"><canvas data-tt="${thumb}"></canvas><b>${label}</b><small>${tileCount(id)}</small></button>`;
+  }).join("");
+  paintAll(el("tiles"));
+  renderDetail();
+  renderQuests();
+}
+function renderDetail(){
+  const box = el("detail");
+  if (!openTile){ box.innerHTML = ""; return; }
+  const id = openTile, L = levelOf(P.xp);
+  if (LOOKS[id]){
+    box.innerHTML = `<div class="panel"><div class="ph"><h2>${LOOKS[id].label}</h2><span class="count">Låses upp med nivån · du är på nivå ${L}</span></div><div class="looks">` +
+      LOOKS[id].items.map(([v, name, lvl])=>{
+        const locked = lvl > L, cur = look(id) === v;
+        return `<button class="tile${cur ? " cur" : ""}${locked ? " locked" : ""}" data-look="${id}:${v}"${locked ? " disabled" : ""}>` +
+          `<canvas data-tt="${id}:${v}"></canvas><b>${name}</b><small>${locked ? `Nivå ${lvl}` : cur ? "Vald" : "Välj"}</small>${locked ? `<span class="lock">${ICON_LOCK}</span>` : ""}</button>`;
+      }).join("") + "</div></div>";
+    paintAll(box);
+  } else if (id === "grooves") box.innerHTML = `<div class="panel"><div class="ph"><h2>Komp</h2><span class="count">${tileCount(id)} · ${TEXTURE_IDS.filter(t=>P.grooves[t] && P.grooves[t].clean >= 3).length} behärskade</span></div>
+      <p class="hint">Varje spelsätt är en trappa. Tre bra varv tar dig ett steg upp, tre rena varv i en groove gör den behärskad, och ditt bästa tempo sparas.</p>${groovesHTML()}</div>`;
+  else if (id === "progs") box.innerHTML = `<div class="panel"><div class="ph"><h2>Progressioner</h2><span class="count">${tileCount(id)}</span></div>
+      <p class="hint">De du inte hittat än visar bara sin stämning. Motorn byter progression på sin egen, långsammare klocka.</p><div class="progs">${progsHTML()}</div></div>`;
+  else box.innerHTML = `<div class="panel"><div class="ph"><h2>Dolda grejer</h2><span class="count">${tileCount(id)}</span></div><div class="looks">` +
+      SECRETS.map(([k, icon, name, desc])=>{
+        const found = (P.secrets || {})[k];
+        return `<div class="secret${found ? " found" : ""}"><i>${found ? icon : "?"}</i><div><b>${found ? name : "Något du inte hittat än"}</b><span>${found ? desc : "Fortsätt spela."}</span></div></div>`;
+      }).join("") + "</div></div>";
+}
+el("tiles").addEventListener("click", e=>{
+  const t = e.target.closest(".tile"); if (!t) return;
+  openTile = openTile === t.dataset.tile ? null : t.dataset.tile;
+  renderSamling();
+  if (openTile) el("detail").scrollIntoView({ behavior:"smooth", block:"nearest" });
+});
+el("detail").addEventListener("click", e=>{
+  const t = e.target.closest("[data-look]"); if (!t || t.disabled) return;
+  const [kind, v] = t.dataset.look.split(":");
+  chooseLook(kind, v);
+  renderSamling(); renderMe();
+});
+
 /* Samlingen: trapporna som stigar, det man spelat, behärskat och sitt
    bästa tempo i varje. Det man inte nått än syns, men låst — man ska se
    vart man är på väg. Progressionerna man inte hittat visar bara stämningen. */
 const LADDER_STYLES = ["kids","rhythm","broken","pro","jazz"];
-function renderCollection(){
+function groovesHTML(){
   const g = t => P.grooves[t], mastered = t => g(t) && g(t).clean >= 3;
   const li = (t, i, locked, cur) => {
     const s = g(t), played = s && s.n > 0;
@@ -3686,42 +4745,37 @@ function renderCollection(){
   }
   const inLadders = new Set([].concat(...LADDER_STYLES.map(s=>STYLES[s].textures)));
   const rest = TEXTURE_IDS.filter(t=>!inLadders.has(t));
-  html += `<div class="ladder"><div class="lh"><b>Fler i Mix</b><span>motorn väljer dem när de passar</span></div><ol class="loose">` +
+  return html + `<div class="ladder"><div class="lh"><b>Fler i Mix</b><span>motorn väljer dem när de passar</span></div><ol class="loose">` +
     rest.map(t=>li(t, "·", false, false)).join("") + "</ol></div>";
-  el("grooves").innerHTML = html;
-  const all = TEXTURE_IDS.length, played = TEXTURE_IDS.filter(t=>g(t) && g(t).n).length;
-  el("groove-count").textContent = `${played} av ${all} spelade · ${TEXTURE_IDS.filter(mastered).length} behärskade`;
-
-  const found = LIBRARY.filter(p=>P.progs[p.id] !== undefined).length;
-  el("prog-count").textContent = `${found} av ${LIBRARY.length}`;
-  el("progs").innerHTML = LIBRARY.map(p=>P.progs[p.id] !== undefined
+}
+function progsHTML(){
+  return LIBRARY.map(p=>P.progs[p.id] !== undefined
     ? `<span class="pg" title="${p.numerals.join(" ")}"><b>${p.name}</b>${p.mood}</span>`
     : `<span class="pg locked" title="Inte hittad än">?<i>${p.mood}</i></span>`).join("");
-
+}
+function renderCollection(){
   const hours = Math.floor(P.totalSecs/3600), mins = Math.floor(P.totalSecs % 3600 / 60);
   el("records").innerHTML = [
     [P.bestCombo, "bästa kombo"], [plural(P.bestStreak, "dag", "dagar"), "längsta svit"],
     [hours ? `${hours} h ${mins} min` : `${mins} min`, "speltid"], [fmt(P.hits), "träffade toner"]
   ].map(([v, k])=>`<div><b>${v}</b><span>${k}</span></div>`).join("");
+  if (screen === "more" && tab === "samling") renderSamling();
 }
 
-const ICON_PLAY  = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9.5-5.5z" fill="currentColor"/></svg>';
-const ICON_PAUSE = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z" fill="currentColor"/></svg>';
+/* --- Transport, keyboard och inställningar ---------------------------------- */
 function updateTransport(){
   const b = el("btn-play");
   let label = "Spela", icon = ICON_PLAY;   /* går alltid: MIDI eller datorns tangentbord */
   if (!state.started) ;
   else if (ctx && ctx.state === "running"){ label = "Paus"; icon = ICON_PAUSE; }
   else label = "Fortsätt";
-  b.innerHTML = icon + "<span>" + label + "</span>";
-  b.disabled = false;
-  const f = el("btn-fs-play");
-  f.innerHTML = icon; f.disabled = false; f.setAttribute("aria-label", label);
-  b.title = label + " (mellanslag)";
+  b.innerHTML = icon; b.disabled = false;
+  b.setAttribute("aria-label", label); b.title = label + " (mellanslag)";
   /* Sammanfattningen bara när spelaren själv pausat — inte när ljudet
      ännu inte hunnit starta, och inte när systemet stoppat det. */
-  if (state.started && ctx && ctx.state !== "running" && game.pausedByUser){ if (overlayMode !== "pause" && overlayMode !== "choose") showPause(); }
+  if (state.started && ctx && ctx.state !== "running" && game.pausedByUser){ if (overlayMode !== "pause") showPause(); }
   else if (state.started && overlayMode === "pause") hideOverlay();
+  if (screen === "home") renderHome();
 }
 
 function updateDevice(){
@@ -3747,18 +4801,20 @@ function updateDevice(){
   if (lat.length) s.textContent += " · " + lat.join(" · ");
 }
 
-el("btn-play").addEventListener("click", togglePlay);
+/* Inställningarna finns på ett ställe och flyttas dit de visas: i en
+   låda över scenen medan man spelar, och som en flik i samlingen. Lådan
+   pausar inte — ljudet kan slås av mitt i ett varv. */
+function openDrawer(){ el("drawer-host").appendChild(el("settings")); el("drawer").hidden = false; el("btn-drawer-x").focus(); }
+function closeDrawer(){ if (!el("drawer").hidden){ el("drawer").hidden = true; el("settings-host").appendChild(el("settings")); } }
+el("btn-gear").addEventListener("click", ()=>el("drawer").hidden ? openDrawer() : closeDrawer());
+el("btn-drawer-x").addEventListener("click", closeDrawer);
 
-/* Helskärm. Scenen tar hela skärmen, med spela/paus i raden under noterna
-   eftersom resten av sidan inte syns. Safari på iPad vill ha webkit-namnen;
-   iPhone kan inte visa annat än video i helskärm, och där syns ingen knapp. */
-const ICON_FS_IN  = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
-const ICON_FS_OUT = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
-const ICON_SHEET = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 3h14M1 6h14M1 9h14M1 12h14" stroke="currentColor" stroke-width="1.2"/><ellipse cx="10" cy="10.5" rx="2.2" ry="1.6" fill="currentColor"/></svg>';
-const ICON_ROLL  = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2h3v6H3zM10 4h3v6h-3z" fill="currentColor"/><path d="M1 13h14" stroke="currentColor" stroke-width="1.8"/></svg>';
+/* Helskärm. Spelskärmen tar hela skärmen. Safari på iPad vill ha
+   webkit-namnen; iPhone kan inte visa annat än video i helskärm, och där
+   syns ingen knapp. */
 function fsElement(){ return document.fullscreenElement || document.webkitFullscreenElement || null; }
 function toggleFullscreen(){
-  const stage = lane.closest(".stage");
+  const stage = el("scr-play");
   if (fsElement()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
   else {
     const req = stage.requestFullscreen || stage.webkitRequestFullscreen;
@@ -3771,26 +4827,26 @@ function onFullscreen(){
   el("btn-fs").innerHTML = on ? ICON_FS_OUT : ICON_FS_IN;
   el("btn-fs").setAttribute("aria-label", on ? "Lämna helskärm" : "Helskärm");
   el("btn-fs").title = on ? "Lämna helskärm (F eller Esc)" : "Helskärm (F)";
-  el("btn-fs-play").hidden = !on;
-  el("btn-fs-view").hidden = !on;
-  updateTransport();
   onResize();
 }
 if (document.fullscreenEnabled || document.webkitFullscreenEnabled){
   el("btn-fs").hidden = false;
   el("btn-fs").addEventListener("click", toggleFullscreen);
-  el("btn-fs-play").addEventListener("click", togglePlay);
   document.addEventListener("fullscreenchange", onFullscreen);
   document.addEventListener("webkitfullscreenchange", onFullscreen);
   onFullscreen();
 }
 /* Pianorulle eller notblad. Samma varv, samma klocka, samma bedömning —
    bara bilden byts, och den kan bytas mitt i ett varv. Valet sparas. */
-setView(view.sheet);
-/* Canvas laddar inga typsnitt själv: klavarna och förtecknen hämtas i förväg. */
-if (document.fonts) document.fonts.load('40px "Noto Music"', "\u{1D11E}\u{1D122}\u266F\u266D\u266E").catch(()=>{});
+/* Canvas laddar inga typsnitt själv: klavarna, förtecknen och skrivstilen hämtas i förväg. */
+if (document.fonts){
+  document.fonts.load('40px "Noto Music"', "\u{1D11E}\u{1D122}♯♭♮♪♫").catch(()=>{});
+  document.fonts.load('700 40px "Dancing Script"', "Perfekt!").catch(()=>{});
+  document.fonts.load('700 40px "Playfair Display"', "Vamp 0123").catch(()=>{});
+  document.fonts.ready.then(()=>{ homeBg.key = ""; if (screen === "home") renderHome(); if (screen === "pick") renderPick(); });
+}
 el("btn-view").addEventListener("click", ()=>setView(!view.sheet));
-el("btn-fs-view").addEventListener("click", ()=>setView(!view.sheet));
+el("btn-view-2").addEventListener("click", ()=>setView(!view.sheet));
 el("btn-midi").addEventListener("click", connectMidi);
 el("btn-measure").addEventListener("click", measureStart);
 
@@ -3812,12 +4868,11 @@ async function applyWake(){
 function setWake(on){
   wake.on = on;
   try { localStorage.setItem("vamp.wake", on ? "1" : "0"); } catch(e){}
-  el("btn-wake").textContent = on ? "Skärmen tänd" : "Skärmen släcks";
-  el("btn-wake").setAttribute("aria-pressed", on ? "true" : "false");
+  toggleText(el("btn-wake"), on);
   applyWake();
 }
 if ("wakeLock" in navigator){
-  el("btn-wake").hidden = false;
+  el("wake-row").hidden = false;
   let saved = false; try { saved = localStorage.getItem("vamp.wake") === "1"; } catch(e){}
   setWake(saved);
   el("btn-wake").addEventListener("click", ()=>setWake(!wake.on));
@@ -3828,82 +4883,57 @@ el("echo").addEventListener("change", e=>{
   if (kb.name) kbSave(kb.name, {echo: midi.echo});   /* sparas per keyboard */
 });
 
-/* Grundton, skala och spelsätt. Ändras de medan musiken går gäller de
-   från nästa varv som inte redan är lagt — musiken stannar aldrig. */
-function fillPick(id, items, value){
-  const sel = el(id);
-  sel.innerHTML = items.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
-  sel.value = String(value);
-}
-fillPick("pick-tonic", [["mix","Mix"]].concat(PC_NAMES.map((n,i)=>[i,n])), prefs.tonic);
-fillPick("pick-scale", [["mix","Mix"]].concat(Object.keys(SCALES).map(k=>[k,SCALES[k].label])), prefs.scale);
-fillPick("pick-style", Object.keys(STYLES).map(k=>[k,STYLES[k].label]), prefs.style);
-/* Ett spelsätt med egna progressioner bestämmer grundton och skala själv. */
-function syncPicks(){
-  const off = fixedKeys();
-  ["pick-tonic","pick-scale"].forEach(id=>{
-    el(id).disabled = off;
-    el(id).title = off ? `${style().label} spelar bara på vita tangenter.` : "";
-  });
-}
-syncPicks();
-function setPref(key, value){
-  const was = prefs[key], newStyle = key === "style" && value !== was;
-  if (newStyle && state.started) saveEngine();     /* det gamla spelsättet minns var det var */
-  prefs[key] = value;
-  try { localStorage.setItem("vamp.prefs", JSON.stringify(prefs)); } catch(e){}
-  syncPicks();
-  if (!state.started){ if (newStyle && overlayMode === "welcome") showWelcome(); return; }
-  if (newStyle){
-    const how = enterStyle(false);
-    if (how === "placement") log(`${style().label}: placering från nästa varv.`, "phase");
-    else if (how === "resume") log(`${style().label}: där du slutade, svårighet ${engine.est.toFixed(1)}.`, "phase");
-    renderCollection();
-  }
-  log(`Från nästa varv: ` + (style().jam ? `fritt spel, ${el("pick-tonic").selectedOptions[0].text} · ${el("pick-scale").selectedOptions[0].text}.` :
-    fixedKeys() ? style().label + ", vita tangenter." :
-    `${el("pick-tonic").selectedOptions[0].text} · ${el("pick-scale").selectedOptions[0].text} · ${style().label}.`));
-}
-el("pick-tonic").addEventListener("change", e=>setPref("tonic", e.target.value === "mix" ? "mix" : Number(e.target.value)));
-el("pick-scale").addEventListener("change", e=>setPref("scale", e.target.value));
-el("pick-style").addEventListener("change", e=>setPref("style", e.target.value));
 document.addEventListener("keydown", e=>{
-  if (e.code !== "Space" || e.repeat) return;
+  if (e.code === "Escape"){
+    if (!el("how").hidden) el("how").hidden = true;
+    else if (!el("drawer").hidden) closeDrawer();
+    return;
+  }
+  if (screen !== "play" || e.repeat) return;
   if (e.target.closest && e.target.closest("button,input,select,textarea,label")) return;
-  e.preventDefault(); togglePlay();
+  if (e.code === "Space"){ e.preventDefault(); togglePlay(); }
+  /* F är ingen ton, så den är ledig */
+  else if (e.code === "KeyF" && !e.ctrlKey && !e.metaKey && !e.altKey && !el("btn-fs").hidden){ e.preventDefault(); toggleFullscreen(); }
 });
-document.addEventListener("keydown", e=>{        /* F är ingen ton, så den är ledig */
-  if (e.code !== "KeyF" || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
-  if (el("btn-fs").hidden || (e.target.closest && e.target.closest("input,select,textarea"))) return;
-  e.preventDefault(); toggleFullscreen();
+document.addEventListener("keydown", e=>{
+  if (screen !== "play" || (e.target.closest && e.target.closest("input,select,textarea"))) return;
+  typeDown(e);
 });
-document.addEventListener("keydown", typeDown);
 document.addEventListener("keyup", typeUp);
 window.addEventListener("blur", typeRelease);
 /* Ny placering: glöm nivån i det här spelsättet och gör om proven, från
    nästa varv. XP, svit och samling rörs aldrig. */
 el("btn-reset").addEventListener("click", ()=>{
   delete P.engine[prefs.style]; saveP();
-  if (!state.started){ say(`${style().label} börjar med placeringen nästa gång du spelar.`, 6); if (overlayMode === "welcome") showWelcome(); return; }
-  if (style().jam) return;
+  if (!state.started){ el("reset-note").textContent = `${style().label} börjar med placeringen nästa gång du spelar.`; return; }
+  if (style().jam){ el("reset-note").textContent = "Fritt spel har ingen nivå att glömma."; return; }
   Object.assign(engine, { phase:"placement", probeIndex:0, probeResults:[] });
   log("Ny placering från nästa varv.", "phase");
+  el("reset-note").textContent = `${style().label}: proven görs om från nästa varv.`;
 });
 el("btn-sound").addEventListener("click", ()=>{
   soundOn = !soundOn;
   if (musicGain){ musicGain.gain.value = soundOn?1:0; bandRoom.gain.value = soundOn?1:0; }
-  el("btn-sound").textContent = soundOn?"Ljud på":"Ljud av";
-  el("btn-sound").setAttribute("aria-pressed", soundOn?"true":"false");
+  toggleText(el("btn-sound"), soundOn);
 });
-el("hood").addEventListener("toggle", ()=>{ if (el("hood").open) onResize(); });
 
-function onResize(){ layoutStage(); chartSize = resizeCanvas(chart); drawChart(); }
+function onResize(){
+  if (screen === "play") layoutStage();
+  if (screen === "home") renderHome();
+  if (screen === "pick") el("cards").querySelectorAll("canvas").forEach(cv=>{ const s = resizeCanvas(cv); paintThumb(cv.dataset.thumb, cv.getContext("2d"), s.w, s.h); });
+  if (screen === "more"){
+    if (tab === "stats"){ chartSize = resizeCanvas(chart); drawChart(); }
+    if (tab === "samling") paintAll(el("scr-more"));
+  }
+}
 window.addEventListener("resize", onResize);
+
+refreshLooks();
 setRange(KB_DEFAULT[0], KB_DEFAULT[1]);
-onResize();
+setView(view.sheet);
 updateDevice(); updateTransport();
-renderMe(); renderCollection(); renderBand(null);
-showWelcome();
+renderMe(); renderCollection(); renderBand(null); renderQuests();
+go("home");
 /* Redan tillåtet → anslut direkt. Annars väntar vi på knappen, så att
    ingen möts av en behörighetsfråga innan de ens sett sidan. */
 if (midi.supported && navigator.permissions)
@@ -3911,8 +4941,6 @@ if (midi.supported && navigator.permissions)
     if (p.state === "granted") connectMidi();
     else if (p.state === "denied"){ midi.denied = true; updateDevice(); }
   }, ()=>{});
-drawLane();
-drawChart();
 requestAnimationFrame(frame);
 </script>
 </body>
